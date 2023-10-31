@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Support local builds
 - Support goreleaser for builds/releases
-- Move to github.com/bikeshack/hms-smd
+- Move to github.com/OpenChami/hms-smd
 - Container now based on wolfi
 - Deprecated built-in kafaka listener for redfish events
 
