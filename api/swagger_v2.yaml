@@ -427,35 +427,6 @@ paths:
           schema:
             $ref: '#/definitions/Problem7807'
 
-  /service/liveness:
-    get:
-      tags:
-        - Service Info
-      summary: Kubernetes liveness endpoint to monitor service health
-      x-private: true
-      description: >-
-        The `liveness` resource works in conjunction with the Kubernetes liveness
-        probe to determine when the service is no longer responding to
-        requests.  Too many failures of the liveness probe will result in the
-        service being shut down and restarted.
-
-
-        This is primarily an endpoint for the automated Kubernetes system.
-      operationId: doLivenessGet
-      responses:
-        "204":
-          description: >-
-            [No Content](http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.5)
-            Network API call success
-        "503":
-          description: >-
-            The service is not taking HTTP requests
-          schema:
-            $ref: '#/definitions/Problem7807'
-        default:
-          description: Unexpected error
-          schema:
-            $ref: '#/definitions/Problem7807'
   /service/values:
     get:
       tags:
@@ -1949,242 +1920,242 @@ paths:
   # Node Maps - Default NIDs/Roles/etc. to use on first time discovery
   #
   ########################################################################
-  /Defaults/NodeMaps:
-    get:
-      tags:
-        - NodeMap
-      summary: >-
-        Retrieve all NodeMaps, returning NodeMapArray
-      description: >-
-        Retrieve all Node map entries as a named array, or an empty array if the
-        collection is empty.
-      operationId: doNodeMapsGet
-      responses:
-        "200":
-          description: >-
-            Named NodeMaps array representing all xname locations that
-            have defaults registered.
-          schema:
-            $ref: '#/definitions/NodeMapArray_NodeMapArray'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/Problem7807'
-        default:
-          description: Unexpected error
-          schema:
-            $ref: '#/definitions/Problem7807'
-    post:
-      tags:
-        - NodeMap
-      summary: Create or Modify NodeMaps
-      description: >-
-        Create or update the given set of NodeMaps whose ID fields are each a
-        valid xname. The NID field is required and serves as the NID that
-        will be used when a component with the same xname ID is created for
-        the first time by discovery.
+  # /Defaults/NodeMaps:
+  #   get:
+  #     tags:
+  #       - NodeMap
+  #     summary: >-
+  #       Retrieve all NodeMaps, returning NodeMapArray
+  #     description: >-
+  #       Retrieve all Node map entries as a named array, or an empty array if the
+  #       collection is empty.
+  #     operationId: doNodeMapsGet
+  #     responses:
+  #       "200":
+  #         description: >-
+  #           Named NodeMaps array representing all xname locations that
+  #           have defaults registered.
+  #         schema:
+  #           $ref: '#/definitions/NodeMapArray_NodeMapArray'
+  #       "400":
+  #         description: Bad Request
+  #         schema:
+  #           $ref: '#/definitions/Problem7807'
+  #       default:
+  #         description: Unexpected error
+  #         schema:
+  #           $ref: '#/definitions/Problem7807'
+  #   post:
+  #     tags:
+  #       - NodeMap
+  #     summary: Create or Modify NodeMaps
+  #     description: >-
+  #       Create or update the given set of NodeMaps whose ID fields are each a
+  #       valid xname. The NID field is required and serves as the NID that
+  #       will be used when a component with the same xname ID is created for
+  #       the first time by discovery.
 
-        Role is an optional field. A node is assigned the
-        default (e.g. Compute) role when it is first created during discovery.
-        The NID must be unique across all entries.
+  #       Role is an optional field. A node is assigned the
+  #       default (e.g. Compute) role when it is first created during discovery.
+  #       The NID must be unique across all entries.
 
-        SubRole is an optional field. A node is assigned no subrole by default
-        when it is first created during discovery.
-
-
-        The NodeMaps collection should be uploaded at install time by specifying
-        it as a JSON file. As a result, when the endpoints are automatically discovered
-        by REDS, and inventory discovery is performed by HSM, the desired NID numbers will
-        be set as soon as the nodes are created using the NodeMaps collection. All node xnames
-        that are expected to be used in the system should be included in the mapping, even
-        if not currently populated.
+  #       SubRole is an optional field. A node is assigned no subrole by default
+  #       when it is first created during discovery.
 
 
-        It is recommended that NodeMaps are uploaded at install time before discovery happens.
-        If they are uploaded after discovery, then the node xnames need
-        to be manually updated with the correct NIDs. You can update NIDs for individual
-        components by using PATCH /State/Components/{xname}/NID.
+  #       The NodeMaps collection should be uploaded at install time by specifying
+  #       it as a JSON file. As a result, when the endpoints are automatically discovered
+  #       by REDS, and inventory discovery is performed by HSM, the desired NID numbers will
+  #       be set as soon as the nodes are created using the NodeMaps collection. All node xnames
+  #       that are expected to be used in the system should be included in the mapping, even
+  #       if not currently populated.
 
 
-        Note the following points:
+  #       It is recommended that NodeMaps are uploaded at install time before discovery happens.
+  #       If they are uploaded after discovery, then the node xnames need
+  #       to be manually updated with the correct NIDs. You can update NIDs for individual
+  #       components by using PATCH /State/Components/{xname}/NID.
 
-        * If the POST operation contains an xname that already exists, the entry will be overwritten
-        with the new entry (i.e. new NID, Role (if given), etc.).
 
-        * The same NID cannot be used for more than one xname. If such a duplicate would be
-        created, the operation will fail.
+  #       Note the following points:
 
-        * If the node has already been discovered for the first time (that is, it exists in
-        /hsm/v2/State/Components and already has a previous/default NID), modifying the
-        NodeMap entry will not automatically reassign the current NID.
+  #       * If the POST operation contains an xname that already exists, the entry will be overwritten
+  #       with the new entry (i.e. new NID, Role (if given), etc.).
 
-        * If you wish to use POST to completely replace the current NodeMaps collection
-        (rather than modifying it), first delete it using the DELETE method on the collection.
-        Otherwise the current entries and the new ones will be merged if they are disjoint
-        sets of nodes.
-      operationId: doNodeMapPost
-      parameters:
-        - name: payload
-          in: body
-          required: true
-          schema:
-            $ref: '#/definitions/NodeMapArray_NodeMapArray'
-      responses:
-        "200":
-          description: >-
-            Zero (success) error code - one or more entries created or
-            updated.  Message contains count of new/modified items.
-          schema:
-            $ref: '#/definitions/Response_1.0.0'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/Problem7807'
-        "409":
-          description: Conflict. Duplicate resource (NID) would be created.
-          schema:
-            $ref: '#/definitions/Problem7807'
-        default:
-          description: Unexpected error
-          schema:
-            $ref: '#/definitions/Problem7807'
-    delete:
-      tags:
-        - NodeMap
-        - cli_danger$This will delete all node maps, continue?
-      summary: >-
-        Delete all NodeMap entities
-      description: >-
-        Delete all entries in the NodeMaps collection.
-      operationId: doNodeMapsDeleteAll
-      responses:
-        "200":
-          description: >-
-            Zero (success) error code - one or more entries deleted.
-            Message contains count of deleted items.
-          schema:
-            $ref: '#/definitions/Response_1.0.0'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/Problem7807'
-        "404":
-          description: Does Not Exist - Collection is empty
-          schema:
-            $ref: '#/definitions/Problem7807'
-        default:
-          description: Unexpected error
-          schema:
-            $ref: '#/definitions/Problem7807'
-  /Defaults/NodeMaps/{xname}:
-    get:
-      tags:
-        - NodeMap
-      summary: Retrieve NodeMap at {xname}
-      description: >-
-        Retrieve NodeMap, i.e. defaults NID/Role/etc. for node located at
-        physical location {xname}.
-      operationId: doNodeMapGet
-      parameters:
-        - name: xname
-          in: path
-          type: string
-          description: Locational xname of NodeMap record to return.
-          required: true
-      responses:
-        "200":
-          description: NodeMap entry matching xname/ID
-          schema:
-            $ref: '#/definitions/NodeMap.1.0.0_NodeMap'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/Problem7807'
-        "404":
-          description: Does Not Exist
-          schema:
-            $ref: '#/definitions/Problem7807'
-        default:
-          description: Unexpected error
-          schema:
-            $ref: '#/definitions/Problem7807'
-    delete:
-      tags:
-        - NodeMap
-      summary: Delete NodeMap with ID {xname}
-      description: >-
-        Delete NodeMap entry for a specific node {xname}.
-      operationId: doNodeMapDelete
-      parameters:
-        - name: xname
-          in: path
-          type: string
-          description: Locational xname of NodeMap record to delete.
-          required: true
-      responses:
-        "200":
-          description: Zero (success) error code - NodeMap is deleted.
-          schema:
-            $ref: '#/definitions/Response_1.0.0'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/Problem7807'
-        "404":
-          description: XName does Not Exist - no matching ID to delete
-          schema:
-            $ref: '#/definitions/Problem7807'
-        default:
-          description: Unexpected error
-          schema:
-            $ref: '#/definitions/Problem7807'
-    put:
-      tags:
-        - NodeMap
-      summary: Update definition for NodeMap ID {xname}
-      description: >-
-        Update or create an entry for an individual node xname using PUT.
-        Note the following points:
+  #       * The same NID cannot be used for more than one xname. If such a duplicate would be
+  #       created, the operation will fail.
 
-        * If the PUT operation contains an xname that already exists, the entry will be overwritten
-        with the new entry (i.e. new NID, Role (if given), etc.).
+  #       * If the node has already been discovered for the first time (that is, it exists in
+  #       /hsm/v2/State/Components and already has a previous/default NID), modifying the
+  #       NodeMap entry will not automatically reassign the current NID.
 
-        * The same NID cannot be used for more than one xname. If such a duplicate would be
-        created, the operation will fail.
+  #       * If you wish to use POST to completely replace the current NodeMaps collection
+  #       (rather than modifying it), first delete it using the DELETE method on the collection.
+  #       Otherwise the current entries and the new ones will be merged if they are disjoint
+  #       sets of nodes.
+  #     operationId: doNodeMapPost
+  #     parameters:
+  #       - name: payload
+  #         in: body
+  #         required: true
+  #         schema:
+  #           $ref: '#/definitions/NodeMapArray_NodeMapArray'
+  #     responses:
+  #       "200":
+  #         description: >-
+  #           Zero (success) error code - one or more entries created or
+  #           updated.  Message contains count of new/modified items.
+  #         schema:
+  #           $ref: '#/definitions/Response_1.0.0'
+  #       "400":
+  #         description: Bad Request
+  #         schema:
+  #           $ref: '#/definitions/Problem7807'
+  #       "409":
+  #         description: Conflict. Duplicate resource (NID) would be created.
+  #         schema:
+  #           $ref: '#/definitions/Problem7807'
+  #       default:
+  #         description: Unexpected error
+  #         schema:
+  #           $ref: '#/definitions/Problem7807'
+  #   delete:
+  #     tags:
+  #       - NodeMap
+  #       - cli_danger$This will delete all node maps, continue?
+  #     summary: >-
+  #       Delete all NodeMap entities
+  #     description: >-
+  #       Delete all entries in the NodeMaps collection.
+  #     operationId: doNodeMapsDeleteAll
+  #     responses:
+  #       "200":
+  #         description: >-
+  #           Zero (success) error code - one or more entries deleted.
+  #           Message contains count of deleted items.
+  #         schema:
+  #           $ref: '#/definitions/Response_1.0.0'
+  #       "400":
+  #         description: Bad Request
+  #         schema:
+  #           $ref: '#/definitions/Problem7807'
+  #       "404":
+  #         description: Does Not Exist - Collection is empty
+  #         schema:
+  #           $ref: '#/definitions/Problem7807'
+  #       default:
+  #         description: Unexpected error
+  #         schema:
+  #           $ref: '#/definitions/Problem7807'
+  # /Defaults/NodeMaps/{xname}:
+  #   get:
+  #     tags:
+  #       - NodeMap
+  #     summary: Retrieve NodeMap at {xname}
+  #     description: >-
+  #       Retrieve NodeMap, i.e. defaults NID/Role/etc. for node located at
+  #       physical location {xname}.
+  #     operationId: doNodeMapGet
+  #     parameters:
+  #       - name: xname
+  #         in: path
+  #         type: string
+  #         description: Locational xname of NodeMap record to return.
+  #         required: true
+  #     responses:
+  #       "200":
+  #         description: NodeMap entry matching xname/ID
+  #         schema:
+  #           $ref: '#/definitions/NodeMap.1.0.0_NodeMap'
+  #       "400":
+  #         description: Bad Request
+  #         schema:
+  #           $ref: '#/definitions/Problem7807'
+  #       "404":
+  #         description: Does Not Exist
+  #         schema:
+  #           $ref: '#/definitions/Problem7807'
+  #       default:
+  #         description: Unexpected error
+  #         schema:
+  #           $ref: '#/definitions/Problem7807'
+  #   delete:
+  #     tags:
+  #       - NodeMap
+  #     summary: Delete NodeMap with ID {xname}
+  #     description: >-
+  #       Delete NodeMap entry for a specific node {xname}.
+  #     operationId: doNodeMapDelete
+  #     parameters:
+  #       - name: xname
+  #         in: path
+  #         type: string
+  #         description: Locational xname of NodeMap record to delete.
+  #         required: true
+  #     responses:
+  #       "200":
+  #         description: Zero (success) error code - NodeMap is deleted.
+  #         schema:
+  #           $ref: '#/definitions/Response_1.0.0'
+  #       "400":
+  #         description: Bad Request
+  #         schema:
+  #           $ref: '#/definitions/Problem7807'
+  #       "404":
+  #         description: XName does Not Exist - no matching ID to delete
+  #         schema:
+  #           $ref: '#/definitions/Problem7807'
+  #       default:
+  #         description: Unexpected error
+  #         schema:
+  #           $ref: '#/definitions/Problem7807'
+  #   put:
+  #     tags:
+  #       - NodeMap
+  #     summary: Update definition for NodeMap ID {xname}
+  #     description: >-
+  #       Update or create an entry for an individual node xname using PUT.
+  #       Note the following points:
 
-        * If the node has already been discovered for the first time (that is, it exists in
-        /hsm/v2/State/Components and already has a previous/default NID), modifying the
-        NodeMap entry will not automatically reassign the current NID.
-      operationId: doNodeMapPut
-      parameters:
-        - name: xname
-          in: path
-          type: string
-          description: >-
-            Locational xname of NodeMap record to create or update.
-          required: true
-        - name: payload
-          in: body
-          required: true
-          schema:
-            $ref: '#/definitions/NodeMap.1.0.0_NodeMap'
-      responses:
-        "200":
-          description: NodeMap entry was successfully created/updated.
-          schema:
-            $ref: '#/definitions/NodeMap.1.0.0_PostNodeMap'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/Problem7807'
-        "409":
-          description: Conflict. Duplicate resource (NID) would be created.
-          schema:
-            $ref: '#/definitions/Problem7807'
-        default:
-          description: Unexpected error
-          schema:
-            $ref: '#/definitions/Problem7807'
+  #       * If the PUT operation contains an xname that already exists, the entry will be overwritten
+  #       with the new entry (i.e. new NID, Role (if given), etc.).
+
+  #       * The same NID cannot be used for more than one xname. If such a duplicate would be
+  #       created, the operation will fail.
+
+  #       * If the node has already been discovered for the first time (that is, it exists in
+  #       /hsm/v2/State/Components and already has a previous/default NID), modifying the
+  #       NodeMap entry will not automatically reassign the current NID.
+  #     operationId: doNodeMapPut
+  #     parameters:
+  #       - name: xname
+  #         in: path
+  #         type: string
+  #         description: >-
+  #           Locational xname of NodeMap record to create or update.
+  #         required: true
+  #       - name: payload
+  #         in: body
+  #         required: true
+  #         schema:
+  #           $ref: '#/definitions/NodeMap.1.0.0_NodeMap'
+  #     responses:
+  #       "200":
+  #         description: NodeMap entry was successfully created/updated.
+  #         schema:
+  #           $ref: '#/definitions/NodeMap.1.0.0_PostNodeMap'
+  #       "400":
+  #         description: Bad Request
+  #         schema:
+  #           $ref: '#/definitions/Problem7807'
+  #       "409":
+  #         description: Conflict. Duplicate resource (NID) would be created.
+  #         schema:
+  #           $ref: '#/definitions/Problem7807'
+  #       default:
+  #         description: Unexpected error
+  #         schema:
+  #           $ref: '#/definitions/Problem7807'
   ########################################################################
   #
   # Hardware Inventory API calls

@@ -292,12 +292,6 @@ func (s *SmD) doReadyGet(w http.ResponseWriter, r *http.Request) {
 	sendJsonError(w, http.StatusOK, "HSM is healthy")
 }
 
-// Get the liveness state of HSM
-func (s *SmD) doLivenessGet(w http.ResponseWriter, r *http.Request) {
-	// Let the caller know we are accepting HTTP requests.
-	w.WriteHeader(http.StatusNoContent)
-}
-
 // Get all HMS base enum values
 func (s *SmD) doValuesGet(w http.ResponseWriter, r *http.Request) {
 	s.getHMSValues(HMSValAll, w, r)
@@ -1112,18 +1106,18 @@ func (s *SmD) doNodeMapGet(w http.ResponseWriter, r *http.Request) {
 
 // Get all NodeMap entries in database, by doing a GET against the
 // entire collection.
-func (s *SmD) doNodeMapsGet(w http.ResponseWriter, r *http.Request) {
-	nnms := new(sm.NodeMapArray)
-	var err error
+// func (s *SmD) doNodeMapsGet(w http.ResponseWriter, r *http.Request) {
+// 	nnms := new(sm.NodeMapArray)
+// 	var err error
 
-	nnms.NodeMaps, err = s.db.GetNodeMapsAll()
-	if err != nil {
-		s.LogAlways("doNodeMapsGet(): Lookup failure: %s", err)
-		sendJsonDBError(w, "", "", err)
-		return
-	}
-	sendJsonNodeMapArrayRsp(w, nnms)
-}
+// 	nnms.NodeMaps, err = s.db.GetNodeMapsAll()
+// 	if err != nil {
+// 		s.LogAlways("doNodeMapsGet(): Lookup failure: %s", err)
+// 		sendJsonDBError(w, "", "", err)
+// 		return
+// 	}
+// 	sendJsonNodeMapArrayRsp(w, nnms)
+// }
 
 // Polymorphic type that takes either a single (scan-friendly) RedfishEndpoint
 // or a named array of them.
@@ -1134,161 +1128,161 @@ type scanableNodeMap struct {
 
 // CREATE new or UPDATE EXISTING Node->NID mapping
 // Accept either a named array or a single entry.
-func (s *SmD) doNodeMapsPost(w http.ResponseWriter, r *http.Request) {
-	var scanMap scanableNodeMap
-	nnms := new(sm.NodeMapArray)
+// func (s *SmD) doNodeMapsPost(w http.ResponseWriter, r *http.Request) {
+// 	var scanMap scanableNodeMap
+// 	nnms := new(sm.NodeMapArray)
 
-	body, err := ioutil.ReadAll(r.Body)
-	err = json.Unmarshal(body, &scanMap)
-	if err != nil {
-		sendJsonError(w, http.StatusInternalServerError,
-			"error decoding JSON "+err.Error())
-		return
-	}
-	if scanMap.NodeMap != nil {
-		nnm, err := sm.NewNodeMap(
-			scanMap.NodeMap.ID,
-			scanMap.NodeMap.Role,
-			scanMap.NodeMap.SubRole,
-			scanMap.NodeMap.NID,
-			scanMap.NodeMap.NodeInfo)
-		if err != nil {
-			sendJsonError(w, http.StatusBadRequest,
-				"couldn't validate mapping data: "+err.Error())
-			return
-		}
-		nnms.NodeMaps = append(nnms.NodeMaps, nnm)
-	} else if scanMap.NodeMaps != nil {
-		for i, m := range *scanMap.NodeMaps {
-			// Attempt to create a valid NodeMap from the
-			// raw data.  If we do not get any errors, it should be sane enough
-			// to put into the data store.
-			nnm, err := sm.NewNodeMap(
-				m.ID,
-				m.Role,
-				m.SubRole,
-				m.NID,
-				m.NodeInfo)
-			if err != nil {
-				idx := strconv.Itoa(i)
-				sendJsonError(w, http.StatusBadRequest,
-					"couldn't validate map data at idx "+idx+": "+err.Error())
-				return
-			}
-			nnms.NodeMaps = append(nnms.NodeMaps, nnm)
-		}
-	}
-	err = s.db.InsertNodeMaps(nnms)
-	if err != nil {
-		s.lg.Printf("failed: %s %s Err: %s", r.RemoteAddr, string(body), err)
-		if err == hmsds.ErrHMSDSDuplicateKey {
-			sendJsonError(w, http.StatusConflict, "operation would conflict "+
-				"with an existing xname ID that has the same NID.")
-		} else {
-			sendJsonError(w, http.StatusInternalServerError,
-				"operation 'POST' failed during store. ")
-		}
-		return
-	}
-	s.lg.Printf("succeeded: %s %s", r.RemoteAddr, string(body))
+// 	body, err := ioutil.ReadAll(r.Body)
+// 	err = json.Unmarshal(body, &scanMap)
+// 	if err != nil {
+// 		sendJsonError(w, http.StatusInternalServerError,
+// 			"error decoding JSON "+err.Error())
+// 		return
+// 	}
+// 	if scanMap.NodeMap != nil {
+// 		nnm, err := sm.NewNodeMap(
+// 			scanMap.NodeMap.ID,
+// 			scanMap.NodeMap.Role,
+// 			scanMap.NodeMap.SubRole,
+// 			scanMap.NodeMap.NID,
+// 			scanMap.NodeMap.NodeInfo)
+// 		if err != nil {
+// 			sendJsonError(w, http.StatusBadRequest,
+// 				"couldn't validate mapping data: "+err.Error())
+// 			return
+// 		}
+// 		nnms.NodeMaps = append(nnms.NodeMaps, nnm)
+// 	} else if scanMap.NodeMaps != nil {
+// 		for i, m := range *scanMap.NodeMaps {
+// 			// Attempt to create a valid NodeMap from the
+// 			// raw data.  If we do not get any errors, it should be sane enough
+// 			// to put into the data store.
+// 			nnm, err := sm.NewNodeMap(
+// 				m.ID,
+// 				m.Role,
+// 				m.SubRole,
+// 				m.NID,
+// 				m.NodeInfo)
+// 			if err != nil {
+// 				idx := strconv.Itoa(i)
+// 				sendJsonError(w, http.StatusBadRequest,
+// 					"couldn't validate map data at idx "+idx+": "+err.Error())
+// 				return
+// 			}
+// 			nnms.NodeMaps = append(nnms.NodeMaps, nnm)
+// 		}
+// 	}
+// 	err = s.db.InsertNodeMaps(nnms)
+// 	if err != nil {
+// 		s.lg.Printf("failed: %s %s Err: %s", r.RemoteAddr, string(body), err)
+// 		if err == hmsds.ErrHMSDSDuplicateKey {
+// 			sendJsonError(w, http.StatusConflict, "operation would conflict "+
+// 				"with an existing xname ID that has the same NID.")
+// 		} else {
+// 			sendJsonError(w, http.StatusInternalServerError,
+// 				"operation 'POST' failed during store. ")
+// 		}
+// 		return
+// 	}
+// 	s.lg.Printf("succeeded: %s %s", r.RemoteAddr, string(body))
 
-	numStr := strconv.FormatInt(int64(len(nnms.NodeMaps)), 10)
-	sendJsonError(w, http.StatusOK, "Created or modified "+numStr+" entries")
+// 	numStr := strconv.FormatInt(int64(len(nnms.NodeMaps)), 10)
+// 	sendJsonError(w, http.StatusOK, "Created or modified "+numStr+" entries")
 
-}
+// }
 
 // UPDATE EXISTING Node->NID mapping by it's xname URI.
-func (s *SmD) doNodeMapPut(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	xname := base.NormalizeHMSCompID(vars["xname"])
+// func (s *SmD) doNodeMapPut(w http.ResponseWriter, r *http.Request) {
+// 	vars := mux.Vars(r)
+// 	xname := base.NormalizeHMSCompID(vars["xname"])
 
-	var m sm.NodeMap
-	body, _ := io.ReadAll(r.Body)
-	err := json.Unmarshal(body, &m)
-	if err != nil {
-		sendJsonError(w, http.StatusInternalServerError,
-			"error decoding JSON "+err.Error())
-		return
-	}
-	if m.ID == "" {
-		if xname != "" {
-			m.ID = xname
-		}
-	} else if base.NormalizeHMSCompID(m.ID) != xname {
-		sendJsonError(w, http.StatusBadRequest,
-			"xname in URL and PUT body do not match")
-		return
-	}
-	// Make sure the information submitted is a proper endpoint and will
-	// not update the entry with invalid data.
-	nnm, err := sm.NewNodeMap(
-		m.ID,
-		m.Role,
-		m.SubRole,
-		m.NID,
-		m.NodeInfo)
-	if err != nil {
-		sendJsonError(w, http.StatusBadRequest,
-			"couldn't validate endpoint data: "+err.Error())
-		return
-	}
-	err = s.db.InsertNodeMap(nnm)
-	if err != nil {
-		s.lg.Printf("failed: %s %s, Err: %s", r.RemoteAddr, string(body), err)
-		if err == hmsds.ErrHMSDSDuplicateKey {
-			sendJsonError(w, http.StatusConflict, "operation would conflict "+
-				"with an existing resource that has the same NID")
-		} else {
-			// Unexpected error on update
-			sendJsonError(w, http.StatusInternalServerError,
-				"operation 'PUT' failed during store")
-		}
-		return
-	}
-	sendJsonNodeMapRsp(w, nnm)
+// 	var m sm.NodeMap
+// 	body, _ := io.ReadAll(r.Body)
+// 	err := json.Unmarshal(body, &m)
+// 	if err != nil {
+// 		sendJsonError(w, http.StatusInternalServerError,
+// 			"error decoding JSON "+err.Error())
+// 		return
+// 	}
+// 	if m.ID == "" {
+// 		if xname != "" {
+// 			m.ID = xname
+// 		}
+// 	} else if base.NormalizeHMSCompID(m.ID) != xname {
+// 		sendJsonError(w, http.StatusBadRequest,
+// 			"xname in URL and PUT body do not match")
+// 		return
+// 	}
+// 	// Make sure the information submitted is a proper endpoint and will
+// 	// not update the entry with invalid data.
+// 	nnm, err := sm.NewNodeMap(
+// 		m.ID,
+// 		m.Role,
+// 		m.SubRole,
+// 		m.NID,
+// 		m.NodeInfo)
+// 	if err != nil {
+// 		sendJsonError(w, http.StatusBadRequest,
+// 			"couldn't validate endpoint data: "+err.Error())
+// 		return
+// 	}
+// 	err = s.db.InsertNodeMap(nnm)
+// 	if err != nil {
+// 		s.lg.Printf("failed: %s %s, Err: %s", r.RemoteAddr, string(body), err)
+// 		if err == hmsds.ErrHMSDSDuplicateKey {
+// 			sendJsonError(w, http.StatusConflict, "operation would conflict "+
+// 				"with an existing resource that has the same NID")
+// 		} else {
+// 			// Unexpected error on update
+// 			sendJsonError(w, http.StatusInternalServerError,
+// 				"operation 'PUT' failed during store")
+// 		}
+// 		return
+// 	}
+// 	sendJsonNodeMapRsp(w, nnm)
 
-}
+// }
 
 // Delete single NodeMap, by its xname ID.
-func (s *SmD) doNodeMapDelete(w http.ResponseWriter, r *http.Request) {
-	s.lg.Printf("doNodeMapDelete(): trying...")
-	vars := mux.Vars(r)
-	xname := base.NormalizeHMSCompID(vars["xname"])
+// func (s *SmD) doNodeMapDelete(w http.ResponseWriter, r *http.Request) {
+// 	s.lg.Printf("doNodeMapDelete(): trying...")
+// 	vars := mux.Vars(r)
+// 	xname := base.NormalizeHMSCompID(vars["xname"])
 
-	if !base.IsHMSCompIDValid(xname) {
-		sendJsonError(w, http.StatusBadRequest, "invalid xname")
-		return
-	}
-	didDelete, err := s.db.DeleteNodeMapByID(xname)
-	if err != nil {
-		s.LogAlways("doNodeMapDelete(): delete failure: (%s) %s",
-			xname, err)
-		sendJsonDBError(w, "", "", err)
-		return
-	}
-	if !didDelete {
-		sendJsonError(w, http.StatusNotFound, "no such xname.")
-		return
-	}
-	sendJsonError(w, http.StatusOK, "deleted 1 entry")
-}
+// 	if !base.IsHMSCompIDValid(xname) {
+// 		sendJsonError(w, http.StatusBadRequest, "invalid xname")
+// 		return
+// 	}
+// 	didDelete, err := s.db.DeleteNodeMapByID(xname)
+// 	if err != nil {
+// 		s.LogAlways("doNodeMapDelete(): delete failure: (%s) %s",
+// 			xname, err)
+// 		sendJsonDBError(w, "", "", err)
+// 		return
+// 	}
+// 	if !didDelete {
+// 		sendJsonError(w, http.StatusNotFound, "no such xname.")
+// 		return
+// 	}
+// 	sendJsonError(w, http.StatusOK, "deleted 1 entry")
+// }
 
-// Delete collection containing all NodeMap entries.
-func (s *SmD) doNodeMapsDeleteAll(w http.ResponseWriter, r *http.Request) {
-	var err error
-	numDeleted, err := s.db.DeleteNodeMapsAll()
-	if err != nil {
-		s.lg.Printf("doNodeMapsDelete(): Delete failure: %s", err)
-		sendJsonError(w, http.StatusInternalServerError, "DB query failed.")
-		return
-	}
-	if numDeleted == 0 {
-		sendJsonError(w, http.StatusNotFound, "no entries to delete")
-		return
-	}
-	numStr := strconv.FormatInt(numDeleted, 10)
-	sendJsonError(w, http.StatusOK, "deleted "+numStr+" entries")
-}
+// // Delete collection containing all NodeMap entries.
+// func (s *SmD) doNodeMapsDeleteAll(w http.ResponseWriter, r *http.Request) {
+// 	var err error
+// 	numDeleted, err := s.db.DeleteNodeMapsAll()
+// 	if err != nil {
+// 		s.lg.Printf("doNodeMapsDelete(): Delete failure: %s", err)
+// 		sendJsonError(w, http.StatusInternalServerError, "DB query failed.")
+// 		return
+// 	}
+// 	if numDeleted == 0 {
+// 		sendJsonError(w, http.StatusNotFound, "no entries to delete")
+// 		return
+// 	}
+// 	numStr := strconv.FormatInt(numDeleted, 10)
+// 	sendJsonError(w, http.StatusOK, "deleted "+numStr+" entries")
+// }
 
 /////////////////////////////////////////////////////////////////////////////
 // Hardware Inventory

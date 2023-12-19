@@ -111,12 +111,12 @@ func (s *SmD) generateRoutes() Routes {
 			s.serviceBaseV2 + "/ready",
 			s.doReadyGet,
 		},
-		Route{
-			"doLivenessGetV2",
-			strings.ToUpper("Get"),
-			s.serviceBaseV2 + "/liveness",
-			s.doLivenessGet,
-		},
+		// Route{
+		// 	"doLivenessGetV2",
+		// 	strings.ToUpper("Get"),
+		// 	s.serviceBaseV2 + "/liveness",
+		// 	s.doLivenessGet,
+		// },
 		Route{
 			"doValuesGetV2",
 			strings.ToUpper("Get"),
@@ -432,42 +432,42 @@ func (s *SmD) generateRoutes() Routes {
 		},
 
 		// NodeMaps
-		Route{
-			"doNodeMapGetV2",
-			strings.ToUpper("Get"),
-			s.nodeMapBaseV2 + "/{xname}",
-			s.doNodeMapGet,
-		},
-		Route{
-			"doNodeMapsGetV2",
-			strings.ToUpper("Get"),
-			s.nodeMapBaseV2,
-			s.doNodeMapsGet,
-		},
-		Route{
-			"doNodeMapDeleteV2",
-			strings.ToUpper("Delete"),
-			s.nodeMapBaseV2 + "/{xname}",
-			s.doNodeMapDelete,
-		},
-		Route{
-			"doNodeMapPutV2",
-			strings.ToUpper("Put"),
-			s.nodeMapBaseV2 + "/{xname}",
-			s.doNodeMapPut,
-		},
-		Route{
-			"doNodeMapsPostV2",
-			strings.ToUpper("Post"),
-			s.nodeMapBaseV2,
-			s.doNodeMapsPost,
-		},
-		Route{
-			"doNodeMapsDeleteAllV2",
-			strings.ToUpper("Delete"),
-			s.nodeMapBaseV2,
-			s.doNodeMapsDeleteAll,
-		},
+		// Route{
+		// 	"doNodeMapGetV2",
+		// 	strings.ToUpper("Get"),
+		// 	s.nodeMapBaseV2 + "/{xname}",
+		// 	s.doNodeMapGet,
+		// },
+		// Route{
+		// 	"doNodeMapsGetV2",
+		// 	strings.ToUpper("Get"),
+		// 	s.nodeMapBaseV2,
+		// 	s.doNodeMapsGet,
+		// },
+		// Route{
+		// 	"doNodeMapDeleteV2",
+		// 	strings.ToUpper("Delete"),
+		// 	s.nodeMapBaseV2 + "/{xname}",
+		// 	s.doNodeMapDelete,
+		// },
+		// Route{
+		// 	"doNodeMapPutV2",
+		// 	strings.ToUpper("Put"),
+		// 	s.nodeMapBaseV2 + "/{xname}",
+		// 	s.doNodeMapPut,
+		// },
+		// Route{
+		// 	"doNodeMapsPostV2",
+		// 	strings.ToUpper("Post"),
+		// 	s.nodeMapBaseV2,
+		// 	s.doNodeMapsPost,
+		// },
+		// Route{
+		// 	"doNodeMapsDeleteAllV2",
+		// 	strings.ToUpper("Delete"),
+		// 	s.nodeMapBaseV2,
+		// 	s.doNodeMapsDeleteAll,
+		// },
 
 		// Hardware Inventory History
 		Route{
