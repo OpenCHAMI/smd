@@ -561,27 +561,6 @@ func (s *SmD) doComponentsPost(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	// Send out a SCN for each unique combination of change type and new value
-	for change, valMap := range scnIds {
-		for val, list := range valMap {
-			switch change {
-			case "state":
-				scn := NewJobSCN(list, base.Component{State: val}, s)
-				s.wp.Queue(scn)
-			case "enabled":
-				enabled, _ := strconv.ParseBool(val)
-				scn := NewJobSCN(list, base.Component{Enabled: &enabled}, s)
-				s.wp.Queue(scn)
-			case "swStatus":
-				scn := NewJobSCN(list, base.Component{SwStatus: val}, s)
-				s.wp.Queue(scn)
-			case "role":
-				roles := strings.Split(val, ".")
-				scn := NewJobSCN(list, base.Component{Role: roles[0], SubRole: roles[1]}, s)
-				s.wp.Queue(scn)
-			}
-		}
-	}
 
 	// Send 204 status (success, no content in response)
 	sendJsonError(w, http.StatusNoContent, "operation completed")
@@ -1053,34 +1032,11 @@ func (s *SmD) doComponentPut(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	changeMap, err := s.db.UpsertComponents([]*base.Component{component}, compIn.Force)
+	_, err = s.db.UpsertComponents([]*base.Component{component}, compIn.Force)
 	if err != nil {
 		sendJsonDBError(w, "operation 'PUT' failed: ", "", err)
 		s.lg.Printf("failed: %s %s, Err: %s", r.RemoteAddr, string(body), err)
 		return
-	}
-	if changes, ok := changeMap[component.ID]; ok {
-		scnIds := make([]string, 0, 1)
-		scnIds = append(scnIds, component.ID)
-		for change, value := range changes {
-			if !value {
-				continue
-			}
-			switch change {
-			case "state":
-				scn := NewJobSCN(scnIds, base.Component{State: component.State}, s)
-				s.wp.Queue(scn)
-			case "enabled":
-				scn := NewJobSCN(scnIds, base.Component{Enabled: component.Enabled}, s)
-				s.wp.Queue(scn)
-			case "swStatus":
-				scn := NewJobSCN(scnIds, base.Component{SwStatus: component.SwStatus}, s)
-				s.wp.Queue(scn)
-			case "role":
-				scn := NewJobSCN(scnIds, base.Component{Role: component.Role, SubRole: component.SubRole}, s)
-				s.wp.Queue(scn)
-			}
-		}
 	}
 
 	// Send 204 status (success, no content in response)
@@ -1411,7 +1367,7 @@ func (s *SmD) doHWInvByLocationGetAll(w http.ResponseWriter, r *http.Request) {
 func (s *SmD) doHWInvByLocationPost(w http.ResponseWriter, r *http.Request) {
 	var hwIn HwInvIn
 
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	err = json.Unmarshal(body, &hwIn)
 	if err != nil {
 		s.lg.Printf("doHWInvByLocationPost(): Unmarshal body: %s", err)
@@ -1432,7 +1388,6 @@ func (s *SmD) doHWInvByLocationPost(w http.ResponseWriter, r *http.Request) {
 		sendJsonDBError(w, "", "operation 'POST' failed during store.", err)
 		return
 	}
-	s.GenerateHWInvHist(hwlocs)
 
 	numStr := strconv.Itoa(len(hwlocs))
 	sendJsonError(w, http.StatusOK, "Created "+numStr+" entries")
@@ -2117,7 +2072,7 @@ func (s *SmD) doRedfishEndpointDelete(w http.ResponseWriter, r *http.Request) {
 	s.lg.Printf("doRedfishEndpointDelete(): trying...")
 	vars := mux.Vars(r)
 	xname := vars["xname"]
-	didDelete, affectedIDs, err := s.db.DeleteRFEndpointByIDSetEmpty(xname)
+	didDelete, _, err := s.db.DeleteRFEndpointByIDSetEmpty(xname)
 	if err != nil {
 		s.LogAlways("doRedfishEndpointDelete(): delete failure: (%s) %s", xname, err)
 		sendJsonDBError(w, "", "", err)
@@ -2127,21 +2082,13 @@ func (s *SmD) doRedfishEndpointDelete(w http.ResponseWriter, r *http.Request) {
 		sendJsonError(w, http.StatusNotFound, "no such xname.")
 		return
 	}
-	if len(affectedIDs) != 0 {
-		data := base.Component{
-			State: base.StateEmpty.String(),
-			Flag:  base.FlagOK.String(),
-		}
-		scn := NewJobSCN(affectedIDs, data, s)
-		s.wp.Queue(scn)
-	}
 	sendJsonError(w, http.StatusOK, "deleted 1 entry")
 }
 
 // Delete collection containing all RedfishEndoint entries.
 func (s *SmD) doRedfishEndpointsDeleteAll(w http.ResponseWriter, r *http.Request) {
 	var err error
-	numDeleted, affectedIDs, err := s.db.DeleteRFEndpointsAllSetEmpty()
+	numDeleted, _, err := s.db.DeleteRFEndpointsAllSetEmpty()
 	if err != nil {
 		s.lg.Printf("doRedfishEndpointsDelete(): Delete failure: %s", err)
 		sendJsonError(w, http.StatusInternalServerError, "DB query failed.")
@@ -2151,14 +2098,7 @@ func (s *SmD) doRedfishEndpointsDeleteAll(w http.ResponseWriter, r *http.Request
 		sendJsonError(w, http.StatusNotFound, "no entries to delete")
 		return
 	}
-	if len(affectedIDs) != 0 {
-		data := base.Component{
-			State: base.StateEmpty.String(),
-			Flag:  base.FlagOK.String(),
-		}
-		scn := NewJobSCN(affectedIDs, data, s)
-		s.wp.Queue(scn)
-	}
+
 	numStr := strconv.FormatInt(numDeleted, 10)
 	sendJsonError(w, http.StatusOK, "deleted "+numStr+" entries")
 }
@@ -2208,7 +2148,7 @@ func (s *SmD) doRedfishEndpointPut(w http.ResponseWriter, r *http.Request) {
 			ep.Password = ""
 		}
 	}
-	retEP, affectedIDs, err := s.db.UpdateRFEndpointNoDiscInfo(ep)
+	retEP, _, err := s.db.UpdateRFEndpointNoDiscInfo(ep)
 	if err != nil {
 		s.lg.Printf("failed: %s %s, Err: %s", r.RemoteAddr, string(body), err)
 		if err == hmsds.ErrHMSDSDuplicateKey {
@@ -2247,19 +2187,6 @@ func (s *SmD) doRedfishEndpointPut(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	if len(affectedIDs) != 0 {
-		data := base.Component{
-			State: base.StateEmpty.String(),
-			Flag:  base.FlagOK.String(),
-		}
-		scn := NewJobSCN(affectedIDs, data, s)
-		s.wp.Queue(scn)
-	}
-	// Do discovery if needed on new Endpoints.  Should never want to
-	// force this since it can cause both the new and old discovery to
-	// fail.  A manual discovery would be the recovery mechanism.
-	// TODO:  Add auto-force based on time delta.
-	go s.discoverFromEndpoint(ep, 0, false)
 
 	s.lg.Printf("succeeded: %s %s", r.RemoteAddr, string(body))
 
@@ -2277,7 +2204,7 @@ func (s *SmD) doRedfishEndpointPatch(w http.ResponseWriter, r *http.Request) {
 	var epUser string
 	var epPassword string
 
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		sendJsonError(w, http.StatusInternalServerError,
 			"error reading body "+err.Error())
@@ -2306,7 +2233,7 @@ func (s *SmD) doRedfishEndpointPatch(w http.ResponseWriter, r *http.Request) {
 			rep.Password = nil
 		}
 	}
-	retEP, affectedIDs, err := s.db.PatchRFEndpointNoDiscInfo(xname, rep)
+	retEP, _, err := s.db.PatchRFEndpointNoDiscInfo(xname, rep)
 	if err != nil {
 		s.lg.Printf("failed: %s %s, Err: %s", r.RemoteAddr, string(body), err)
 		if err == hmsds.ErrHMSDSDuplicateKey {
@@ -2351,19 +2278,6 @@ func (s *SmD) doRedfishEndpointPatch(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	if len(affectedIDs) != 0 {
-		data := base.Component{
-			State: base.StateEmpty.String(),
-			Flag:  base.FlagOK.String(),
-		}
-		scn := NewJobSCN(affectedIDs, data, s)
-		s.wp.Queue(scn)
-	}
-	// Do discovery if needed on new Endpoints.  Should never want to
-	// force this since it can cause both the new and old discovery to
-	// fail.  A manual discovery would be the recovery mechanism.
-	// TODO:  Add auto-force based on time delta.
-	go s.discoverFromEndpoint(retEP, 0, false)
 
 	s.lg.Printf("succeeded: %s %s", r.RemoteAddr, string(body))
 
@@ -2478,13 +2392,6 @@ func (s *SmD) doRedfishEndpointsPost(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	s.lg.Printf("succeeded: %s %s", r.RemoteAddr, string(body))
-
-	// Do discovery if needed on new Endpoints.  Should never need to
-	// force this because the endpoint should always be new, else we would
-	// have already failed the operation.
-	if !s.disableDiscovery {
-		go s.discoverFromEndpoints(eps.RedfishEndpoints, 0, true, false)
-	}
 
 	// parse data and populate component endpoints before inserting into db
 	err = s.parseRedfishPostData(w, eps, body)
@@ -2693,7 +2600,7 @@ func (s *SmD) doComponentEndpointDelete(w http.ResponseWriter, r *http.Request) 
 	s.lg.Printf("doComponentEndpointDelete(): trying...")
 	vars := mux.Vars(r)
 	xname := vars["xname"]
-	didDelete, affectedIDs, err := s.db.DeleteCompEndpointByIDSetEmpty(xname)
+	didDelete, _, err := s.db.DeleteCompEndpointByIDSetEmpty(xname)
 	if err != nil {
 		s.lg.Printf("doComponentEndpointDelete(): delete failure: (%s) %s", xname, err)
 		sendJsonDBError(w, "", "", err)
@@ -2703,21 +2610,13 @@ func (s *SmD) doComponentEndpointDelete(w http.ResponseWriter, r *http.Request) 
 		sendJsonError(w, http.StatusNotFound, "no such xname.")
 		return
 	}
-	if len(affectedIDs) != 0 {
-		data := base.Component{
-			State: base.StateEmpty.String(),
-			Flag:  base.FlagOK.String(),
-		}
-		scn := NewJobSCN(affectedIDs, data, s)
-		s.wp.Queue(scn)
-	}
 	sendJsonError(w, http.StatusOK, "deleted 1 entry")
 }
 
 // Delete entire collection of ComponentEndpoints, undoing discovery.
 func (s *SmD) doComponentEndpointsDeleteAll(w http.ResponseWriter, r *http.Request) {
 	var err error
-	numDeleted, affectedIDs, err := s.db.DeleteCompEndpointsAllSetEmpty()
+	numDeleted, _, err := s.db.DeleteCompEndpointsAllSetEmpty()
 	if err != nil {
 		s.lg.Printf("doCompEndpointsDelete(): Delete failure: %s", err)
 		sendJsonError(w, http.StatusInternalServerError, "DB query failed.")
@@ -2727,14 +2626,7 @@ func (s *SmD) doComponentEndpointsDeleteAll(w http.ResponseWriter, r *http.Reque
 		sendJsonError(w, http.StatusNotFound, "no entries to delete")
 		return
 	}
-	if len(affectedIDs) != 0 {
-		data := base.Component{
-			State: base.StateEmpty.String(),
-			Flag:  base.FlagOK.String(),
-		}
-		scn := NewJobSCN(affectedIDs, data, s)
-		s.wp.Queue(scn)
-	}
+
 	numStr := strconv.FormatInt(numDeleted, 10)
 	sendJsonError(w, http.StatusOK, "deleted "+numStr+" entries")
 }
@@ -3377,7 +3269,6 @@ func (s *SmD) doInventoryDiscoverPost(w http.ResponseWriter, r *http.Request) {
 			}
 			epsTrimmed = append(epsTrimmed, ep)
 		}
-		go s.discoverFromEndpoints(epsTrimmed, id, false, discIn.Force)
 	} else {
 		// We had no array, default to discovering all RedfishEndpoints
 		eps, err := s.db.GetRFEndpointsAll()
@@ -3392,7 +3283,6 @@ func (s *SmD) doInventoryDiscoverPost(w http.ResponseWriter, r *http.Request) {
 				"RedfishEndpoints collection is empty")
 			return
 		}
-		go s.discoverFromEndpoints(eps, id, false, discIn.Force)
 	}
 	// We return a link to a set of DiscoveryStatus records.  For now,
 	// we only allow one discovery at once and the entry number is

@@ -126,14 +126,13 @@ type CompUpdate struct {
 }
 
 // Update the database based on the input fields and the selected operation.
-// Then send any SCN messages required.  This is intended to be used
+// This is intended to be used
 // for REST operations and operations that occur due to message bus events.
 func (s *SmD) doCompUpdate(u *CompUpdate, name string) error {
 	var data base.Component
 	pi := new(hmsds.PartInfo)
 	compIDs := []string{}
 	scnIDs := []string{}
-	skipSCNs := false
 
 	if u == nil {
 		s.LogAlways("WARNING: %s: got nil pointer", name)
@@ -192,7 +191,6 @@ func (s *SmD) doCompUpdate(u *CompUpdate, name string) error {
 	case FlagOnlyUpdate:
 		// This should work, but we don't support it as a valid SCN type
 		// now.
-		skipSCNs = true
 		if u.Flag == "" {
 			return ErrSMDNoFlag
 		}
@@ -225,8 +223,6 @@ func (s *SmD) doCompUpdate(u *CompUpdate, name string) error {
 		if u.NID == nil {
 			return ErrSMDNoNID
 		}
-		// No SCN ever for NID updates (at the moment)
-		skipSCNs = true
 		err = s.dbUpdateCompSingleNID(compIDs, *u.NID, pi)
 	default:
 		s.LogAlways("Error: %s: doCompUpdate: bad CompUpdateType: '%s'",
@@ -235,11 +231,6 @@ func (s *SmD) doCompUpdate(u *CompUpdate, name string) error {
 	}
 	if err != nil {
 		return err
-	}
-	// Send SCN if there were changes.
-	if len(scnIDs) != 0 && !skipSCNs {
-		scn := NewJobSCN(scnIDs, data, s)
-		s.wp.Queue(scn)
 	}
 	return nil
 }

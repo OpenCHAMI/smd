@@ -55,7 +55,6 @@ import (
 var (
 	version = "dev"
 	commit  = "none"
-	date    = "unknown"
 )
 
 const (
@@ -107,7 +106,6 @@ type SmD struct {
 	logLevelIn   int
 
 	hwInvHistAgeMax  int
-	smapCompEP       *SyncMap
 	genTestPayloads  string
 	disableDiscovery bool
 	requireAuth      bool
@@ -161,13 +159,9 @@ type SmD struct {
 	jobList     map[string]*Job // List of Jobs by jobId running on this HSM instance.
 	srfpJobList map[string]*Job // List of srfp Jobs by xname running on this HSM instance.
 
-	//Discovery Sync
-	discMap     map[string]int
-	discMapLock sync.Mutex
-
 	//router
-	// router *mux.Router
-	router    *chi.Mux
+	// router *chi.Router
+	router    *chi.Router
 	tokenAuth *jwtauth.JWTAuth
 
 	httpClient *retryablehttp.Client
@@ -407,112 +401,6 @@ func (s *SmD) JobSync() {
 				}
 				time.Sleep(20 * time.Second)
 			}
-		}
-	}()
-}
-
-// Discovery jobs running locally in an intance of HSM can become orphaned if that
-// instance of HSM dies. This spins off a goroutine to periodically check for
-// orphaned discovery jobs and picks them up.
-// TODO: Close potential race condition between GetRFEndpointsFilter() and when
-//
-//	discoverFromEndpoint() updates the DiscInfo.LastAttempt where another HSM
-//	instance could run GetRFEndpointsFilter() to get the same list of orphaned
-//	EPs. For now, this should be rare.
-func (s *SmD) DiscoverySync() {
-	go func() {
-		for {
-			failed := false
-			numNewJobs := 0
-			// Gather a list of all in-progress discovery jobs
-			eps, err := s.db.GetRFEndpointsFilter(&hmsds.RedfishEPFilter{LastStatus: []string{rf.DiscoveryStarted}})
-			if err != nil {
-				s.LogAlways("DiscoverySync(): Lookup failure: %s", err)
-				failed = true
-			} else {
-				for _, ep := range eps {
-					lastAttempt, _ := time.Parse("2006-01-02T15:04:05.000000Z07:00", ep.DiscInfo.LastAttempt)
-					// Consider discovery jobs that have not updated
-					// in 30 minutes to have been orphaned.
-					if time.Since(lastAttempt) >= (time.Minute * 30) {
-						// Take on orphaned discovery job
-						go s.discoverFromEndpoint(ep, 0, true)
-						numNewJobs++
-					}
-				}
-			}
-			if failed {
-				// Don't wait the full time to retry reading from the database
-				time.Sleep(30 * time.Second)
-			} else {
-				if numNewJobs > 0 {
-					s.LogAlways("DiscoverySync(): Picked up %d orphaned discovery jobs", numNewJobs)
-				}
-				// Check every 10 minutes
-				time.Sleep(10 * time.Minute)
-			}
-		}
-	}()
-}
-
-// Add an xname to the discovery list. Meaning HSM has started
-// discovery on this component and a discovery job is ongoing
-// and owned by this HSM instance.
-func (s *SmD) discoveryMapAdd(id string) {
-	s.discMapLock.Lock()
-	ref, ok := s.discMap[id]
-	if ok {
-		s.discMap[id] = ref + 1
-	} else {
-		s.discMap[id] = 1
-	}
-	s.discMapLock.Unlock()
-}
-
-// Remove an xname from the discovery list. Meaning HSM has finished
-// discovery on this component.
-func (s *SmD) discoveryMapRemove(id string) {
-	s.discMapLock.Lock()
-	ref, ok := s.discMap[id]
-	if ok {
-		if ref <= 1 {
-			delete(s.discMap, id)
-		} else {
-			s.discMap[id] = ref - 1
-		}
-	}
-	s.discMapLock.Unlock()
-}
-
-// Periodically updates the timestamp for ongoing RedfishEndpoint discoveries
-// owned by this instance of HSM so that a discovery that is taking longer than
-// usual doesn't get seen as an orphan by another HSM instance.
-func (s *SmD) DiscoveryUpdater() {
-	go func() {
-		for {
-			s.discMapLock.Lock()
-			if len(s.discMap) > 0 {
-				discIDs := make([]string, 0, 1)
-				for id := range s.discMap {
-					discIDs = append(discIDs, id)
-				}
-				// Cause the discovery LastStatus to get updated for all of these IDs to
-				// let the other HSM instances know that we're still working on them.
-				_, err := s.db.UpdateRFEndpointForDiscover(discIDs, true)
-				if err != nil {
-					s.discMapLock.Unlock()
-					// Don't wait the full time to retry updating the database
-					time.Sleep(30 * time.Second)
-					continue
-				}
-			}
-			s.discMapLock.Unlock()
-			// Update every 20 minutes. This is a bit arbitrary. 20mins is long
-			// enough that, on average, the discovery should have finished thus
-			// no need to update the timestamp but shorter than the 30 min
-			// timeout for when other HSM instances mark a discovery job as
-			// orphaned.
-			time.Sleep(20 * time.Minute)
 		}
 	}()
 }
@@ -928,17 +816,6 @@ func main() {
 	// Start the component lock cleanup thread
 	s.CompReservationCleanup()
 
-	// Start the Job Sync thread to pick up orphaned
-	// jobs from other HSM instances.
-	s.jobList = make(map[string]*Job, 0)
-	s.srfpJobList = make(map[string]*Job, 0)
-	s.discMap = make(map[string]int, 0)
-	s.JobSync()
-	if !s.disableDiscovery {
-		s.DiscoverySync()
-		s.DiscoveryUpdater()
-	}
-
 	// Initialize token authorization and load JWKS well-knowns from .well-known endpoint
 	if s.requireAuth {
 		s.LogAlways("Fetching public key from server...")
@@ -961,8 +838,8 @@ func main() {
 	router = s.NewRouter(publicRoutes, protectedRoutes)
 
 	s.LogAlways("GOMAXPROCS is: %v", runtime.GOMAXPROCS(0))
-	s.LogAlways("Listening for connections at: ", s.httpListen)
-	s.LogAlways("Registered SMD Routes: ", append(publicRoutes, protectedRoutes...))
+	s.LogAlways("Listening for connections at: %v ", s.httpListen)
+	s.LogAlways("Registered SMD Routes: %v", append(publicRoutes, protectedRoutes...))
 	err = s.setupCerts(s.tlsCert, s.tlsKey)
 	if err == nil {
 		err = http.ListenAndServeTLS(s.httpListen, s.tlsCert, s.tlsKey, router)

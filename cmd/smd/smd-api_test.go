@@ -42,13 +42,12 @@ import (
 	"github.com/OpenCHAMI/smd/v2/pkg/rf"
 	stest "github.com/OpenCHAMI/smd/v2/pkg/sharedtest"
 	"github.com/OpenCHAMI/smd/v2/pkg/sm"
-
-	"github.com/gorilla/mux"
+	"github.com/go-chi/chi"
 )
 
 var s *SmD
 var results *TestResults
-var router *mux.Router
+var router *chi.Router
 
 var ffStringMap = map[hmsds.FieldFilter]string{
 	hmsds.FLTR_DEFAULT:   "FLTR_DEFAULT",
@@ -617,17 +616,13 @@ func TestMain(m *testing.M) {
 	s.sysInfoBaseV2 = s.apiRootV2 + "/sysinfo"
 	s.powerMapBaseV2 = s.sysInfoBaseV2 + "/powermaps"
 
-	s.smapCompEP = NewSyncMap(ComponentEndpointSMap(s))
-
-	s.msgbusHandle = nil
-
 	s.dbDSN = ""
 	s.lg = log.New(os.Stdout, "", log.Lshortfile|log.LstdFlags|log.Lmicroseconds)
 	s.db, results = NewHMSDB_Test(s.dbDSN, s.lg)
 	s.wp = new(base.WorkerPool)
 
 	routes := s.generateRoutes()
-	router = s.NewRouter(routes)
+	router = s.NewRouter([]Routes{}, routes)
 
 	excode := 1
 	excode = m.Run()
