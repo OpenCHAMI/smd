@@ -37,8 +37,7 @@ import (
 	"github.com/OpenCHAMI/smd/v2/internal/hmsds"
 	"github.com/OpenCHAMI/smd/v2/pkg/rf"
 	"github.com/OpenCHAMI/smd/v2/pkg/sm"
-
-	"github.com/gorilla/mux"
+	"github.com/go-chi/chi"
 )
 
 type componentArrayIn struct {
@@ -382,8 +381,8 @@ func (s *SmD) getHMSValues(valSelect HMSValueSelect, w http.ResponseWriter, r *h
 // Get single HMS component by xname ID
 func (s *SmD) doComponentGet(w http.ResponseWriter, r *http.Request) {
 	// TODO: get route variables using chi instead of mux
-	vars := mux.Vars(r)
-	xname := base.NormalizeHMSCompID(vars["xname"])
+
+	xname := base.NormalizeHMSCompID(chi.URLParam(r, "xname"))
 
 	cmp, err := s.db.GetComponentByID(xname)
 	if err != nil {
@@ -402,8 +401,8 @@ func (s *SmD) doComponentGet(w http.ResponseWriter, r *http.Request) {
 // Delete single ComponentEndpoint, by its xname ID.
 func (s *SmD) doComponentDelete(w http.ResponseWriter, r *http.Request) {
 	s.lg.Printf("doComponentDelete(): trying...")
-	vars := mux.Vars(r)
-	xname := base.NormalizeHMSCompID(vars["xname"])
+
+	xname := base.NormalizeHMSCompID(chi.URLParam(r, "xname"))
 
 	if !base.IsHMSCompIDValid(xname) {
 		sendJsonError(w, http.StatusBadRequest, "invalid xname")
@@ -615,8 +614,8 @@ func (s *SmD) doComponentsQueryGet(w http.ResponseWriter, r *http.Request) {
 	comps := new(base.ComponentArray)
 	ids := make([]string, 0, 1)
 	var err error
-	vars := mux.Vars(r)
-	xname := base.NormalizeHMSCompID(vars["xname"])
+
+	xname := base.NormalizeHMSCompID(chi.URLParam(r, "xname"))
 
 	// Parse arguments
 	if err := r.ParseForm(); err != nil {
@@ -679,8 +678,8 @@ func (s *SmD) doComponentsDeleteAll(w http.ResponseWriter, r *http.Request) {
 // Get single HMS component by NID, if it exists and is a type that has a
 // NID (i.e. a node)
 func (s *SmD) doComponentByNIDGet(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	xname := vars["nid"]
+
+	xname := chi.URLParam(r, "nid")
 
 	cmp, err := s.db.GetComponentByNID(xname)
 	if err != nil {
@@ -945,8 +944,8 @@ func (s *SmD) componentPatch(
 	r *http.Request, t CompUpdateType,
 	name string,
 ) {
-	vars := mux.Vars(r)
-	xname := vars["xname"]
+
+	xname := chi.URLParam(r, "xname")
 
 	var update compPatchIn
 	body, err := ioutil.ReadAll(r.Body)
@@ -983,8 +982,8 @@ func (s *SmD) componentPatch(
 // In any case, it should not be needed except to force changes to what should
 // otherwise be write-only fields.
 func (s *SmD) doComponentPut(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	xname := base.NormalizeHMSCompID(vars["xname"])
+
+	xname := base.NormalizeHMSCompID(chi.URLParam(r, "xname"))
 
 	var compIn sm.ComponentPut
 	body, err := ioutil.ReadAll(r.Body)
@@ -1051,8 +1050,8 @@ func (s *SmD) doComponentPut(w http.ResponseWriter, r *http.Request) {
 // Get one specific NodeMap entry, previously created, by its xname ID.
 func (s *SmD) doNodeMapGet(w http.ResponseWriter, r *http.Request) {
 	s.lg.Printf("doNodeMapGet(): trying...")
-	vars := mux.Vars(r)
-	xname := vars["xname"]
+
+	xname := chi.URLParam(r, "xname")
 	m, err := s.db.GetNodeMapByID(xname)
 	if err != nil {
 		s.LogAlways("doNodeMapGet(): Lookup failure: (%s) %s",
@@ -1156,8 +1155,8 @@ func (s *SmD) doNodeMapsPost(w http.ResponseWriter, r *http.Request) {
 
 // UPDATE EXISTING Node->NID mapping by it's xname URI.
 func (s *SmD) doNodeMapPut(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	xname := base.NormalizeHMSCompID(vars["xname"])
+
+	xname := base.NormalizeHMSCompID(chi.URLParam(r, "xname"))
 
 	var m sm.NodeMap
 	body, _ := io.ReadAll(r.Body)
@@ -1209,8 +1208,8 @@ func (s *SmD) doNodeMapPut(w http.ResponseWriter, r *http.Request) {
 // Delete single NodeMap, by its xname ID.
 func (s *SmD) doNodeMapDelete(w http.ResponseWriter, r *http.Request) {
 	s.lg.Printf("doNodeMapDelete(): trying...")
-	vars := mux.Vars(r)
-	xname := base.NormalizeHMSCompID(vars["xname"])
+
+	xname := base.NormalizeHMSCompID(chi.URLParam(r, "xname"))
 
 	if !base.IsHMSCompIDValid(xname) {
 		sendJsonError(w, http.StatusBadRequest, "invalid xname")
@@ -1253,8 +1252,8 @@ func (s *SmD) doNodeMapsDeleteAll(w http.ResponseWriter, r *http.Request) {
 
 // Get single HWInvByLocation entry by it's xname
 func (s *SmD) doHWInvByLocationGet(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	xname := vars["xname"]
+
+	xname := chi.URLParam(r, "xname")
 	hl, err := s.db.GetHWInvByLocID(xname)
 	if err != nil {
 		s.LogAlways("doHWInvByLocationGet(): Lookup failure: (%s) %s", xname, err)
@@ -1396,8 +1395,8 @@ func (s *SmD) doHWInvByLocationPost(w http.ResponseWriter, r *http.Request) {
 
 // Get single HWInvByFRU entry by its FRU ID
 func (s *SmD) doHWInvByFRUGet(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	fruID := vars["fruid"]
+
+	fruID := chi.URLParam(r, "fruid")
 	hf, err := s.db.GetHWInvByFRUID(fruID)
 	if err != nil {
 		s.LogAlways("doHWInvByFRUGet(): Lookup failure: (%s) %s", fruID, err)
@@ -1487,8 +1486,8 @@ func (s *SmD) doHWInvByLocationQueryGet(w http.ResponseWriter, r *http.Request) 
 		compType    base.HMSType
 		parentQuery bool
 	)
-	vars := mux.Vars(r)
-	xname := vars["xname"]
+
+	xname := chi.URLParam(r, "xname")
 	format := sm.HWInvFormatNestNodesOnly
 
 	// Parse arguments
@@ -1638,8 +1637,8 @@ func (s *SmD) doHWInvByLocationQueryGet(w http.ResponseWriter, r *http.Request) 
 
 // Delete a single HWInvByLocation by its xname ID.
 func (s *SmD) doHWInvByLocationDelete(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	xname := vars["xname"]
+
+	xname := chi.URLParam(r, "xname")
 	didDelete, err := s.db.DeleteHWInvByLocID(xname)
 	if err != nil {
 		s.LogAlways("doHWInvByLocationDelete(): delete failure: (%s) %s",
@@ -1673,8 +1672,8 @@ func (s *SmD) doHWInvByLocationDeleteAll(w http.ResponseWriter, r *http.Request)
 
 // Delete a single HWInvByFRUD entry, by its FRU ID.
 func (s *SmD) doHWInvByFRUDelete(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	fruID := vars["fruid"]
+
+	fruID := chi.URLParam(r, "fruid")
 	didDelete, err := s.db.DeleteHWInvByFRUID(fruID)
 	if err != nil {
 		s.LogAlways("doHWInvByFRUDelete(): delete failure: (%s) %s",
@@ -1725,12 +1724,11 @@ func (s *SmD) doHWInvHistByFRUGet(w http.ResponseWriter, r *http.Request) {
 func (s *SmD) hwInvHistGet(w http.ResponseWriter, r *http.Request, format sm.HWInvHistFmt) {
 	var id string
 
-	vars := mux.Vars(r)
 	switch format {
 	case sm.HWInvHistFmtByLoc:
-		id = vars["xname"]
+		id = chi.URLParam(r, "xname")
 	case sm.HWInvHistFmtByFRU:
-		id = vars["fruid"]
+		id = chi.URLParam(r, "fruid")
 	default:
 		// Shouldn't happen
 		return
@@ -1926,8 +1924,8 @@ func (s *SmD) hwInvHistGetAll(w http.ResponseWriter, r *http.Request, format sm.
 
 // Delete the HWInvHist entries for a single HWInvByLocation by its xname ID.
 func (s *SmD) doHWInvHistByLocationDelete(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	xname := vars["xname"]
+
+	xname := chi.URLParam(r, "xname")
 	normId := base.VerifyNormalizeCompID(xname)
 	if normId == "" {
 		s.lg.Printf("doHWInvHistByLocationDelete(%s): Invalid xname: %s", xname, xname)
@@ -1967,8 +1965,8 @@ func (s *SmD) doHWInvHistDeleteAll(w http.ResponseWriter, r *http.Request) {
 
 // Delete the HWInvHist entries for a single HWInvByFRUD entry, by its FRU ID.
 func (s *SmD) doHWInvHistByFRUDelete(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	fruID := vars["fruid"]
+
+	fruID := chi.URLParam(r, "fruid")
 	numDeleted, err := s.db.DeleteHWInvHistByFRUID(fruID)
 	if err != nil {
 		s.LogAlways("doHWInvByFRUDelete(): Delete failure: (%s) %s", fruID, err)
@@ -1990,8 +1988,8 @@ func (s *SmD) doHWInvHistByFRUDelete(w http.ResponseWriter, r *http.Request) {
 // Get one specific RedfishEndpoint, previously created, by its xname ID.
 func (s *SmD) doRedfishEndpointGet(w http.ResponseWriter, r *http.Request) {
 	s.lg.Printf("doRedfishEndpointGet(): trying...")
-	vars := mux.Vars(r)
-	xname := vars["xname"]
+
+	xname := chi.URLParam(r, "xname")
 	ep, err := s.db.GetRFEndpointByID(xname)
 	if err != nil {
 		s.LogAlways("doRedfishEndpointGet(): Lookup failure: (%s) %s", xname, err)
@@ -2048,8 +2046,7 @@ func (s *SmD) doRedfishEndpointsGet(w http.ResponseWriter, r *http.Request) {
 func (s *SmD) doRedfishEndpointQueryGet(w http.ResponseWriter, r *http.Request) {
 	eps := new(sm.RedfishEndpointArray)
 
-	vars := mux.Vars(r)
-	xname := vars["xname"]
+	xname := chi.URLParam(r, "xname")
 	if xname == "" || xname == "all" || xname == "s0" {
 		var err error
 		eps.RedfishEndpoints, err = s.db.GetRFEndpointsAll()
@@ -2070,8 +2067,8 @@ func (s *SmD) doRedfishEndpointQueryGet(w http.ResponseWriter, r *http.Request) 
 // child ComponentEndpoints, though not other structures.
 func (s *SmD) doRedfishEndpointDelete(w http.ResponseWriter, r *http.Request) {
 	s.lg.Printf("doRedfishEndpointDelete(): trying...")
-	vars := mux.Vars(r)
-	xname := vars["xname"]
+
+	xname := chi.URLParam(r, "xname")
 	didDelete, _, err := s.db.DeleteRFEndpointByIDSetEmpty(xname)
 	if err != nil {
 		s.LogAlways("doRedfishEndpointDelete(): delete failure: (%s) %s", xname, err)
@@ -2106,8 +2103,8 @@ func (s *SmD) doRedfishEndpointsDeleteAll(w http.ResponseWriter, r *http.Request
 // UPDATE existing RedfishEndpoint entry in full (or all least all
 // user-writable portions).
 func (s *SmD) doRedfishEndpointPut(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	xname := base.NormalizeHMSCompID(vars["xname"])
+
+	xname := base.NormalizeHMSCompID(chi.URLParam(r, "xname"))
 
 	var rep rf.RawRedfishEP
 	var cred compcreds.CompCredentials
@@ -2197,8 +2194,8 @@ func (s *SmD) doRedfishEndpointPut(w http.ResponseWriter, r *http.Request) {
 
 // PATCH existing RedfishEndpoint entry but only the fields specified.
 func (s *SmD) doRedfishEndpointPatch(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	xname := base.VerifyNormalizeCompID(vars["xname"])
+
+	xname := base.VerifyNormalizeCompID(chi.URLParam(r, "xname"))
 
 	var rep sm.RedfishEndpointPatch
 	var epUser string
@@ -2545,8 +2542,8 @@ func (s *SmD) parseRedfishPostData(w http.ResponseWriter, eps *sm.RedfishEndpoin
 // component underneath a RedfishEndpoint).
 func (s *SmD) doComponentEndpointGet(w http.ResponseWriter, r *http.Request) {
 	s.lg.Printf("doComponentEndpointGet(): trying...")
-	vars := mux.Vars(r)
-	xname := vars["xname"]
+
+	xname := chi.URLParam(r, "xname")
 	cep, err := s.db.GetCompEndpointByID(xname)
 	if err != nil {
 		s.LogAlways("doComponentEndpointGet(): Lookup failure: (%s) %s", xname, err)
@@ -2598,8 +2595,8 @@ func (s *SmD) doComponentEndpointsGet(w http.ResponseWriter, r *http.Request) {
 // Delete single ComponentEndpoint, by its xname ID.
 func (s *SmD) doComponentEndpointDelete(w http.ResponseWriter, r *http.Request) {
 	s.lg.Printf("doComponentEndpointDelete(): trying...")
-	vars := mux.Vars(r)
-	xname := vars["xname"]
+
+	xname := chi.URLParam(r, "xname")
 	didDelete, _, err := s.db.DeleteCompEndpointByIDSetEmpty(xname)
 	if err != nil {
 		s.lg.Printf("doComponentEndpointDelete(): delete failure: (%s) %s", xname, err)
@@ -2638,9 +2635,9 @@ func (s *SmD) doComponentEndpointsDeleteAll(w http.ResponseWriter, r *http.Reque
 // Retrieves a single ServiceEndpoint (discovered info from Redfish on a
 // service underneath a RedfishEndpoint).
 func (s *SmD) doServiceEndpointGet(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	svc := vars["service"]
-	xname := vars["xname"]
+
+	svc := chi.URLParam(r, "service")
+	xname := chi.URLParam(r, "xname")
 	sep, err := s.db.GetServiceEndpointByID(svc, xname)
 	if err != nil {
 		s.lg.Printf("doServiceEndpointGet(): Lookup failure: (%s,%s) %s", svc, xname, err)
@@ -2697,8 +2694,8 @@ func (s *SmD) doServiceEndpointsGetAll(w http.ResponseWriter, r *http.Request) {
 func (s *SmD) doServiceEndpointsGet(w http.ResponseWriter, r *http.Request) {
 	seps := new(sm.ServiceEndpointArray)
 	var err error
-	vars := mux.Vars(r)
-	svc := vars["service"]
+
+	svc := chi.URLParam(r, "service")
 
 	// Parse arguments
 	if err := r.ParseForm(); err != nil {
@@ -2735,9 +2732,9 @@ func (s *SmD) doServiceEndpointsGet(w http.ResponseWriter, r *http.Request) {
 
 // Delete single ServiceEndpoint, by its service type and xname ID.
 func (s *SmD) doServiceEndpointDelete(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	svc := vars["service"]
-	xname := vars["xname"]
+
+	svc := chi.URLParam(r, "service")
+	xname := chi.URLParam(r, "xname")
 	didDelete, err := s.db.DeleteServiceEndpointByID(svc, xname)
 	if err != nil {
 		s.lg.Printf("doServiceEndpointDelete(): delete failure: (%s,%s) %s", svc, xname, err)
@@ -2795,8 +2792,8 @@ func (s *SmD) doCompEthInterfaceDeleteAll(w http.ResponseWriter, r *http.Request
 
 // Delete component ethernet interface {id}.
 func (s *SmD) doCompEthInterfaceDelete(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id := strings.ToLower(vars["id"])
+
+	id := strings.ToLower(chi.URLParam(r, "id"))
 
 	if len(id) == 0 {
 		s.lg.Printf("doCompEthInterfaceDelete(): Invalid id.")
@@ -2962,8 +2959,8 @@ func (s *SmD) doCompEthInterfacePostV2(w http.ResponseWriter, r *http.Request) {
 // Retrieve the component ethernet interface which was created with the given {id}.
 func (s *SmD) doCompEthInterfaceGetV2(w http.ResponseWriter, r *http.Request) {
 	var err error
-	vars := mux.Vars(r)
-	id := strings.ToLower(vars["id"])
+
+	id := strings.ToLower(chi.URLParam(r, "id"))
 
 	if len(id) == 0 {
 		s.lg.Printf("doCompEthInterfaceGetV2(): Invalid id.")
@@ -2993,8 +2990,8 @@ func (s *SmD) doCompEthInterfaceGetV2(w http.ResponseWriter, r *http.Request) {
 // only updated if an IP address is specified.
 func (s *SmD) doCompEthInterfacePatchV2(w http.ResponseWriter, r *http.Request) {
 	var ceip sm.CompEthInterfaceV2Patch
-	vars := mux.Vars(r)
-	id := vars["id"]
+
+	id := chi.URLParam(r, "id")
 
 	if len(id) == 0 {
 		s.lg.Printf("doCompEthInterfacePatchV2(): Invalid id.")
@@ -3034,8 +3031,8 @@ func (s *SmD) doCompEthInterfacePatchV2(w http.ResponseWriter, r *http.Request) 
 // associated with this Component Ethernet Interface
 func (s *SmD) doCompEthInterfaceIPAddressesGetV2(w http.ResponseWriter, r *http.Request) {
 	var err error
-	vars := mux.Vars(r)
-	id := vars["id"]
+
+	id := chi.URLParam(r, "id")
 
 	if len(id) == 0 {
 		s.lg.Printf("doCompEthInterfaceIPAddressesGetV2(): Invalid id.")
@@ -3066,8 +3063,8 @@ func (s *SmD) doCompEthInterfaceIPAddressesGetV2(w http.ResponseWriter, r *http.
 // in the payload. New IP Addresses should not already exist in the given Component Ethernet Interface.
 func (s *SmD) doCompEthInterfaceIPAddressPostV2(w http.ResponseWriter, r *http.Request) {
 	var ipAddressIn sm.IPAddressMapping
-	vars := mux.Vars(r)
-	id := vars["id"]
+
+	id := chi.URLParam(r, "id")
 
 	if len(id) == 0 {
 		s.lg.Printf("doCompEthInterfaceIPAddressesGetV2(): Invalid id.")
@@ -3114,9 +3111,9 @@ func (s *SmD) doCompEthInterfaceIPAddressPostV2(w http.ResponseWriter, r *http.R
 // Patch the field fields of an IP Address {ipaddr} associated with Component Ethernet interface {id}
 func (s *SmD) doCompEthInterfaceIPAddressPatchV2(w http.ResponseWriter, r *http.Request) {
 	var ipmPatch sm.IPAddressMappingPatch
-	vars := mux.Vars(r)
-	id := vars["id"]
-	ipaddr := vars["ipaddr"]
+
+	id := chi.URLParam(r, "id")
+	ipaddr := chi.URLParam(r, "ipaddr")
 
 	if len(id) == 0 {
 		s.lg.Printf("doCompEthInterfaceMembersDelete(): Invalid id.")
@@ -3156,9 +3153,9 @@ func (s *SmD) doCompEthInterfaceIPAddressPatchV2(w http.ResponseWriter, r *http.
 
 // Remove IP Address {ipaddr} from the IP Addresses of the Component Ethernet Interface {id}.
 func (s *SmD) doCompEthInterfaceIPAddressDeleteV2(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id := vars["id"]
-	ipAddr := vars["ipaddr"]
+
+	id := chi.URLParam(r, "id")
+	ipAddr := chi.URLParam(r, "ipaddr")
 
 	if len(id) == 0 {
 		s.lg.Printf("doCompEthInterfaceMembersDelete(): Invalid id.")
@@ -3198,8 +3195,8 @@ func (s *SmD) doCompEthInterfaceIPAddressDeleteV2(w http.ResponseWriter, r *http
 /////////////////////////////////////////////////////////////////////////////
 
 func (s *SmD) doDiscoveryStatusGet(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	idStr := vars["id"]
+
+	idStr := chi.URLParam(r, "id")
 
 	id, err := strconv.ParseUint(idStr, 10, 32)
 	if err != nil {
@@ -3447,8 +3444,8 @@ func (s *SmD) doDeleteSCNSubscriptionsAll(w http.ResponseWriter, r *http.Request
 
 // Get a currently held SCN subscription. This returns the specified SCN subscription.
 func (s *SmD) doGetSCNSubscription(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	idStr := vars["id"]
+
+	idStr := chi.URLParam(r, "id")
 
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -3475,8 +3472,8 @@ func (s *SmD) doGetSCNSubscription(w http.ResponseWriter, r *http.Request) {
 // Update a SCN subscription entirely.
 func (s *SmD) doPutSCNSubscription(w http.ResponseWriter, r *http.Request) {
 	var err error
-	vars := mux.Vars(r)
-	idStr := vars["id"]
+
+	idStr := chi.URLParam(r, "id")
 
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -3595,8 +3592,8 @@ func (s *SmD) doPutSCNSubscription(w http.ResponseWriter, r *http.Request) {
 // Patch update a SCN subscription.
 func (s *SmD) doPatchSCNSubscription(w http.ResponseWriter, r *http.Request) {
 	var err error
-	vars := mux.Vars(r)
-	idStr := vars["id"]
+
+	idStr := chi.URLParam(r, "id")
 
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -3842,8 +3839,8 @@ func (s *SmD) doPatchSCNSubscription(w http.ResponseWriter, r *http.Request) {
 // Delete a SCN subscription.
 func (s *SmD) doDeleteSCNSubscription(w http.ResponseWriter, r *http.Request) {
 	var err error
-	vars := mux.Vars(r)
-	idStr := vars["id"]
+
+	idStr := chi.URLParam(r, "id")
 
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -4052,8 +4049,8 @@ func (s *SmD) doGroupsPost(w http.ResponseWriter, r *http.Request) {
 // Retrieve the group which was created with the given {group_label}.
 func (s *SmD) doGroupGet(w http.ResponseWriter, r *http.Request) {
 	var err error
-	vars := mux.Vars(r)
-	label := sm.NormalizeGroupField(vars["group_label"])
+
+	label := sm.NormalizeGroupField(chi.URLParam(r, "group_label"))
 
 	if sm.VerifyGroupField(label) != nil {
 		s.lg.Printf("doGroupGet(): Invalid group label.")
@@ -4113,8 +4110,8 @@ func (s *SmD) doGroupGet(w http.ResponseWriter, r *http.Request) {
 // Delete the given group label. Any members previously in the group will no
 // longer have the deleted group label associated with them.
 func (s *SmD) doGroupDelete(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	label := sm.NormalizeGroupField(vars["group_label"])
+
+	label := sm.NormalizeGroupField(chi.URLParam(r, "group_label"))
 
 	if sm.VerifyGroupField(label) != nil {
 		s.lg.Printf("doGroupDelete(): Invalid group label.")
@@ -4145,8 +4142,8 @@ func (s *SmD) doGroupDelete(w http.ResponseWriter, r *http.Request) {
 //	POST/DELETE {group_label}/members API.
 func (s *SmD) doGroupPatch(w http.ResponseWriter, r *http.Request) {
 	var groupPatch sm.GroupPatch
-	vars := mux.Vars(r)
-	label := sm.NormalizeGroupField(vars["group_label"])
+
+	label := sm.NormalizeGroupField(chi.URLParam(r, "group_label"))
 
 	body, err := ioutil.ReadAll(r.Body)
 	err = json.Unmarshal(body, &groupPatch)
@@ -4210,8 +4207,8 @@ func (s *SmD) doGroupLabelsGet(w http.ResponseWriter, r *http.Request) {
 // returning a members set containing the component xname IDs.
 func (s *SmD) doGroupMembersGet(w http.ResponseWriter, r *http.Request) {
 	var err error
-	vars := mux.Vars(r)
-	label := sm.NormalizeGroupField(vars["group_label"])
+
+	label := sm.NormalizeGroupField(chi.URLParam(r, "group_label"))
 
 	if sm.VerifyGroupField(label) != nil {
 		s.lg.Printf("doGroupMembersGet(): Invalid group label.")
@@ -4273,8 +4270,8 @@ func (s *SmD) doGroupMembersGet(w http.ResponseWriter, r *http.Request) {
 // in the payload. New member should not already exist in the given group.
 func (s *SmD) doGroupMembersPost(w http.ResponseWriter, r *http.Request) {
 	var memberIn sm.MemberAddBody
-	vars := mux.Vars(r)
-	label := sm.NormalizeGroupField(vars["group_label"])
+
+	label := sm.NormalizeGroupField(chi.URLParam(r, "group_label"))
 
 	if sm.VerifyGroupField(label) != nil {
 		s.lg.Printf("doGroupMemberPost(): Invalid group label.")
@@ -4322,9 +4319,9 @@ func (s *SmD) doGroupMembersPost(w http.ResponseWriter, r *http.Request) {
 
 // Remove component {xname_id} from the members of group {group_label}.
 func (s *SmD) doGroupMemberDelete(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	label := sm.NormalizeGroupField(vars["group_label"])
-	id := base.NormalizeHMSCompID(vars["xname_id"])
+
+	label := sm.NormalizeGroupField(chi.URLParam(r, "group_label"))
+	id := base.NormalizeHMSCompID(chi.URLParam(r, "xname_id"))
 
 	if sm.VerifyGroupField(label) != nil {
 		s.lg.Printf("doGroupMemberDelete(): Invalid group label.")
@@ -4510,8 +4507,8 @@ func (s *SmD) doPartitionsPost(w http.ResponseWriter, r *http.Request) {
 // Retrieve the partition which was created with the given {partition_name}.
 func (s *SmD) doPartitionGet(w http.ResponseWriter, r *http.Request) {
 	var err error
-	vars := mux.Vars(r)
-	name := sm.NormalizeGroupField(vars["partition_name"])
+
+	name := sm.NormalizeGroupField(chi.URLParam(r, "partition_name"))
 
 	if sm.VerifyGroupField(name) != nil {
 		s.lg.Printf("doPartitionGet(): Invalid partition name.")
@@ -4539,8 +4536,8 @@ func (s *SmD) doPartitionGet(w http.ResponseWriter, r *http.Request) {
 // Delete partition {partition_name}. Any members previously in the partition
 // will no longer have the deleted partition name associated with them.
 func (s *SmD) doPartitionDelete(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	name := sm.NormalizeGroupField(vars["partition_name"])
+
+	name := sm.NormalizeGroupField(chi.URLParam(r, "partition_name"))
 
 	if sm.VerifyGroupField(name) != nil {
 		s.lg.Printf("doPartitionDelete(): Invalid partition name.")
@@ -4571,8 +4568,8 @@ func (s *SmD) doPartitionDelete(w http.ResponseWriter, r *http.Request) {
 //	{partition_name}/members API.
 func (s *SmD) doPartitionPatch(w http.ResponseWriter, r *http.Request) {
 	var partPatch sm.PartitionPatch
-	vars := mux.Vars(r)
-	name := sm.NormalizeGroupField(vars["partition_name"])
+
+	name := sm.NormalizeGroupField(chi.URLParam(r, "partition_name"))
 
 	if sm.VerifyGroupField(name) != nil {
 		s.lg.Printf("doPartitionPatch(): Invalid partition name.")
@@ -4643,8 +4640,8 @@ func (s *SmD) doPartitionNamesGet(w http.ResponseWriter, r *http.Request) {
 // the set, returning a members set that includes the component xname IDs.
 func (s *SmD) doPartitionMembersGet(w http.ResponseWriter, r *http.Request) {
 	var err error
-	vars := mux.Vars(r)
-	name := sm.NormalizeGroupField(vars["partition_name"])
+
+	name := sm.NormalizeGroupField(chi.URLParam(r, "partition_name"))
 
 	if sm.VerifyGroupField(name) != nil {
 		s.lg.Printf("doPartitionMembersGet(): Invalid partition name.")
@@ -4674,8 +4671,8 @@ func (s *SmD) doPartitionMembersGet(w http.ResponseWriter, r *http.Request) {
 // partition
 func (s *SmD) doPartitionMembersPost(w http.ResponseWriter, r *http.Request) {
 	var memberIn sm.MemberAddBody
-	vars := mux.Vars(r)
-	name := sm.NormalizeGroupField(vars["partition_name"])
+
+	name := sm.NormalizeGroupField(chi.URLParam(r, "partition_name"))
 
 	if sm.VerifyGroupField(name) != nil {
 		s.lg.Printf("doPartitionMembersPost(): Invalid partition name.")
@@ -4726,9 +4723,9 @@ func (s *SmD) doPartitionMembersPost(w http.ResponseWriter, r *http.Request) {
 
 // Remove component {xname_id} from the members of partition {partition_name}.
 func (s *SmD) doPartitionMemberDelete(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	name := sm.NormalizeGroupField(vars["partition_name"])
-	id := base.NormalizeHMSCompID(vars["xname_id"])
+
+	name := sm.NormalizeGroupField(chi.URLParam(r, "partition_name"))
+	id := base.NormalizeHMSCompID(chi.URLParam(r, "xname_id"))
 
 	if sm.VerifyGroupField(name) != nil {
 		s.lg.Printf("doPartitionMemberDelete(): Invalid partition name.")
@@ -4799,8 +4796,8 @@ func (s *SmD) doMembershipsGet(w http.ResponseWriter, r *http.Request) {
 
 func (s *SmD) doMembershipGet(w http.ResponseWriter, r *http.Request) {
 	var err error
-	vars := mux.Vars(r)
-	xname := base.NormalizeHMSCompID(vars["xname"])
+
+	xname := base.NormalizeHMSCompID(chi.URLParam(r, "xname"))
 
 	if !base.IsHMSCompIDValid(xname) {
 		s.lg.Printf("doMembershipGet(): Invalid xname.")
@@ -5183,8 +5180,8 @@ func (s *SmD) doCompLocksDisable(w http.ResponseWriter, r *http.Request) {
 // Get one specific PowerMap entry, previously created, by its xname ID.
 func (s *SmD) doPowerMapGet(w http.ResponseWriter, r *http.Request) {
 	s.lg.Printf("doPowerMapGet(): trying...")
-	vars := mux.Vars(r)
-	xname := base.NormalizeHMSCompID(vars["xname"])
+
+	xname := base.NormalizeHMSCompID(chi.URLParam(r, "xname"))
 	if !base.IsHMSCompIDValid(xname) {
 		s.lg.Printf("doPowerMapGet(): Invalid xname.")
 		sendJsonError(w, http.StatusBadRequest, "invalid xname")
@@ -5263,8 +5260,8 @@ func (s *SmD) doPowerMapsPost(w http.ResponseWriter, r *http.Request) {
 
 // UPDATE EXISTING Power mapping by it's xname URI.
 func (s *SmD) doPowerMapPut(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	xname := base.NormalizeHMSCompID(vars["xname"])
+
+	xname := base.NormalizeHMSCompID(chi.URLParam(r, "xname"))
 
 	var mIn sm.PowerMap
 	body, err := ioutil.ReadAll(r.Body)
@@ -5312,8 +5309,8 @@ func (s *SmD) doPowerMapPut(w http.ResponseWriter, r *http.Request) {
 // Delete single PowerMap, by its xname ID.
 func (s *SmD) doPowerMapDelete(w http.ResponseWriter, r *http.Request) {
 	s.lg.Printf("doPowerMapDelete(): trying...")
-	vars := mux.Vars(r)
-	xname := base.NormalizeHMSCompID(vars["xname"])
+
+	xname := base.NormalizeHMSCompID(chi.URLParam(r, "xname"))
 
 	if !base.IsHMSCompIDValid(xname) {
 		sendJsonError(w, http.StatusBadRequest, "invalid xname")
