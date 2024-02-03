@@ -46,7 +46,7 @@ import (
 	"github.com/OpenCHAMI/smd/v2/internal/slsapi"
 	"github.com/OpenCHAMI/smd/v2/pkg/rf"
 	"github.com/OpenCHAMI/smd/v2/pkg/sm"
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/sirupsen/logrus"
@@ -161,7 +161,7 @@ type SmD struct {
 
 	//router
 	// router *chi.Router
-	router    *chi.Router
+	router    *chi.Mux
 	tokenAuth *jwtauth.JWTAuth
 
 	httpClient *retryablehttp.Client
