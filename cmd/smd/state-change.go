@@ -131,8 +131,8 @@ type CompUpdate struct {
 func (s *SmD) doCompUpdate(u *CompUpdate, name string) error {
 	var data base.Component
 	pi := new(hmsds.PartInfo)
-	compIDs := []string{}
-	scnIDs := []string{}
+	var compIDs []string
+	var scnIDs []string
 
 	if u == nil {
 		s.LogAlways("WARNING: %s: got nil pointer", name)
@@ -195,19 +195,19 @@ func (s *SmD) doCompUpdate(u *CompUpdate, name string) error {
 			return ErrSMDNoFlag
 		}
 		data.Flag = base.VerifyNormalizeFlag(u.Flag)
-		scnIDs, err = s.dbUpdateCompFlagOnly(compIDs, u.Flag, pi)
+		_, err = s.dbUpdateCompFlagOnly(compIDs, u.Flag, pi)
 	case EnabledUpdate:
 		if u.Enabled == nil {
 			return ErrSMDNoEnabled
 		}
 		data.Enabled = u.Enabled
-		scnIDs, err = s.dbUpdateCompEnabled(compIDs, u.Enabled, pi)
+		_, err = s.dbUpdateCompEnabled(compIDs, u.Enabled, pi)
 	case SwStatusUpdate:
 		if u.SwStatus == nil {
 			return ErrSMDNoSwStatus
 		}
 		data.SwStatus = *u.SwStatus
-		scnIDs, err = s.dbUpdateCompSwStatus(compIDs, *u.SwStatus, pi)
+		_, err = s.dbUpdateCompSwStatus(compIDs, *u.SwStatus, pi)
 	case RoleUpdate:
 		subRole := ""
 		if u.Role == nil {
@@ -218,7 +218,7 @@ func (s *SmD) doCompUpdate(u *CompUpdate, name string) error {
 			subRole = *u.SubRole
 			data.SubRole = base.VerifyNormalizeSubRole(subRole)
 		}
-		scnIDs, err = s.dbUpdateCompRole(compIDs, *u.Role, subRole, pi)
+		_, err = s.dbUpdateCompRole(compIDs, *u.Role, subRole, pi)
 	case SingleNIDUpdate:
 		if u.NID == nil {
 			return ErrSMDNoNID

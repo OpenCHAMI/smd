@@ -1366,8 +1366,8 @@ func (s *SmD) doHWInvByLocationGetAll(w http.ResponseWriter, r *http.Request) {
 func (s *SmD) doHWInvByLocationPost(w http.ResponseWriter, r *http.Request) {
 	var hwIn HwInvIn
 
-	body, err := io.ReadAll(r.Body)
-	err = json.Unmarshal(body, &hwIn)
+	body, _ := io.ReadAll(r.Body)
+	err := json.Unmarshal(body, &hwIn)
 	if err != nil {
 		s.lg.Printf("doHWInvByLocationPost(): Unmarshal body: %s", err)
 		sendJsonError(w, http.StatusInternalServerError,
@@ -2297,8 +2297,8 @@ func (s *SmD) doRedfishEndpointsPost(w http.ResponseWriter, r *http.Request) {
 	eps := new(sm.RedfishEndpointArray)
 	creds := []compcreds.CompCredentials{}
 
-	body, err := ioutil.ReadAll(r.Body)
-	err = json.Unmarshal(body, &scanEPs)
+	body, _ := io.ReadAll(r.Body)
+	err := json.Unmarshal(body, &scanEPs)
 	if err != nil {
 		sendJsonError(w, http.StatusInternalServerError,
 			"error decoding JSON "+err.Error())
@@ -2400,7 +2400,6 @@ func (s *SmD) doRedfishEndpointsPost(w http.ResponseWriter, r *http.Request) {
 	// Send a URI array of the created resources, along with 201 (created).
 	uris := eps.GetResourceURIArray(s.redfishEPBaseV2)
 	sendJsonNewResourceIDArray(w, s.redfishEPBaseV2, uris)
-	return
 }
 
 // Parse the incoming JSON data, extracts specific keys, and writes the data
@@ -3234,8 +3233,8 @@ func (s *SmD) doInventoryDiscoverPost(w http.ResponseWriter, r *http.Request) {
 	var discIn sm.DiscoverIn
 	var id uint = 0
 
-	body, err := ioutil.ReadAll(r.Body)
-	err = json.Unmarshal(body, &discIn)
+	body, _ := io.ReadAll(r.Body)
+	err := json.Unmarshal(body, &discIn)
 	if err != nil {
 		sendJsonError(w, http.StatusBadRequest, "POST body was not understood")
 		return

@@ -1088,6 +1088,7 @@ func TestDoComponentDeleteAll(t *testing.T) {
 	}
 }
 
+// Fix this test
 func TestDoComponentsGet(t *testing.T) {
 	enabledFlg := true
 	tests := []struct {
@@ -9442,6 +9443,7 @@ func TestDoPartitionMembersGet(t *testing.T) {
 	}
 }
 
+// Fix this test
 func TestDoPartitionMembersPost(t *testing.T) {
 	tests := []struct {
 		reqType      string
