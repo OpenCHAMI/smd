@@ -49,13 +49,17 @@ binaries: smd smd-init smd-loader native
 
 BUILD := `git rev-parse --short HEAD`
 VERSION := `git describe --tags --abbrev=0`
+
+GOOS := $(if $(GOOS),$(GOOS),linux)
+GOARCH := $(if $(GOARCH),$(GOARCH),amd64)
+
 LDFLAGS=-ldflags "-X=$(GIT)main.commit=$(BUILD) -X=$(GIT)main.version=$(VERSION) -X=$(GIT)main.date=$(shell date +%Y-%m-%d:%H:%M:%S)"
 
 smd: cmd/smd/*.go
-	GOOS=linux GOARCH=amd64 go build -o smd -v -tags musl $(LDFLAGS) ./cmd/smd
+	go build -o smd -v -tags musl $(LDFLAGS) ./cmd/smd
 
 smd-init: cmd/smd-init/*.go
-	GOOS=linux GOARCH=amd64 go build -o smd-init -v -tags musl $(LDFLAGS) ./cmd/smd-init
+	go build -o smd-init -v -tags musl $(LDFLAGS) ./cmd/smd-init
 
 native:
 	go build -o smd-init-native -v -tags musl $(LDFLAGS) ./cmd/smd-init
@@ -65,7 +69,7 @@ native:
 
 
 smd-loader: cmd/smd-loader/*.go
-	GOOS=linux GOARCH=amd64 go build -o smd-loader -v -tags musl $(LDFLAGS) ./cmd/smd-loader
+	go build -o smd-loader -v -tags musl $(LDFLAGS) ./cmd/smd-loader
 
 coverage:
 	go test -cover -v -tags musl ./cmd/* ./internal/* ./pkg/*

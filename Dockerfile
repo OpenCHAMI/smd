@@ -1,3 +1,9 @@
+FROM golang:1.22.5 AS build
+
+RUN git clone https://github.com/OpenCHAMI/smd.git /smd
+WORKDIR /smd
+RUN make binaries
+
 FROM cgr.dev/chainguard/wolfi-base
 
 RUN apk add --no-cache tini
@@ -7,9 +13,9 @@ RUN set -ex \
     && apk -U upgrade \
     && apk add --no-cache curl
 
-COPY smd /
-COPY smd-loader /
-COPY smd-init /
+COPY --from=build /smd/smd /
+COPY --from=build /smd/smd-loader /
+COPY --from=build /smd/smd-init /
 RUN mkdir /persistent_migrations
 COPY migrations/* /persistent_migrations/
 
