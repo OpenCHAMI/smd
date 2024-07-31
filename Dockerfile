@@ -2,6 +2,8 @@ FROM golang:1.22.5 AS build
 
 RUN git clone https://github.com/OpenCHAMI/smd.git /smd
 WORKDIR /smd
+# TODO: remove this after Makefile changes are merged
+RUN sed -i 's/amd64/arm64/g' Makefile
 RUN make binaries
 
 FROM cgr.dev/chainguard/wolfi-base
