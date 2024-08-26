@@ -28,11 +28,10 @@ import (
 	"strings"
 	"time"
 
-	jwtauth "github.com/OpenCHAMI/jwtauth/v5"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	jwtauth "github.com/go-chi/jwtauth/v5"
 	"github.com/gorilla/handlers"
-	openchami_authenticator "github.com/openchami/chi-middleware/auth"
 	openchami_logger "github.com/openchami/chi-middleware/log"
 	"github.com/rs/zerolog"
 	zlog "github.com/rs/zerolog/log"
@@ -69,7 +68,7 @@ func (s *SmD) NewRouter(publicRoutes []Route, protectedRoutes []Route) *chi.Mux 
 		router.Group(func(r chi.Router) {
 			r.Use(
 				jwtauth.Verifier(s.tokenAuth),
-				openchami_authenticator.AuthenticatorWithRequiredClaims(s.tokenAuth, []string{"sub", "iss", "aud"}),
+				jwtauth.Authenticator(s.tokenAuth),
 			)
 
 			// Register protected routes

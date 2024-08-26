@@ -47,7 +47,7 @@ import (
 	"github.com/OpenCHAMI/smd/v2/pkg/rf"
 	"github.com/OpenCHAMI/smd/v2/pkg/sm"
 	"github.com/go-chi/chi/v5"
-	jwtauth "github.com/OpenCHAMI/jwtauth/v5"
+	jwtauth "github.com/go-chi/jwtauth/v5"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/sirupsen/logrus"
 )
