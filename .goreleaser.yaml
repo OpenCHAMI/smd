@@ -50,12 +50,15 @@ dockers:
       - ghcr.io/openchami/{{.ProjectName}}:{{ .Tag }}
       - ghcr.io/openchami/{{.ProjectName}}:{{ .Major }}
       - ghcr.io/openchami/{{.ProjectName}}:{{ .Major }}.{{ .Minor }}
+    use: buildx
     build_flag_templates:
       - "--pull"
       - "--label=org.opencontainers.image.created={{.Date}}"
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--platform=linux/amd64"
+    goarch: amd64
     extra_files:
       - LICENSE
       - CHANGELOG.md
