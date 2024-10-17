@@ -2603,9 +2603,22 @@ func (s *SmD) parseRedfishPostData(w http.ResponseWriter, eps *sm.RedfishEndpoin
 func (s *SmD) parseRedfishPostDataV2(w http.ResponseWriter, data []byte) error {
 	s.lg.Printf("parsing request data using V2 parsing method...")
 
+	// NOTE: temporary definition for manager
+	type Manager struct {
+		URI                string                      `json:"uri,omitempty"`
+		UUID               string                      `json:"uuid,omitempty"`
+		Name               string                      `json:"name,omitempty"`
+		Description        string                      `json:"description,omitempty"`
+		Model              string                      `json:"model,omitempty"`
+		Type               string                      `json:"type,omitempty"`
+		FirmwareVersion    string                      `json:"firmware_version,omitempty"`
+		EthernetInterfaces []schemas.EthernetInterface `json:"ethernet_interfaces,omitempty"`
+	}
+
 	type Root struct {
 		redfish.RedfishEndpoint
-		Systems []schemas.InventoryDetail
+		Systems  []schemas.InventoryDetail
+		Managers []Manager
 	}
 	var (
 		root Root
@@ -2635,23 +2648,66 @@ func (s *SmD) parseRedfishPostDataV2(w http.ResponseWriter, data []byte) error {
 		return nicInfo
 	}
 
-	// iterate over all of the systems to create component and component endpoint
+	// iterate over all of the managers to create NodeBMC components and component endpoints
+	for _, manager := range root.Managers {
+		var (
+			enabled   = true
+			component = base.Component{
+				ID: root.ID,
+				// State:   manager.PowerState,
+				Type:    base.NodeBMC.String(),
+				Enabled: &enabled,
+			}
+		)
+		// components
+		rowsAffected, err := s.db.InsertComponent(&component)
+		if err != nil {
+			sendJsonError(w, http.StatusInternalServerError,
+				fmt.Sprintf("failed to insert %d component(s): %w", rowsAffected, err))
+			return fmt.Errorf("failed to insert %d component(s): %w", rowsAffected, err)
+		}
+
+		// create a new ethernet interface with reference to the component above
+		for _, eth := range manager.EthernetInterfaces {
+			// convert IP address from manager ethernet interface to IPAddressMapping
+			ips := []sm.IPAddressMapping{sm.IPAddressMapping{IPAddr: eth.IP}}
+			cei, err := sm.NewCompEthInterfaceV2(eth.Description, eth.MAC, component.ID, ips)
+			if err != nil {
+				sendJsonError(w, http.StatusBadRequest, err.Error())
+				continue
+			}
+			err = s.db.InsertCompEthInterface(cei)
+			if err != nil {
+				if err == hmsds.ErrHMSDSDuplicateKey {
+					sendJsonError(w, http.StatusConflict, "operation would conflict "+
+						"with an existing component ethernet interface that has the same MAC address.")
+				} else {
+					// Send this message as 500 or 400 plus error message if it is
+					// an HMSError and not, e.g. an internal DB error code.
+					sendJsonDBError(w, "", "operation 'POST' failed during store.", err)
+				}
+				continue
+			}
+		}
+	}
+
+	// iterate over all of the systems to create components and component endpoints
 	for _, system := range root.Systems {
 		var (
 			enabled   = strings.ToLower(system.PowerState) == "on"
 			component = base.Component{
 				ID:      root.ID,
 				State:   system.PowerState,
-				Type:    string(root.Type),
+				Type:    base.Node.String(),
 				Enabled: &enabled,
 			}
 			componentEndpoint = sm.ComponentEndpoint{
 				ComponentDescription: rf.ComponentDescription{
 					ID:             root.ID,
-					Type:           string(root.Type),
-					RedfishType:    "ComputerSystem",  // TODO: need to get the RF type
-					RedfishSubtype: system.SystemType, // TODO: need to get the RF subtype (SystemType)
-					UUID:           system.UUID,       // TODO: need to get the UUID (UUID)
+					Type:           base.Node.String(),
+					RedfishType:    rf.ComputerSystemType, // TODO: need to get the RF type
+					RedfishSubtype: system.SystemType,     // TODO: need to get the RF subtype (SystemType)
+					UUID:           system.UUID,           // TODO: need to get the UUID (UUID)
 					RfEndpointID:   root.ID,
 				},
 				RfEndpointFQDN:        "",
@@ -2669,8 +2725,8 @@ func (s *SmD) parseRedfishPostDataV2(w http.ResponseWriter, data []byte) error {
 		rowsAffected, err := s.db.InsertComponent(&component)
 		if err != nil {
 			sendJsonError(w, http.StatusInternalServerError,
-				fmt.Sprintf("failed to insert %d components(s): %w", rowsAffected, err))
-			return fmt.Errorf("failed to insert %d components(s): %w", rowsAffected, err)
+				fmt.Sprintf("failed to insert %d component(s): %w", rowsAffected, err))
+			return fmt.Errorf("failed to insert %d component(s): %w", rowsAffected, err)
 		}
 
 		// component endpoints
