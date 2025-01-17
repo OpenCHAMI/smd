@@ -2163,14 +2163,23 @@ func (s *SmD) doRedfishEndpointsDeleteAll(w http.ResponseWriter, r *http.Request
 }
 
 // UPDATE existing RedfishEndpoint entry in full (or all least all
-// user-writable portions).
+// user-writable portions) or CREATE if it does not exists.
 func (s *SmD) doRedfishEndpointPut(w http.ResponseWriter, r *http.Request) {
+	var (
+		xname = base.NormalizeHMSCompID(chi.URLParam(r, "xname"))
+		rep   rf.RawRedfishEP
+		cred  compcreds.CompCredentials
+		body  []byte
+		err   error
+	)
 
-	xname := base.NormalizeHMSCompID(chi.URLParam(r, "xname"))
+	body, err = io.ReadAll(r.Body)
+	if err != nil {
+		sendJsonError(w, http.StatusInternalServerError,
+			"error reading response body "+err.Error())
+	}
 
-	var rep rf.RawRedfishEP
-	var cred compcreds.CompCredentials
-	body, err := ioutil.ReadAll(r.Body)
+	// We expect the RedfishEndpoint to be in JSON format in the request body.
 	err = json.Unmarshal(body, &rep)
 	if err != nil {
 		sendJsonError(w, http.StatusInternalServerError,
@@ -2186,6 +2195,7 @@ func (s *SmD) doRedfishEndpointPut(w http.ResponseWriter, r *http.Request) {
 			"xname in URL and PUT body do not match")
 		return
 	}
+
 	// Make sure the information submitted is a proper endpoint and will
 	// not update the entry with invalid data.
 	epd, err := rf.NewRedfishEPDescription(&rep)
@@ -2194,6 +2204,7 @@ func (s *SmD) doRedfishEndpointPut(w http.ResponseWriter, r *http.Request) {
 			"couldn't validate endpoint data: "+err.Error())
 		return
 	}
+
 	// Package it up into a SM RedfishEndpoint representation and send to DB.
 	ep := sm.NewRedfishEndpoint(epd)
 	if s.writeVault {
@@ -2207,6 +2218,8 @@ func (s *SmD) doRedfishEndpointPut(w http.ResponseWriter, r *http.Request) {
 			ep.Password = ""
 		}
 	}
+
+	// TODO: Change behavior to create a new RedfishEndpoint entry
 	retEP, affectedIDs, err := s.db.UpdateRFEndpointNoDiscInfo(ep)
 	if err != nil {
 		s.lg.Printf("failed: %s %s, Err: %s", r.RemoteAddr, string(body), err)
@@ -2220,11 +2233,28 @@ func (s *SmD) doRedfishEndpointPut(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	} else if retEP == nil {
+		// Create a new RedfishEndpoint in DB.
+		err = s.db.InsertRFEndpoint(ep)
+		if err != nil {
+			s.lg.Printf("failed: %s Err: %s", r.RemoteAddr, err)
+			if err == hmsds.ErrHMSDSDuplicateKey {
+				sendJsonError(w, http.StatusConflict, "operation would conflict "+
+					"with an existing resource that has the same FQDN or xname ID.")
+			} else {
+				sendJsonError(w, http.StatusInternalServerError,
+					"operation 'POST' failed during store. ")
+			}
+			return
+		}
+
+		// TODO: This is too be removed since we don't want this behavior.
+		//
 		// No error, but no update: Resource was not found.
-		s.lg.Printf("doRedfishEndpointPut: No such entry %s", rep.ID)
-		sendJsonError(w, http.StatusNotFound, "No such entry: "+rep.ID)
+		// s.lg.Printf("doRedfishEndpointPut: No such entry %s", rep.ID)
+		// sendJsonError(w, http.StatusNotFound, "No such entry: "+rep.ID)
 		return
 	}
+
 	// Store credentials that are given in vault
 	if s.writeVault {
 		// Don't store empty credentials
@@ -2254,17 +2284,51 @@ func (s *SmD) doRedfishEndpointPut(w http.ResponseWriter, r *http.Request) {
 		scn := NewJobSCN(affectedIDs, data, s)
 		s.wp.Queue(scn)
 	}
+
 	// Do discovery if needed on new Endpoints.  Should never want to
 	// force this since it can cause both the new and old discovery to
 	// fail.  A manual discovery would be the recovery mechanism.
 	// TODO:  Add auto-force based on time delta.
-	go s.discoverFromEndpoint(ep, 0, false)
+	//
+	// Discovery can optionally be disabled with the --disable-discovery
+	// flag from the CLI.
+	if !s.disableDiscovery {
+		go s.discoverFromEndpoint(ep, 0, false)
+	}
+
+	//
+	// Create RedfishEndpoints, Components, and ComponentEndpoints from
+	// the "systems" and "managers" properties found in the request body
+	// in JSON format.
+	//
+
+	// check for the data format sent via the schema version
+	var (
+		schemaVersion = s.getSchemaVersion(w, body)
+		eps           = &sm.RedfishEndpointArray{
+			RedfishEndpoints: []*sm.RedfishEndpoint{ep},
+		}
+	)
+	if schemaVersion <= 0 {
+		// parse data and populate component endpoints before inserting into db
+		err = s.parseRedfishPostData(w, eps, body)
+		if err != nil {
+			sendJsonError(w, http.StatusInternalServerError,
+				fmt.Sprintf("failed parsing post data: %w", err))
+		}
+	} else {
+		// parse data using the new inventory data format (will conform to schema)
+		err = s.parseRedfishPostDataV2(w, body)
+		if err != nil {
+			sendJsonError(w, http.StatusInternalServerError,
+				fmt.Sprintf("failed parsing post data (V2): %w", err))
+		}
+	}
 
 	s.lg.Printf("succeeded: %s %s", r.RemoteAddr, string(body))
 
 	// Send 200 status (success
 	sendJsonRFEndpointRsp(w, retEP)
-
 }
 
 // PATCH existing RedfishEndpoint entry but only the fields specified.
@@ -2481,9 +2545,18 @@ func (s *SmD) doRedfishEndpointsPost(w http.ResponseWriter, r *http.Request) {
 	// Do discovery if needed on new Endpoints.  Should never need to
 	// force this because the endpoint should always be new, else we would
 	// have already failed the operation.
+	//
+	// Discovery can optionally be disabled with the --disable-discovery
+	// flag from the CLI.
 	if !s.disableDiscovery {
 		go s.discoverFromEndpoints(eps.RedfishEndpoints, 0, true, false)
 	}
+
+	//
+	// Create RedfishEndpoints, Components, and ComponentEndpoints from
+	// the "systems" and "managers" properties found in the request body
+	// in JSON format.
+	//
 
 	if s.ochami {
 		// check for the data format sent via the schema version
@@ -2508,7 +2581,6 @@ func (s *SmD) doRedfishEndpointsPost(w http.ResponseWriter, r *http.Request) {
 	// Send a URI array of the created resources, along with 201 (created).
 	uris := eps.GetResourceURIArray(s.redfishEPBaseV2)
 	sendJsonNewResourceIDArray(w, s.redfishEPBaseV2, uris)
-	return
 }
 
 // Parse the incoming JSON data, extracts specific keys, and writes the data
