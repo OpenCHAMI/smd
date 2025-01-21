@@ -2275,7 +2275,6 @@ func (s *SmD) doRedfishEndpointPut(w http.ResponseWriter, r *http.Request) {
 		// No error, but no update: Resource was not found.
 		// s.lg.Printf("doRedfishEndpointPut: No such entry %s", rep.ID)
 		// sendJsonError(w, http.StatusNotFound, "No such entry: "+rep.ID)
-		return
 	}
 
 	// Store credentials that are given in vault
