@@ -2311,14 +2311,14 @@ func (s *SmD) doRedfishEndpointPut(w http.ResponseWriter, r *http.Request) {
 	)
 	if schemaVersion <= 0 {
 		// parse data and populate component endpoints before inserting into db
-		err = s.parseRedfishPostData(w, eps, body)
+		err = s.parseRedfishEndpointData(w, eps, body)
 		if err != nil {
 			sendJsonError(w, http.StatusInternalServerError,
 				fmt.Sprintf("failed parsing post data: %v", err))
 		}
 	} else {
 		// parse data using the new inventory data format (will conform to schema)
-		err = s.parseRedfishPostDataV2(w, body)
+		err = s.parseRedfishEndpointDataV2(w, body)
 		if err != nil {
 			sendJsonError(w, http.StatusInternalServerError,
 				fmt.Sprintf("failed parsing post data (V2): %v", err))
@@ -2563,14 +2563,14 @@ func (s *SmD) doRedfishEndpointsPost(w http.ResponseWriter, r *http.Request) {
 		schemaVersion := s.getSchemaVersion(w, body)
 		if schemaVersion <= 0 {
 			// parse data and populate component endpoints before inserting into db
-			err = s.parseRedfishPostData(w, eps, body)
+			err = s.parseRedfishEndpointData(w, eps, body)
 			if err != nil {
 				sendJsonError(w, http.StatusInternalServerError,
 					fmt.Sprintf("failed parsing post data: %v", err))
 			}
 		} else {
 			// parse data using the new inventory data format (will conform to schema)
-			err = s.parseRedfishPostDataV2(w, body)
+			err = s.parseRedfishEndpointDataV2(w, body)
 			if err != nil {
 				sendJsonError(w, http.StatusInternalServerError,
 					fmt.Sprintf("failed parsing post data (V2): %v", err))
@@ -2586,7 +2586,7 @@ func (s *SmD) doRedfishEndpointsPost(w http.ResponseWriter, r *http.Request) {
 // Parse the incoming JSON data, extracts specific keys, and writes the data
 // to the database
 // Used for ochami where discovery is diabled
-func (s *SmD) parseRedfishPostData(w http.ResponseWriter, eps *sm.RedfishEndpointArray, data []byte) error {
+func (s *SmD) parseRedfishEndpointData(w http.ResponseWriter, eps *sm.RedfishEndpointArray, data []byte) error {
 	s.lg.Printf("parsing request data using default parsing method...")
 	var obj map[string]any
 	err := json.Unmarshal(data, &obj)
@@ -2676,7 +2676,7 @@ func (s *SmD) parseRedfishPostData(w http.ResponseWriter, eps *sm.RedfishEndpoin
 }
 
 // Used for ochami where discovery is diabled
-func (s *SmD) parseRedfishPostDataV2(w http.ResponseWriter, data []byte) error {
+func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte) error {
 	s.lg.Printf("parsing request data using V2 parsing method...")
 
 	// NOTE: temporary definition for manager
