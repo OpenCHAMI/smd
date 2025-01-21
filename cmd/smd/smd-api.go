@@ -2247,6 +2247,29 @@ func (s *SmD) doRedfishEndpointPut(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// check for the data format sent via the schema version
+		var (
+			schemaVersion = s.getSchemaVersion(w, body)
+			eps           = &sm.RedfishEndpointArray{
+				RedfishEndpoints: []*sm.RedfishEndpoint{ep},
+			}
+		)
+		if schemaVersion <= 0 {
+			// parse data and populate component endpoints before inserting into db
+			err = s.parseRedfishEndpointData(w, eps, body)
+			if err != nil {
+				sendJsonError(w, http.StatusInternalServerError,
+					fmt.Sprintf("failed parsing post data: %v", err))
+			}
+		} else {
+			// parse data using the new inventory data format (will conform to schema)
+			err = s.parseRedfishEndpointDataV2(w, body)
+			if err != nil {
+				sendJsonError(w, http.StatusInternalServerError,
+					fmt.Sprintf("failed parsing post data (V2): %v", err))
+			}
+		}
+
 		// TODO: This is too be removed since we don't want this behavior.
 		//
 		// No error, but no update: Resource was not found.
@@ -2301,29 +2324,6 @@ func (s *SmD) doRedfishEndpointPut(w http.ResponseWriter, r *http.Request) {
 	// the "systems" and "managers" properties found in the request body
 	// in JSON format.
 	//
-
-	// check for the data format sent via the schema version
-	var (
-		schemaVersion = s.getSchemaVersion(w, body)
-		eps           = &sm.RedfishEndpointArray{
-			RedfishEndpoints: []*sm.RedfishEndpoint{ep},
-		}
-	)
-	if schemaVersion <= 0 {
-		// parse data and populate component endpoints before inserting into db
-		err = s.parseRedfishEndpointData(w, eps, body)
-		if err != nil {
-			sendJsonError(w, http.StatusInternalServerError,
-				fmt.Sprintf("failed parsing post data: %v", err))
-		}
-	} else {
-		// parse data using the new inventory data format (will conform to schema)
-		err = s.parseRedfishEndpointDataV2(w, body)
-		if err != nil {
-			sendJsonError(w, http.StatusInternalServerError,
-				fmt.Sprintf("failed parsing post data (V2): %v", err))
-		}
-	}
 
 	s.lg.Printf("succeeded: %s %s", r.RemoteAddr, string(body))
 
