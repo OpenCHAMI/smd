@@ -30,7 +30,7 @@ import (
 
 	base "github.com/Cray-HPE/hms-base"
 	compcreds "github.com/Cray-HPE/hms-compcredentials"
-	rf "github.com/Cray-HPE/hms-smd/v2/pkg/redfish"
+	"github.com/Cray-HPE/hms-smd/v2/pkg/rf"
 	"github.com/Cray-HPE/hms-smd/v2/pkg/sm"
 )
 
@@ -41,8 +41,9 @@ import (
 // structures and place them in the database.
 //
 // Args:
-//   eps is a set of RedfishEndpoints retrieved from the database.
-//   id is the id of the DiscoveryStatus object to write status to.
+//
+//	eps is a set of RedfishEndpoints retrieved from the database.
+//	id is the id of the DiscoveryStatus object to write status to.
 func (s *SmD) discoverFromEndpoints(eps []*sm.RedfishEndpoint, id uint, update, force bool) {
 	idsFiltered := make([]string, 0, len(eps))
 	for _, ep := range eps {
@@ -125,8 +126,9 @@ func (s *SmD) discoverFromEndpoints(eps []*sm.RedfishEndpoint, id uint, update, 
 // Single-endpoint version of the above.
 //
 // Args:
-//   ep is a single RedfishEndpoint retrieved from the database.
-//   id is the id of the DiscoveryStatus object to write status to.
+//
+//	ep is a single RedfishEndpoint retrieved from the database.
+//	id is the id of the DiscoveryStatus object to write status to.
 func (s *SmD) discoverFromEndpoint(ep *sm.RedfishEndpoint, id uint, force bool) {
 	if ep.RediscOnUpdate != true {
 		s.LogAlways("Skipping discovery for %s: !RediscoverOnUpdate", ep.ID)
@@ -204,8 +206,9 @@ func (s *SmD) doDiscovery(rfEP *rf.RedfishEP) {
 // RedfishEndpoint.
 //
 // Args:
-//   rfEP - A discovered rf.RedfishEP, created from a RedfishEndpoint
-//          and then queried via gets to the specified destination.
+//
+//	rfEP - A discovered rf.RedfishEP, created from a RedfishEndpoint
+//	       and then queried via gets to the specified destination.
 func (s *SmD) updateFromRfEndpoint(rfEP *rf.RedfishEP) error {
 	ep := sm.NewRedfishEndpoint(&rfEP.RedfishEPDescription)
 	var savedErr error = nil
@@ -711,7 +714,7 @@ func (s *SmD) DiscoverHWInvByLocArray(rfEP *rf.RedfishEP) ([]*sm.HWInvByLoc, err
 			}
 			hwlocs = append(hwlocs, hwloc)
 		}
-		
+
 		for _, procEP := range sysEP.Processors.OIDs {
 			hwloc, err := s.DiscoverHWInvByLocProcessor(procEP)
 			if err != nil {
@@ -850,11 +853,12 @@ func (s *SmD) DiscoverHWInvByLocArray(rfEP *rf.RedfishEP) ([]*sm.HWInvByLoc, err
 
 // Generate HWInv history entries. This determines the historical event type
 // based on the most recent entry for that FRU.
-// - No history means we are adding.
-// - Previously removed means we are adding.
-// - Same location means we are scanning.
-// - Different location mean we are removing from the previous location and
-//   adding to the new location. (Removal event wasn't generated)
+//   - No history means we are adding.
+//   - Previously removed means we are adding.
+//   - Same location means we are scanning.
+//   - Different location mean we are removing from the previous location and
+//     adding to the new location. (Removal event wasn't generated)
+//
 // If a eventType is specified, all generated entries will be forced to that
 // event type.
 func (s *SmD) GenerateHWInvHist(hwlocs []*sm.HWInvByLoc) error {
@@ -1467,10 +1471,10 @@ func (s *SmD) DiscoverHWInvByFRUHpeDevice(hpeDeviceEP *rf.EpHpeDevice) (*sm.HWIn
 	switch base.ToHMSType(hwfru.Type) {
 	case base.NodeAccel:
 		accelInfo := rf.ProcessorFRUInfoRF{
-			Manufacturer: hpeDeviceEP.DeviceRF.Manufacturer,
-			Model: hpeDeviceEP.DeviceRF.Model,
-			SerialNumber: hpeDeviceEP.DeviceRF.SerialNumber,
-			PartNumber: hpeDeviceEP.DeviceRF.PartNumber,
+			Manufacturer:  hpeDeviceEP.DeviceRF.Manufacturer,
+			Model:         hpeDeviceEP.DeviceRF.Model,
+			SerialNumber:  hpeDeviceEP.DeviceRF.SerialNumber,
+			PartNumber:    hpeDeviceEP.DeviceRF.PartNumber,
 			ProcessorType: hpeDeviceEP.DeviceRF.DeviceType,
 		}
 		hwfru.HMSNodeAccelFRUInfo = &accelInfo
@@ -1478,9 +1482,9 @@ func (s *SmD) DiscoverHWInvByFRUHpeDevice(hpeDeviceEP *rf.EpHpeDevice) (*sm.HWIn
 	case base.NodeHsnNic:
 		nicInfo := rf.NAFRUInfoRF{
 			Manufacturer: hpeDeviceEP.DeviceRF.Manufacturer,
-			Model: hpeDeviceEP.DeviceRF.Model,
+			Model:        hpeDeviceEP.DeviceRF.Model,
 			SerialNumber: hpeDeviceEP.DeviceRF.SerialNumber,
-			PartNumber: hpeDeviceEP.DeviceRF.PartNumber,
+			PartNumber:   hpeDeviceEP.DeviceRF.PartNumber,
 		}
 		hwfru.HMSHSNNICFRUInfo = &nicInfo
 		hwfru.HWInventoryByFRUType = sm.HWInvByFRUHSNNIC
@@ -1522,7 +1526,6 @@ func (s *SmD) DiscoverHWInvByFRUProcessor(procEP *rf.EpProcessor) (*sm.HWInvByFR
 		hwfru.HMSProcessorFRUInfo = &procEP.ProcessorRF.ProcessorFRUInfoRF
 		hwfru.HWInventoryByFRUType = sm.HWInvByFRUProcessor
 	}
-
 
 	return hwfru, nil
 }

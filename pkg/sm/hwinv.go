@@ -28,7 +28,7 @@ import (
 	"strconv"
 
 	base "github.com/Cray-HPE/hms-base"
-	rf "github.com/Cray-HPE/hms-smd/v2/pkg/redfish"
+	"github.com/Cray-HPE/hms-smd/v2/pkg/rf"
 )
 
 var ErrHWLocInvalid = base.NewHMSError("sm", "ID is empty or not a valid xname")
@@ -1100,10 +1100,12 @@ const (
 // for the type with the proper type-specific name.
 //
 // NOTEs: The location info should be that produced by EncodeLocationInfo.
-//        MODIFIES caller.
+//
+//	MODIFIES caller.
 //
 // Return: If err != nil hw is unmodified,
-//         Else, the type's *LocationInfo pointer is set to the expected struct.
+//
+//	Else, the type's *LocationInfo pointer is set to the expected struct.
 func (hw *HWInvByLoc) DecodeLocationInfo(locInfoJSON []byte) error {
 	var (
 		err                                    error
@@ -1286,7 +1288,6 @@ func (hw *HWInvByLoc) DecodeLocationInfo(locInfoJSON []byte) error {
 	return err
 }
 
-//
 // This function encode's the hwinv's type-specific LocationInfo struct
 // into a free-form JSON byte array that can be stored schema-less in the
 // database.
@@ -1294,7 +1295,8 @@ func (hw *HWInvByLoc) DecodeLocationInfo(locInfoJSON []byte) error {
 // NOTE: This function is the counterpart to DecodeLocationInfo().
 //
 // Returns: type's location info as JSON []byte representation, err = nil
-//          Else, err != nil if encoding failed (and location_info is empty)
+//
+//	Else, err != nil if encoding failed (and location_info is empty)
 func (hw *HWInvByLoc) EncodeLocationInfo() ([]byte, error) {
 	var err error
 	var locInfoJSON []byte
@@ -1450,10 +1452,12 @@ const (
 // for the type with the proper type-specific name.
 //
 // NOTEs: The fruInfoJSON array should be that produced by EncodeFRUInfo.
-//        MODIFIES caller.
+//
+//	MODIFIES caller.
 //
 // Return: If err != nil hf is unmodified and operation failed.
-//         Else, the type's *FRUInfo pointer is set to the expected struct.
+//
+//	Else, the type's *FRUInfo pointer is set to the expected struct.
 func (hf *HWInvByFRU) DecodeFRUInfo(fruInfoJSON []byte) error {
 	var (
 		err                               error = nil
@@ -1641,7 +1645,6 @@ func (hf *HWInvByFRU) DecodeFRUInfo(fruInfoJSON []byte) error {
 	return err
 }
 
-//
 // This function encode's the hwinv's type-specific FRU info struct
 // into a free-form JSON byte array that can be stored schema-less in the
 // database.
@@ -1649,7 +1652,8 @@ func (hf *HWInvByFRU) DecodeFRUInfo(fruInfoJSON []byte) error {
 // NOTE: This function is the counterpart to DecodeFRUInfo().
 //
 // Returns: FRU's info as JSON []byte representation, err = nil
-//          Else, err != nil if encoding failed (plus, []byte value is empty)
+//
+//	Else, err != nil if encoding failed (plus, []byte value is empty)
 func (hf *HWInvByFRU) EncodeFRUInfo() ([]byte, error) {
 	var err error
 	var fruInfoJSON []byte

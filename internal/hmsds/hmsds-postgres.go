@@ -35,7 +35,7 @@ import (
 	"time"
 
 	base "github.com/Cray-HPE/hms-base"
-	rf "github.com/Cray-HPE/hms-smd/v2/pkg/redfish"
+	"github.com/Cray-HPE/hms-smd/v2/pkg/rf"
 	"github.com/Cray-HPE/hms-smd/v2/pkg/sm"
 
 	sq "github.com/Masterminds/squirrel"
@@ -643,7 +643,8 @@ func (d *hmsdbPg) UpsertComponents(comps []*base.Component, force bool) (map[str
 }
 
 // Update state and flag fields only in DB for a list of components
-//   Note: If flag is not set, it will be set to OK (i.e. no flag)
+//
+//	Note: If flag is not set, it will be set to OK (i.e. no flag)
 func (d *hmsdbPg) BulkUpdateCompState(ids []string, state string, flag string) ([]string, error) {
 	return d.UpdateCompStates(ids, state, flag, false, new(PartInfo))
 }
@@ -654,7 +655,8 @@ func (d *hmsdbPg) BulkUpdateCompState(ids []string, state string, flag string) (
 //
 // If force = true ignores any starting state restrictions and will
 // always set ids to 'state', unless it is already set.
-//   Note: If flag is not set, it will be set to OK (i.e. no flag)
+//
+//	Note: If flag is not set, it will be set to OK (i.e. no flag)
 func (d *hmsdbPg) UpdateCompStates(
 	ids []string,
 	state string,
@@ -750,7 +752,8 @@ func (d *hmsdbPg) UpdateCompStates(
 // Update state and flag fields only in DB from those in c
 // Returns the number of affected rows. < 0 means RowsAffected() is not
 // supported.
-//   Note: If flag is not set, it will be set to OK (i.e. no flag)
+//
+//	Note: If flag is not set, it will be set to OK (i.e. no flag)
 func (d *hmsdbPg) UpdateCompState(c *base.Component) (int64, error) {
 	ids, err := d.UpdateCompStates([]string{c.ID}, c.State, c.Flag,
 		false, new(PartInfo))
@@ -3118,9 +3121,9 @@ func (d *hmsdbPg) DeleteCompEthInterfacesAll() (int64, error) {
 
 // Add IP Address mapping to the existing component ethernet interface.
 // returns:
-//	- ErrHMSDSNoCompEthInterface if the parent component ethernet interface
-// 	- ErrHMSDSDuplicateKey if the parent component ethernet interface already
-//    has that IP address
+//   - ErrHMSDSNoCompEthInterface if the parent component ethernet interface
+//   - ErrHMSDSDuplicateKey if the parent component ethernet interface already
+//     has that IP address
 //
 // Returns key of new IP Address Mapping id, should be the IP address
 func (d *hmsdbPg) AddCompEthInterfaceIPAddress(id string, ipmIn *sm.IPAddressMapping) (string, error) {
@@ -3341,16 +3344,15 @@ func (d *hmsdbPg) UpsertDiscoveryStatus(stat *sm.DiscoveryStatus) error {
 
 // Atomically:
 //
-// 1. Update discovery-writable fields for RedfishEndpoint
-// 2. Upsert ComponentEndpointArray into database within the
-//    same transaction.
-// 3. Insert or update array of HWInventoryByLocation structs.
-//    If PopulatedFRU is present, these is also added to the DB  If
-//    it is not, this effectively "depopulates" the given locations.
-//    The actual HWInventoryByFRU is stored using within the same
-//    transaction.
-// 4. Inserts or updates HMS Components entries in ComponentArray
-//
+//  1. Update discovery-writable fields for RedfishEndpoint
+//  2. Upsert ComponentEndpointArray into database within the
+//     same transaction.
+//  3. Insert or update array of HWInventoryByLocation structs.
+//     If PopulatedFRU is present, these is also added to the DB  If
+//     it is not, this effectively "depopulates" the given locations.
+//     The actual HWInventoryByFRU is stored using within the same
+//     transaction.
+//  4. Inserts or updates HMS Components entries in ComponentArray
 func (d *hmsdbPg) UpdateAllForRFEndpoint(
 	ep *sm.RedfishEndpoint,
 	ceps *sm.ComponentEndpointArray,
@@ -4633,9 +4635,9 @@ func (d *hmsdbPg) GetCompLocksV2(f sm.CompLockV2Filter) ([]sm.CompLockV2, error)
 // best try.
 func (d *hmsdbPg) UpdateCompLocksV2(f sm.CompLockV2Filter, action string) (sm.CompLockV2UpdateResult, error) {
 	var (
-		result          sm.CompLockV2UpdateResult
-		affectedIds     []string
-		lockKeys        []sm.CompLockV2Key
+		result      sm.CompLockV2UpdateResult
+		affectedIds []string
+		lockKeys    []sm.CompLockV2Key
 	)
 	result.Success.ComponentIDs = make([]string, 0, 1)
 	result.Failure = make([]sm.CompLockV2Failure, 0, 1)

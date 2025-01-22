@@ -24,7 +24,8 @@ package sharedtest
 
 import (
 	"encoding/json"
-	"github.com/Cray-HPE/hms-smd/v2/pkg/redfish"
+
+	"github.com/Cray-HPE/hms-smd/v2/pkg/rf"
 	"github.com/Cray-HPE/hms-smd/v2/pkg/sm"
 )
 
@@ -52,10 +53,10 @@ var NodeHWInvByFRU1 = sm.HWInvByFRU{
 }
 
 var NodeHWInvByLoc1 = sm.HWInvByLoc{
-	ID:      "x0c0s0b0n0",
-	Type:    "Node",
-	Ordinal: 0,
-	Status:  "Populated",
+	ID:                        "x0c0s0b0n0",
+	Type:                      "Node",
+	Ordinal:                   0,
+	Status:                    "Populated",
 	HWInventoryByLocationType: "HWInvByLocNode",
 	HMSNodeLocationInfo: &rf.SystemLocationInfoRF{
 		Id:          "System.Embedded.1",
@@ -80,10 +81,10 @@ var ProcHWInvByFRU1 = sm.HWInvByFRU{
 	Subtype:              "SKL24",
 	HWInventoryByFRUType: "HWInvByFRUProcessor",
 	HMSProcessorFRUInfo: &rf.ProcessorFRUInfoRF{
-		InstructionSet: "x86-64",
-		Manufacturer:   "Intel",
-		MaxSpeedMHz:    json.Number("2600"),
-		Model:          "Intel(R) Xeon(R) CPU E5-2623 v4 @ 2.60GHz",
+		InstructionSet:        "x86-64",
+		Manufacturer:          "Intel",
+		MaxSpeedMHz:           json.Number("2600"),
+		Model:                 "Intel(R) Xeon(R) CPU E5-2623 v4 @ 2.60GHz",
 		ProcessorArchitecture: "x86",
 		ProcessorId: rf.ProcessorIdRF{
 			EffectiveFamily:         "6",
@@ -100,10 +101,10 @@ var ProcHWInvByFRU1 = sm.HWInvByFRU{
 }
 
 var ProcHWInvByLoc1 = sm.HWInvByLoc{
-	ID:      "x0c0s0b0n0p0",
-	Type:    "Processor",
-	Ordinal: 0,
-	Status:  "Populated",
+	ID:                        "x0c0s0b0n0p0",
+	Type:                      "Processor",
+	Ordinal:                   0,
+	Status:                    "Populated",
 	HWInventoryByLocationType: "HWInvByLocProcessor",
 	HMSProcessorLocationInfo: &rf.ProcessorLocationInfoRF{
 		Id:          "CPU1",
@@ -120,10 +121,10 @@ var ProcHWInvByFRU2 = sm.HWInvByFRU{
 	Subtype:              "SKL24",
 	HWInventoryByFRUType: "HWInvByFRUProcessor",
 	HMSProcessorFRUInfo: &rf.ProcessorFRUInfoRF{
-		InstructionSet: "x86-64",
-		Manufacturer:   "Intel",
-		MaxSpeedMHz:    json.Number("2600"),
-		Model:          "Intel(R) Xeon(R) CPU E5-2623 v4 @ 2.60GHz",
+		InstructionSet:        "x86-64",
+		Manufacturer:          "Intel",
+		MaxSpeedMHz:           json.Number("2600"),
+		Model:                 "Intel(R) Xeon(R) CPU E5-2623 v4 @ 2.60GHz",
 		ProcessorArchitecture: "x86",
 		ProcessorId: rf.ProcessorIdRF{
 			EffectiveFamily:         "6",
@@ -140,10 +141,10 @@ var ProcHWInvByFRU2 = sm.HWInvByFRU{
 }
 
 var ProcHWInvByLoc2 = sm.HWInvByLoc{
-	ID:      "x0c0s0b0n0p1",
-	Type:    "Processor",
-	Ordinal: 1,
-	Status:  "Populated",
+	ID:                        "x0c0s0b0n0p1",
+	Type:                      "Processor",
+	Ordinal:                   1,
+	Status:                    "Populated",
 	HWInventoryByLocationType: "HWInvByLocProcessor",
 	HMSProcessorLocationInfo: &rf.ProcessorLocationInfoRF{
 		Id:          "CPU2",
@@ -177,10 +178,10 @@ var MemHWInvByFRU1 = sm.HWInvByFRU{
 }
 
 var MemHWInvByLoc1 = sm.HWInvByLoc{
-	ID:      "x0c0s0b0n0d0",
-	Type:    "Memory",
-	Ordinal: 0,
-	Status:  "Populated",
+	ID:                        "x0c0s0b0n0d0",
+	Type:                      "Memory",
+	Ordinal:                   0,
+	Status:                    "Populated",
 	HWInventoryByLocationType: "HWInvByLocMemory",
 	HMSMemoryLocationInfo: &rf.MemoryLocationInfoRF{
 		Id:   "DIMM1",
@@ -217,10 +218,10 @@ var MemHWInvByFRU2 = sm.HWInvByFRU{
 }
 
 var MemHWInvByLoc2 = sm.HWInvByLoc{
-	ID:      "x0c0s0b0n0d1",
-	Type:    "Memory",
-	Ordinal: 1,
-	Status:  "Populated",
+	ID:                        "x0c0s0b0n0d1",
+	Type:                      "Memory",
+	Ordinal:                   1,
+	Status:                    "Populated",
 	HWInventoryByLocationType: "HWInvByLocMemory",
 	HMSMemoryLocationInfo: &rf.MemoryLocationInfoRF{
 		Id:   "DIMM2",

@@ -24,8 +24,9 @@ package sm
 
 import (
 	"encoding/json"
+
 	base "github.com/Cray-HPE/hms-base"
-	rf "github.com/Cray-HPE/hms-smd/v2/pkg/redfish"
+	"github.com/Cray-HPE/hms-smd/v2/pkg/rf"
 )
 
 // This is a generic link to a resource owned by state manager, i.e. a
@@ -158,7 +159,8 @@ type ComponentEndpointArray struct {
 // RF type-specific name.
 //
 // NOTEs: The location info should be that produced by EncodeComponentInfo.
-//        MODIFIES caller.
+//
+//	MODIFIES caller.
 func (cep *ComponentEndpoint) DecodeComponentInfo(infoJSON []byte) error {
 	var err error
 
