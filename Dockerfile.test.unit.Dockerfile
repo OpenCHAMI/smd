@@ -22,7 +22,7 @@
 
 
 ### Build Base Stage ###
-FROM artifactory.algol60.net/docker.io/library/golang:1.16-alpine AS build-base
+FROM artifactory.algol60.net/docker.io/library/golang:1.23-alpine AS build-base
 
 RUN set -ex \
     && apk -U upgrade \

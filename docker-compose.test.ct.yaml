@@ -172,7 +172,7 @@ services:
     networks:
       - smd
   emulator-loader:
-    image: artifactory.algol60.net/docker.io/library/golang:1.16-alpine
+    image: artifactory.algol60.net/docker.io/library/golang:1.23-alpine
     command: >
       sh -c "apk add curl && sleep 10 &&
       curl -X POST -d '{\"RedfishEndpoints\":[{

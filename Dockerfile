@@ -25,7 +25,7 @@
 
 ### Build Base Stage ###
 # Build base just has the packages installed we need.
-FROM artifactory.algol60.net/docker.io/library/golang:1.16-alpine AS build-base
+FROM artifactory.algol60.net/docker.io/library/golang:1.23-alpine AS build-base
 
 RUN set -ex \
     && apk -U upgrade \
@@ -50,9 +50,9 @@ FROM base AS builder
 
 # Base image contains everything needed for Go building, just build.
 RUN set -ex \
-    && go build -v -tags musl -i github.com/Cray-HPE/hms-smd/v2/cmd/smd \
-    && go build -v -tags musl -i github.com/Cray-HPE/hms-smd/v2/cmd/smd-loader \
-    && go build -v -tags musl -i github.com/Cray-HPE/hms-smd/v2/cmd/smd-init
+    && go build -v -tags musl github.com/Cray-HPE/hms-smd/v2/cmd/smd \
+    && go build -v -tags musl github.com/Cray-HPE/hms-smd/v2/cmd/smd-loader \
+    && go build -v -tags musl github.com/Cray-HPE/hms-smd/v2/cmd/smd-init
 
 
 ### Final Stage ###
