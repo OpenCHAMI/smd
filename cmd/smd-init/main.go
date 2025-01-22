@@ -30,11 +30,11 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Cray-HPE/hms-smd/v2/internal/hmsds"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/lib/pq"
-	"github.com/Cray-HPE/hms-smd/v2/internal/hmsds"
 )
 
 const APP_VERSION = "1"
@@ -49,6 +49,7 @@ var dbPortStr string
 var dbPort int
 var dbOpts string
 var forceStep int
+var migrationsDir string
 var migrateStep uint
 var fresh *bool
 var versionFlag *bool
@@ -61,6 +62,7 @@ func parseCmdLine() {
 	flag.StringVar(&dbPortStr, "dbport", "", "Database port")
 	flag.StringVar(&dbOpts, "dbopts", "", "Database options string")
 	flag.IntVar(&forceStep, "f", -1, "Force migration to step X")
+	flag.StringVar(&migrationsDir, "migrationsdir", "/persistent_migrations", "Directory with migrations v4 files")
 	fresh = flag.Bool("fresh", false,
 		"Revert all schemas before installing (drops all data)")
 	versionFlag = flag.Bool("v", false, "Print the version number.")
@@ -147,7 +149,7 @@ func parseCmdLine() {
 		migrateStep = uint(SCHEMA_STEPS)
 	}
 	envvar = "SMD_FRESH"
-	if *fresh == false {
+	if !*fresh {
 		if val := os.Getenv(envvar); val != "" {
 			*fresh = true
 		}
@@ -172,6 +174,7 @@ func parseCmdLine() {
 var lg = log.New(os.Stdout, "", log.Lshortfile|log.LstdFlags|log.Lmicroseconds)
 
 func main() {
+	PrintVersionInfo()
 	parseCmdLine()
 
 	lg.Printf("smd-init: Starting...")
@@ -215,7 +218,7 @@ func main() {
 	lg.Printf("Creating postgres driver succeeded")
 
 	m, err := migrate.NewWithDatabaseInstance(
-		"file:///persistent_migrations",
+		"file://"+migrationsDir,
 		"postgres", driver)
 	if err != nil {
 		lg.Printf("Creating migration failed: '%s'", err)
@@ -258,7 +261,7 @@ func main() {
 	} else {
 		lg.Printf("Migration: At step version %d, dirty: %t", version, dirty)
 	}
-	if dirty == true && forceStep < 0 {
+	if dirty && forceStep < 0 {
 		// Force current version to remove dirty flag.  We'd prefer to avoid
 		// this situation in the first place.
 		err = m.Force(int(version))
