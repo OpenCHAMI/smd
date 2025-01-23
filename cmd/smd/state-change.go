@@ -82,7 +82,7 @@ func VerifyNormalizeCompUpdateType(utype string) string {
 	utypeLower := strings.ToLower(utype)
 	utypeTrimmed := strings.TrimPrefix(utypeLower, "update")
 	value, ok := compUpdateTypeMap[utypeTrimmed]
-	if ok != true {
+	if !ok {
 		return ""
 	} else {
 		return value.String()
@@ -95,7 +95,7 @@ func GetCompUpdateType(utype string) CompUpdateType {
 	utypeLower := strings.ToLower(utype)
 	utypeTrimmed := strings.TrimPrefix(utypeLower, "update")
 	value, ok := compUpdateTypeMap[utypeTrimmed]
-	if ok != true {
+	if !ok {
 		return CompUpdateInvalid
 	} else {
 		return value
@@ -237,7 +237,7 @@ func (s *SmD) doCompUpdate(u *CompUpdate, name string) error {
 		return err
 	}
 	// Send SCN if there were changes.
-	if len(scnIDs) != 0 && skipSCNs == false {
+	if len(scnIDs) != 0 && !skipSCNs {
 		scn := NewJobSCN(scnIDs, data, s)
 		s.wp.Queue(scn)
 	}

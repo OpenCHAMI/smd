@@ -154,9 +154,7 @@ ON CONFLICT(fru_id) DO UPDATE SET
     subtype = EXCLUDED.subtype,
     fru_info = EXCLUDED.fru_info;`
 
-//
 // RedfishEndpoints - Update operations
-//
 const updatePgRFEndpointPrefix = `
 UPDATE rf_endpoints SET
     "type" = ?,
@@ -316,9 +314,7 @@ ON CONFLICT(id) DO UPDATE SET
 const getPgSCNSubID = `
 SELECT LASTVAL();`
 
-//
 // Groups and partitions
-//
 const compGroupsTablePg = pgSchema + "." + compGroupsTable
 const compGroupMembersTablePg = pgSchema + "." + compGroupMembersTable
 

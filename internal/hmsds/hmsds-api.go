@@ -1083,7 +1083,7 @@ type HMSDBTx interface {
 	// Update NID.  If NID is not set or negative, it is set to -1 which
 	// effectively unsets it and suppresses its output.
 	UpdateCompNIDTx(c *base.Component) error
-	
+
 	// Update NID.  If NID is not set or negative, it is set to -1 which
 	// effectively unsets it and suppresses its output.
 	BulkUpdateCompNIDTx(comps []base.Component) error

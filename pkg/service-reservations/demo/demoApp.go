@@ -25,8 +25,8 @@ package main
 import (
 	"time"
 
-	"github.com/sirupsen/logrus"
 	reservation "github.com/Cray-HPE/hms-smd/v2/pkg/service-reservations"
+	"github.com/sirupsen/logrus"
 )
 
 func main() {

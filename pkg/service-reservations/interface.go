@@ -35,10 +35,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hashicorp/go-retryablehttp"
-	"github.com/sirupsen/logrus"
 	"github.com/Cray-HPE/hms-base"
 	"github.com/Cray-HPE/hms-smd/v2/pkg/sm"
+	"github.com/hashicorp/go-retryablehttp"
+	"github.com/sirupsen/logrus"
 )
 
 const HSM_DEFAULT_RESERVATION_PATH = "/hsm/v2/locks/service/reservations"
@@ -79,8 +79,8 @@ type Production struct {
 	logger             *logrus.Logger
 }
 
-//This uses the rigid implementation, so we will assume for EVERY operation that is all or nothing.  This could be
-//pretty easily extended to support the flexible implementation, but this wasnt needed for FAS/CAPMC
+// This uses the rigid implementation, so we will assume for EVERY operation that is all or nothing.  This could be
+// pretty easily extended to support the flexible implementation, but this wasnt needed for FAS/CAPMC
 type ServiceReservation interface {
 	Init(stateManagerServer string, reservationPath string, defaultTermMinutes int, logger *logrus.Logger)
 
@@ -165,11 +165,11 @@ func (i *Production) Init(stateManagerServer string, reservationPath string, def
 
 func (i *Production) InitInstance(stateManagerServer string, reservationPath string, defaultTermMinutes int, logger *logrus.Logger, svcName string) {
 	serviceName = svcName
-	i.Init(stateManagerServer,reservationPath,defaultTermMinutes,logger)
+	i.Init(stateManagerServer, reservationPath, defaultTermMinutes, logger)
 }
 
-//Lets make this really simple; Im going to wake up and see what expires in the next 30 seconds;
-//then I will renew those things
+// Lets make this really simple; Im going to wake up and see what expires in the next 30 seconds;
+// then I will renew those things
 func (i *Production) doRenewal() {
 
 	for ; ; time.Sleep(time.Duration(DefaultSleepTime) * time.Second) {
@@ -257,9 +257,9 @@ func (i *Production) doRenew(reservationKeys []Key, flex bool) (ReservationRelea
 	}
 
 	renewalParameters := ReservationRenewalParameters{
-		ProcessingModel: processingModel,
+		ProcessingModel:     processingModel,
 		ReservationDuration: i.defaultTermMinutes,
-		ReservationKeys: reservationKeys,
+		ReservationKeys:     reservationKeys,
 	}
 
 	if len(renewalParameters.ReservationKeys) == 0 {
@@ -349,7 +349,7 @@ func (i *Production) Aquire(xnames []string) error {
 		i.logger.WithField("error", err).Error("Aquire() - END")
 		return err
 	}
-	base.SetHTTPUserAgent(newRequest,serviceName)
+	base.SetHTTPUserAgent(newRequest, serviceName)
 
 	reqContext, _ := context.WithTimeout(context.Background(), time.Second*40)
 	req, err := retryablehttp.FromRequest(newRequest)
@@ -388,7 +388,7 @@ func (i *Production) Aquire(xnames []string) error {
 			return err
 		}
 
-		if (len(response.Success) < len(xnames)) {
+		if len(response.Success) < len(xnames) {
 			// because we have HARDCODED rigid; if failure > 0 or successes < xnames,
 			// success MUST == 0
 			err = errors.New("at least one xname could not be reserved")
@@ -425,7 +425,7 @@ func (i *Production) Aquire(xnames []string) error {
 	}
 }
 
-func (i *Production) FlexAquire(xnames []string) (ReservationCreateResponse,error) {
+func (i *Production) FlexAquire(xnames []string) (ReservationCreateResponse, error) {
 	var resResponse ReservationCreateResponse
 
 	i.logger.Trace("SoftAquire() - START")
@@ -443,16 +443,16 @@ func (i *Production) FlexAquire(xnames []string) (ReservationCreateResponse,erro
 	newRequest, err := http.NewRequest("POST", targetURL.String(), bytes.NewBuffer([]byte(stringReservation)))
 	if err != nil {
 		i.logger.WithField("error", err).Error("SoftAquire() - END")
-		return resResponse,err
+		return resResponse, err
 	}
-	base.SetHTTPUserAgent(newRequest,serviceName)
+	base.SetHTTPUserAgent(newRequest, serviceName)
 
 	reqContext, _ := context.WithTimeout(context.Background(), time.Second*40)
 	req, err := retryablehttp.FromRequest(newRequest)
 	req = req.WithContext(reqContext)
 	if err != nil {
 		i.logger.WithField("error", err).Error("SoftAquire() - END")
-		return resResponse,err
+		return resResponse, err
 	}
 
 	req.Header.Add("Content-Type", "application/json")
@@ -461,7 +461,7 @@ func (i *Production) FlexAquire(xnames []string) (ReservationCreateResponse,erro
 	resp, err := i.httpClient.Do(req)
 	if err != nil {
 		i.logger.WithField("error", err).Error("SoftAquire() - END")
-		return resResponse,err
+		return resResponse, err
 	}
 
 	//process response
@@ -469,7 +469,7 @@ func (i *Production) FlexAquire(xnames []string) (ReservationCreateResponse,erro
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		i.logger.WithField("error", err).Error("SoftAquire() - END")
-		return resResponse,err
+		return resResponse, err
 	}
 
 	i.logger.WithField("response", string(body)).Trace("SoftAquire() - Recieved response")
@@ -480,7 +480,7 @@ func (i *Production) FlexAquire(xnames []string) (ReservationCreateResponse,erro
 		err = json.Unmarshal(body, &resResponse)
 		if err != nil {
 			i.logger.WithField("error", err).Error("SoftAquire() - END")
-			return resResponse,err
+			return resResponse, err
 		}
 
 		for _, v := range resResponse.Success {
@@ -501,22 +501,22 @@ func (i *Production) FlexAquire(xnames []string) (ReservationCreateResponse,erro
 		_ = json.Unmarshal(body, &pResponse)
 		err = errors.New(pResponse.Detail)
 		i.logger.WithField("error", err).Error("SoftAquire() - END")
-		return resResponse,err
+		return resResponse, err
 
 	default:
 		err = errors.New(string(body))
 		i.logger.WithField("error", err).Error("SoftAquire() - END")
-		return resResponse,err
+		return resResponse, err
 	}
 
-	return resResponse,nil
+	return resResponse, nil
 }
 
-//Restarts periodic renew for already owned reservations
+// Restarts periodic renew for already owned reservations
 func (i *Production) Reacquire(reservations []Reservation, flex bool) (ReservationReleaseRenewResponse, error) {
 	var (
-		response  ReservationReleaseRenewResponse
-		resKeys   []Key
+		response ReservationReleaseRenewResponse
+		resKeys  []Key
 	)
 
 	i.logger.Trace("Reacquire() - START")
@@ -526,7 +526,7 @@ func (i *Production) Reacquire(reservations []Reservation, flex bool) (Reservati
 	for _, res := range reservations {
 		resMap[res.Xname] = res
 		key := Key{
-			ID: res.Xname,
+			ID:  res.Xname,
 			Key: res.ReservationKey,
 		}
 		resKeys = append(resKeys, key)
@@ -567,7 +567,7 @@ func (i *Production) Check(xnames []string) bool {
 	return valid
 }
 
-func (i *Production) FlexCheck(xnames []string) (ReservationCreateResponse,bool) {
+func (i *Production) FlexCheck(xnames []string) (ReservationCreateResponse, bool) {
 	var retData ReservationCreateResponse
 	i.logger.Trace("SoftCheck() - START")
 
@@ -576,18 +576,18 @@ func (i *Production) FlexCheck(xnames []string) (ReservationCreateResponse,bool)
 		if comp, ok := i.reservedMap[xname]; ok {
 			retData.Success = append(retData.Success,
 				ReservationCreateSuccessResponse{ID: comp.Xname,
-				DeputyKey: comp.DeputyKey,
-				ReservationKey: comp.ReservationKey,
-				ExpirationTime: comp.Expiration.Format(time.RFC3339)})
+					DeputyKey:      comp.DeputyKey,
+					ReservationKey: comp.ReservationKey,
+					ExpirationTime: comp.Expiration.Format(time.RFC3339)})
 		} else {
-			i.logger.Tracef("SoftCheck() - no reservation match for '%s'",xname)
+			i.logger.Tracef("SoftCheck() - no reservation match for '%s'", xname)
 			retData.Failure = append(retData.Failure,
 				FailureResponse{ID: xname, Reason: "Reservation not found."})
 			valid = false
 		}
 	}
 
-	return retData,valid
+	return retData, valid
 }
 
 func (i *Production) Release(xnames []string) error {
@@ -630,7 +630,7 @@ func (i *Production) Release(xnames []string) error {
 		i.logger.WithField("error", err).Error("Release() - END")
 		return err
 	}
-	base.SetHTTPUserAgent(newRequest,serviceName)
+	base.SetHTTPUserAgent(newRequest, serviceName)
 
 	reqContext, _ := context.WithTimeout(context.Background(), time.Second*40)
 	req, err := retryablehttp.FromRequest(newRequest)
@@ -704,14 +704,14 @@ func (i *Production) Release(xnames []string) error {
 	}
 }
 
-func (i *Production) FlexRelease(xnames []string) (ReservationReleaseRenewResponse,error) {
+func (i *Production) FlexRelease(xnames []string) (ReservationReleaseRenewResponse, error) {
 	var retData ReservationReleaseRenewResponse
 
 	i.logger.Trace("SoftRelease() - START")
 	if len(xnames) == 0 {
 		i.logger.Trace("SoftRelease() - END -> nothing to do ")
 		err := errors.New("empty set; failing release operation")
-		return retData,err
+		return retData, err
 	}
 
 	var releaseParams ReservationReleaseParameters
@@ -730,8 +730,8 @@ func (i *Production) FlexRelease(xnames []string) (ReservationReleaseRenewRespon
 			releaseParams.ReservationKeys = append(releaseParams.ReservationKeys, key)
 
 		} else { // xname not in map
-			retData.Failure = append(retData.Failure,FailureResponse{ID: xname,
-									Reason: "Reservation not found."})
+			retData.Failure = append(retData.Failure, FailureResponse{ID: xname,
+				Reason: "Reservation not found."})
 			err := errors.New(xname + " not found in reservation map")
 			i.logger.WithField("error", err).Error("SoftRelease() - END")
 		}
@@ -745,16 +745,16 @@ func (i *Production) FlexRelease(xnames []string) (ReservationReleaseRenewRespon
 	newRequest, err := http.NewRequest("POST", targetURL.String(), bytes.NewBuffer(marshalReleaseParams))
 	if err != nil {
 		i.logger.WithField("error", err).Error("SoftRelease() - END")
-		return retData,err
+		return retData, err
 	}
-	base.SetHTTPUserAgent(newRequest,serviceName)
+	base.SetHTTPUserAgent(newRequest, serviceName)
 
 	reqContext, _ := context.WithTimeout(context.Background(), time.Second*40)
 	req, err := retryablehttp.FromRequest(newRequest)
 	req = req.WithContext(reqContext)
 	if err != nil {
 		i.logger.WithField("error", err).Error("SoftRelease() - END")
-		return retData,err
+		return retData, err
 	}
 
 	req.Header.Add("Content-Type", "application/json")
@@ -763,7 +763,7 @@ func (i *Production) FlexRelease(xnames []string) (ReservationReleaseRenewRespon
 	resp, err := i.httpClient.Do(req)
 	if err != nil {
 		i.logger.WithField("error", err).Error("SoftRelease() - END")
-		return retData,err
+		return retData, err
 	}
 
 	//process response
@@ -771,7 +771,7 @@ func (i *Production) FlexRelease(xnames []string) (ReservationReleaseRenewRespon
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		i.logger.WithField("error", err).Error("SoftRelease() - END")
-		return retData,err
+		return retData, err
 	}
 	i.logger.WithField("response", string(body)).Trace("SoftRelease() - Received response")
 
@@ -782,7 +782,7 @@ func (i *Production) FlexRelease(xnames []string) (ReservationReleaseRenewRespon
 		err = json.Unmarshal(body, &response)
 		if err != nil {
 			i.logger.WithField("error", err).Error("SoftRelease() - END")
-			return retData,err
+			return retData, err
 		}
 
 		i.logger.WithFields(logrus.Fields{"Total": response.Counts.Total,
@@ -796,10 +796,10 @@ func (i *Production) FlexRelease(xnames []string) (ReservationReleaseRenewRespon
 				i.reservationMutex.Lock()
 				delete(i.reservedMap, xname)
 				i.reservationMutex.Unlock()
-				retData.Success.ComponentIDs = append(retData.Success.ComponentIDs,xname)
+				retData.Success.ComponentIDs = append(retData.Success.ComponentIDs, xname)
 			}
 		}
-		retData.Failure = append(retData.Failure,unMapped...)
+		retData.Failure = append(retData.Failure, unMapped...)
 
 		retData.Counts.Success = len(retData.Success.ComponentIDs)
 		retData.Counts.Failure = len(retData.Failure)
@@ -810,15 +810,15 @@ func (i *Production) FlexRelease(xnames []string) (ReservationReleaseRenewRespon
 		_ = json.Unmarshal(body, &response)
 		err = errors.New(response.Detail)
 		i.logger.WithField("error", err).Error("SoftRelease() - END")
-		return retData,err
+		return retData, err
 
 	default:
 		err = errors.New(string(body))
 		i.logger.WithField("error", err).Error("SoftRelease() - END")
-		return retData,err
+		return retData, err
 	}
 
-	return retData,nil
+	return retData, nil
 }
 
 func (i *Production) update() {
@@ -849,7 +849,7 @@ func (i *Production) update() {
 		i.logger.WithField("error", err).Error("update() - END")
 		return
 	}
-	base.SetHTTPUserAgent(newRequest,serviceName)
+	base.SetHTTPUserAgent(newRequest, serviceName)
 
 	reqContext, _ := context.WithTimeout(context.Background(), time.Second*40)
 	req, err := retryablehttp.FromRequest(newRequest)
@@ -927,84 +927,82 @@ func (i *Production) Status() (res map[string]Reservation) {
 	return res
 }
 
-func (i *Production) ValidateDeputyKeys(keys []Key) (ReservationCheckResponse,error) {
+func (i *Production) ValidateDeputyKeys(keys []Key) (ReservationCheckResponse, error) {
 	var lockArray sm.CompLockV2DeputyKeyArray
 	var jdata sm.CompLockV2ReservationResult
 	var retData ReservationCheckResponse
 
 	rmap := make(map[string]bool)
 
-	for _,comp := range(keys) {
+	for _, comp := range keys {
 		rmap[comp.ID] = true
-		if (comp.Key != "") {
+		if comp.Key != "" {
 			lockArray.DeputyKeys = append(lockArray.DeputyKeys,
 				sm.CompLockV2Key{ID: comp.ID, Key: comp.Key})
 		}
 	}
 
-	ba,baerr := json.Marshal(&lockArray)
-	if (baerr != nil) {
-		return retData,fmt.Errorf("Error marshalling deputy key array: %v",baerr)
+	ba, baerr := json.Marshal(&lockArray)
+	if baerr != nil {
+		return retData, fmt.Errorf("Error marshalling deputy key array: %v", baerr)
 	}
 
 	baseURL := i.stateManagerServer + i.reservationPath + "/check"
-	newRequest,err := http.NewRequest(http.MethodPost,baseURL,bytes.NewBuffer(ba))
-	if (err != nil) {
-		return retData,fmt.Errorf("Error constructing HTTP request for deputy key check: %v",
+	newRequest, err := http.NewRequest(http.MethodPost, baseURL, bytes.NewBuffer(ba))
+	if err != nil {
+		return retData, fmt.Errorf("Error constructing HTTP request for deputy key check: %v",
 			err)
 	}
 	req, err := retryablehttp.FromRequest(newRequest)
-	reqContext,_ := context.WithTimeout(context.Background(), 40*time.Second)
+	reqContext, _ := context.WithTimeout(context.Background(), 40*time.Second)
 	req = req.WithContext(reqContext)
 
-	rsp,rsperr := i.httpClient.Do(req)
-	if (rsperr != nil) {
-		return retData,fmt.Errorf("Error sending http request for deputy key check: %v",
+	rsp, rsperr := i.httpClient.Do(req)
+	if rsperr != nil {
+		return retData, fmt.Errorf("Error sending http request for deputy key check: %v",
 			rsperr)
 	}
 
 	switch statusCode := rsp.StatusCode; statusCode {
 	case http.StatusOK:
-		body,bderr := ioutil.ReadAll(rsp.Body)
-		if (bderr != nil) {
-			return retData,fmt.Errorf("Error reading http response for deputy key check: %v",
+		body, bderr := ioutil.ReadAll(rsp.Body)
+		if bderr != nil {
+			return retData, fmt.Errorf("Error reading http response for deputy key check: %v",
 				bderr)
 		}
 
-		err = json.Unmarshal(body,&jdata)
-		if (err != nil) {
-			return retData,fmt.Errorf("Error unmarshalling response for deputy key check: %v",
+		err = json.Unmarshal(body, &jdata)
+		if err != nil {
+			return retData, fmt.Errorf("Error unmarshalling response for deputy key check: %v",
 				err)
 		}
 
 		//Populate success/failure
 
-		for _,comp := range(jdata.Success) {
-			delete(rmap,comp.ID)
+		for _, comp := range jdata.Success {
+			delete(rmap, comp.ID)
 			retData.Success = append(retData.Success,
 				ReservationCheckSuccessResponse{ID: comp.ID,
-					DeputyKey: comp.DeputyKey,
+					DeputyKey:      comp.DeputyKey,
 					ExpirationTime: comp.ExpirationTime})
 		}
 
-		for _,comp := range(jdata.Failure) {
-			delete(rmap,comp.ID)
+		for _, comp := range jdata.Failure {
+			delete(rmap, comp.ID)
 			retData.Failure = append(retData.Failure,
 				FailureResponse{ID: comp.ID, Reason: comp.Reason})
 		}
 
 		//Any remaining map entries mean the key was not found or was invalid.
 
-		for k,_ := range(rmap) {
+		for k, _ := range rmap {
 			retData.Failure = append(retData.Failure,
 				FailureResponse{ID: k, Reason: "Key not found, invalid, or expired"})
 		}
 
-
 	default:
-		return retData,fmt.Errorf("Error response from deputy key check: %d",
+		return retData, fmt.Errorf("Error response from deputy key check: %d",
 			statusCode)
 	}
-	return retData,nil
+	return retData, nil
 }
-

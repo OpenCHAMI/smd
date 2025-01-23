@@ -24,9 +24,10 @@ package hmsds
 
 import (
 	"fmt"
+	"strings"
+
 	base "github.com/Cray-HPE/hms-base"
 	"github.com/Cray-HPE/hms-smd/v2/pkg/sm"
-	"strings"
 )
 
 // Matches generic query sources in external API, but with real table names,
@@ -249,9 +250,8 @@ DELETE FROM components `
 const deleteComponentByIDQuery = deleteComponentPrefix + suffixByID
 const deleteComponentsAllQuery = deleteComponentPrefix + ";"
 
-//getCompIDPrefix
+// getCompIDPrefix
 // Node xname->NID mapping
-//
 const getNodeMapPrefix = `
 SELECT
     id,
@@ -282,7 +282,6 @@ const deleteNodeMapByIDQuery = deleteNodeMapPrefix + suffixByID
 const deleteNodeMapsAllQuery = deleteNodeMapPrefix + ";"
 
 // Power mapping
-//
 const getPowerMapPrefix = `
 SELECT
     id,
