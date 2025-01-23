@@ -2263,7 +2263,7 @@ func (s *SmD) doRedfishEndpointPut(w http.ResponseWriter, r *http.Request) {
 			}
 		} else {
 			// parse data using the new inventory data format (will conform to schema)
-			err = s.parseRedfishEndpointDataV2(w, body)
+			err = s.parseRedfishEndpointDataV2(w, body, true)
 			if err != nil {
 				sendJsonError(w, http.StatusInternalServerError,
 					fmt.Sprintf("failed parsing post data (V2): %v", err))
@@ -2569,7 +2569,7 @@ func (s *SmD) doRedfishEndpointsPost(w http.ResponseWriter, r *http.Request) {
 			}
 		} else {
 			// parse data using the new inventory data format (will conform to schema)
-			err = s.parseRedfishEndpointDataV2(w, body)
+			err = s.parseRedfishEndpointDataV2(w, body, false)
 			if err != nil {
 				sendJsonError(w, http.StatusInternalServerError,
 					fmt.Sprintf("failed parsing post data (V2): %v", err))
@@ -2675,7 +2675,7 @@ func (s *SmD) parseRedfishEndpointData(w http.ResponseWriter, eps *sm.RedfishEnd
 }
 
 // Used for ochami where discovery is diabled
-func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte) error {
+func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, forceUpdate bool) error {
 	s.lg.Printf("parsing request data using V2 parsing method...")
 
 	// NOTE: temporary definition for manager
@@ -2739,7 +2739,15 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte) err
 		if err != nil {
 			sendJsonError(w, http.StatusInternalServerError,
 				fmt.Sprintf("failed to insert %d component(s): %v", rowsAffected, err))
-			return fmt.Errorf("failed to insert %d component(s): %v", rowsAffected, err)
+			if forceUpdate {
+				// upsert here to keep allow returning error for duplicates when not forcing updates
+				_, err := s.db.UpsertComponents([]*base.Component{&component}, false)
+				if err != nil {
+					return fmt.Errorf("failed to update component: %v", rowsAffected, err)
+				}
+			} else {
+				return fmt.Errorf("failed to insert %d component(s): %v", rowsAffected, err)
+			}
 		}
 
 		// create a new ethernet interface with reference to the component above
@@ -2760,6 +2768,24 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte) err
 					// Send this message as 500 or 400 plus error message if it is
 					// an HMSError and not, e.g. an internal DB error code.
 					sendJsonDBError(w, "", "operation 'POST' failed during store.", err)
+				}
+				if forceUpdate {
+					// try deleting and reinserting the CompEthInterface
+					rowAffected, err := s.db.DeleteCompEthInterfaceByID(cei.ID)
+					if err != nil {
+
+					}
+					if rowAffected {
+						err = s.db.InsertCompEthInterface(cei)
+						if err == hmsds.ErrHMSDSDuplicateKey {
+							sendJsonError(w, http.StatusConflict, "operation would conflict "+
+								"with an existing component ethernet interface that has the same MAC address.")
+						} else {
+							// Send this message as 500 or 400 plus error message if it is
+							// an HMSError and not, e.g. an internal DB error code.
+							sendJsonDBError(w, "", "operation 'POST' failed during store.", err)
+						}
+					}
 				}
 				continue
 			}
@@ -2818,6 +2844,12 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte) err
 			if err != nil {
 				sendJsonError(w, http.StatusInternalServerError,
 					fmt.Sprintf("failed to insert %d component(s): %v", rowsAffected, err))
+
+				// upsert here to keep allow returning error for duplicates when not forcing updates
+				_, err := s.db.UpsertComponents([]*base.Component{&component}, false)
+				if err != nil {
+					return fmt.Errorf("failed to update component: %v", rowsAffected, err)
+				}
 				return fmt.Errorf("failed to insert %d component(s): %v", rowsAffected, err)
 			}
 
