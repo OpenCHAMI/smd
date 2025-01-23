@@ -855,17 +855,8 @@ func main() {
 	//Cert mgmt support
 
 	hms_certs.InitInstance(nil, serviceName)
-	vurl := os.Getenv("SMD_VAULT_CA_URL")
-	if vurl != "" {
-		s.LogAlways("Replacing default Vault CA URL with: '%s'", vurl)
-		hms_certs.ConfigParams.VaultCAUrl = vurl
-	}
-	vurl = os.Getenv("SMD_VAULT_PKI_URL")
-	if vurl != "" {
-		s.LogAlways("Replacing default Vault PKI URL with: '%s'", vurl)
-		hms_certs.ConfigParams.VaultPKIUrl = vurl
-	}
-	vurl = os.Getenv("SMD_LOG_INSECURE_FAILOVER")
+
+	vurl := os.Getenv("SMD_LOG_INSECURE_FAILOVER")
 	if vurl != "" {
 		yn, _ := strconv.ParseBool(vurl)
 		if yn == false {

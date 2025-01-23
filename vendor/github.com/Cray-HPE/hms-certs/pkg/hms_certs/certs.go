@@ -1,6 +1,6 @@
 // MIT License
 // 
-// (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+// (C) Copyright [2020-2022] Hewlett Packard Enterprise Development LP
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
@@ -29,7 +29,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"encoding/json"
 	"io"
 	"io/ioutil"
 	"os"
@@ -63,11 +62,12 @@ type vtsAuth struct {
 }
 
 // Used to create certs
-
+// hms-securestorage uses the mapstructure pkg for decoding structs into the map[string]interface{}
+// type needed for the Vault API. The 'mapstructure' tag ensures that the field names are correct.
 type vaultCertReq struct {
-	CommonName string `json:"common_name"`
-	TTL        string `json:"ttl"`
-	AltNames   string `json:"alt_names"`
+	CommonName string `json:"common_name" mapstructure:"common_name"`
+	TTL        string `json:"ttl" mapstructure:"ttl"`
+	AltNames   string `json:"alt_names" mapstructure:"alt_names"`
 }
 
 type VaultCertData struct {
@@ -135,12 +135,11 @@ type HTTPClientPair struct {
 // change them unless you know what you're doing!!
 
 type Config struct {
-	K8SAuthUrl          string	//Defaults to k8sAuthURL
-	VaultPKIUrl         string	//Defaults to vaultPKIURL
-	VaultCAUrl          string	//Defaults to vaultCAURL
 	VaultKeyBase        string	//Defaults to vaultKeyBase
-	VaultJWTFile        string	//Defaults to k8sJWTFile
 	CertKeyBasePath     string	//Defaults to certKeyBasePath
+	VaultPKIBase        string	//Defaults to vaultPKIBase
+	PKIPath             string	//Defaults to pkiPath
+	CAChainPath         string	//Defaults to caPath
 	LogInsecureFailover bool	//Defaults to true
 }
 
@@ -158,13 +157,13 @@ const (
 // Constants used within this package
 
 const (
-	k8sJWTFile      = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-	k8sAuthURL      = "http://cray-vault.vault:8200/v1/auth/kubernetes/login"
-	vaultPKIURL     = "http://cray-vault.vault:8200/v1/pki_common/issue/pki-common"
-	vaultCAURL      = "http://cray-vault.vault:8200/v1/pki_common/ca_chain"
 
 	vaultKeyBase    = "secret"
 	certKeyBasePath = "certs"
+
+	vaultPKIBase    = "pki_common"
+	pkiPath         = "issue/pki-common"
+	caChainPath     = "ca_chain"
 
 	maxCabChassis    = 8
 	maxChassisSlot   = 8
@@ -178,19 +177,17 @@ const (
 // variables which affect the way Vault works, and they are global to the
 // application:
 //
-// CRAY_VAULT_JWT_FILE    # The file containing the access token.  Defaults
-//                        # to the constant k8sJWTfile.
+// CRAY_VAULT_JWT_FILE    # The file containing the access token.
 // CRAY_VAULT_ROLE_FILE   # Namespace file.  Default is /var/run/secrets/kubernetes.io/serviceaccount/namespace
 // CRAY_VAULT_AUTH_PATH   # Vault URL tail for k8s logins.  Default is
 //                        # /auth/kubernetes/login
 // VAULT_ADDR             # URL of Vault, default is http://cray-vault.vault:8200
 
-var ConfigParams = Config{K8SAuthUrl:          k8sAuthURL,
-                          VaultPKIUrl:         vaultPKIURL,
-                          VaultCAUrl:          vaultCAURL,
-                          VaultKeyBase:        vaultKeyBase,
-                          VaultJWTFile:        k8sJWTFile,
+var ConfigParams = Config{VaultKeyBase:        vaultKeyBase,
                           CertKeyBasePath:     certKeyBasePath,
+                          VaultPKIBase:        vaultPKIBase,
+                          PKIPath:             pkiPath,
+                          CAChainPath:         caChainPath,
                           LogInsecureFailover: true,
 }
 
@@ -332,75 +329,10 @@ func CAUpdateUnregister(uri string) error {
 	return nil
 }
 
-//Convenience function to fetch HTTP client for internal use.
-
-func getHTTPClient() *http.Client {
-	if (__httpClient == nil) {
-		__httpTransport = &http.Transport{TLSClientConfig:
-		                                 &tls.Config{InsecureSkipVerify: true},
-		}
-		__httpClient = &http.Client{Transport: __httpTransport,
-		                            Timeout:   (3 * time.Second),
-		}
-	}
-	return __httpClient
-}
-
 // Given a raw key, massage it into a proper vault key (prepend path).
 
 func vaultKey(raw string) string {
 	return path.Join(ConfigParams.CertKeyBasePath,raw)
-}
-
-// Fetch the vault access token.
-
-func getVaultToken() (string,error) {
-	//Get access to vault.  Start by reading the svc acct token file.
-
-	jwtFile := os.Getenv(sstorage.EnvVaultJWTFile)
-	if (jwtFile == "") {
-		jwtFile = ConfigParams.VaultJWTFile
-	}
-	ktoken,kerr := ioutil.ReadFile(jwtFile)
-	if (kerr != nil) {
-		return "",fmt.Errorf("ERROR reading k8s token file '%s': %v",
-			jwtFile,kerr)
-	}
-
-	client := getHTTPClient()
-	pld := `{"jwt":"` + string(ktoken) + `","role":"pki-common-direct"}`
-	req,reqerr := http.NewRequest("POST",ConfigParams.K8SAuthUrl,bytes.NewBuffer([]byte(pld)))
-	if (reqerr != nil) {
-		return "", fmt.Errorf("ERROR creating a new request for kubernetes/login: %v",
-			reqerr)
-	}
-	base.SetHTTPUserAgent(req,instName)
-	defer req.Body.Close()
-	rsp,rsperr := client.Do(req)
-	if (rsperr != nil) {
-		return "",fmt.Errorf("ERROR executing req for kubernetes/login: %v",
-			rsperr)
-	}
-	body,berr := ioutil.ReadAll(rsp.Body)
-	defer rsp.Body.Close()
-
-	if (rsp.StatusCode != http.StatusOK) {
-		return "",fmt.Errorf("ERROR bad rsp code from req for kubernetes/login: %d",
-			rsp.StatusCode)
-	}
-	if (berr != nil) {
-		return "",fmt.Errorf("ERROR can't read rsp body from kubernetes/login: %v",
-			berr)
-	}
-
-	var jdata vaultTokStuff
-	berr = json.Unmarshal(body,&jdata)
-	if (berr != nil) {
-		return "",fmt.Errorf("ERROR can't unmarshal rsp body from kubernetes/login: %v",
-			berr)
-	}
-
-	return jdata.Auth.ClientToken,nil
 }
 
 // Given an endpoint and a domain type, generate all possible SANs for a cert.
@@ -487,56 +419,6 @@ func genAllDomainAltNames(endpoint,domain string) (string,error) {
 	}
 
 	return strings.Join(eps,","),nil
-}
-
-// Create a cert using the Vault PKI.
-//
-// reqData(in):    Ptr to a certificate creation request.
-// vaultToken(in): Token to use for Vault access.
-// retData(out):   Returned cert from PKI.
-// Return:         nil on success, error info on error.
-
-func createTargCerts(reqData *vaultCertReq, vaultToken string,
-                     retData *VaultCertData) error {
-	client := getHTTPClient()
-	ba,berr := json.Marshal(reqData)
-	if (berr != nil) {
-		return fmt.Errorf("Problem marshalling vault cert request data: %v",
-					berr)
-	}
-	req,reqerr := http.NewRequest("POST",ConfigParams.VaultPKIUrl,bytes.NewBuffer(ba))
-	if (reqerr != nil) {
-		return fmt.Errorf("ERROR creating req for vault cert data: %v",
-			reqerr)
-	}
-	base.SetHTTPUserAgent(req,instName)
-	req.Header.Set("X-Vault-Token",vaultToken)
-	rsp,rsperr := client.Do(req)
-	if (rsperr != nil) {
-		return fmt.Errorf("ERROR executing req for vault cert data: %v",
-			rsperr)
-	}
-
-	body,berr := ioutil.ReadAll(rsp.Body)
-	defer rsp.Body.Close()
-
-	if (rsp.StatusCode != http.StatusOK) {
-		return fmt.Errorf("ERROR bad rsp code from req for vault cert data: %d",
-			rsp.StatusCode)
-	}
-
-	if (berr != nil) {
-		return fmt.Errorf("ERROR can't read rsp body from fault cert req: %v",
-			berr)
-	}
-
-	berr = json.Unmarshal(body,retData)
-	if (berr != nil) {
-		return fmt.Errorf("ERROR can't read rsp body from vault cert req: %v",
-			berr)
-	}
-
-	return nil
 }
 
 // Given an XName and a separator, get the front part of an XName
@@ -669,14 +551,14 @@ func CreateCert(endpoints []string, domain string, fqdn string,
                 retData *VaultCertData) error {
 	var vreq vaultCertReq
 
-	domName,err := CheckDomain(endpoints,domain)
+	domName, err := CheckDomain(endpoints, domain)
 	if (err != nil) {
 		return err
 	}
 
-	vaultToken,verr := getVaultToken()
-	if (verr != nil) {
-		return verr
+	ss, err := sstorage.NewVaultAdapterAs(ConfigParams.VaultPKIBase, "pki-common-direct")
+	if (err != nil) {
+		return fmt.Errorf("ERROR creating secure storage adapter: %v", err)
 	}
 
 	//Create the request for vault certs
@@ -685,29 +567,28 @@ func CreateCert(endpoints []string, domain string, fqdn string,
 	vreq.TTL = "8760h"	//1 year TODO: this may change.
 
 	if (len(endpoints) == 1) {
-		vreq.AltNames,err = genAllDomainAltNames(domName,domain)
+		vreq.AltNames, err = genAllDomainAltNames(domName, domain)
 		if (err != nil) {
 			return err
 		}
 	} else {
-		vreq.AltNames = strings.Join(endpoints,",")
+		vreq.AltNames = strings.Join(endpoints, ",")
 	}
 
 	//Append FQDN to each AltName
 
 	if (fqdn != "") {
-		npfqdn := strings.TrimLeft(fqdn,".")
+		npfqdn := strings.TrimLeft(fqdn, ".")
 		fqdn = "." + npfqdn
-		anames := strings.Split(vreq.AltNames,",")
+		anames := strings.Split(vreq.AltNames, ",")
 		for ix := 0; ix < len(anames); ix ++ {
 			anames[ix] = anames[ix] + fqdn
 		}
-		vreq.AltNames = strings.Join(anames,",")
+		vreq.AltNames = strings.Join(anames, ",")
 	}
 
 	//Make the call to Vault
-
-	err = createTargCerts(&vreq, vaultToken, retData)
+	err = ss.StoreWithData(ConfigParams.PKIPath, vreq, retData)
 	if (err != nil) {
 		return err
 	}
@@ -725,48 +606,27 @@ func CreateCert(endpoints []string, domain string, fqdn string,
 //          nil on success, error string on error
 
 func FetchCAChain(uri string) (string,error) {
+	caChain := ""
 	if (uri == VaultCAChainURI) {
-		vaultToken,err := getVaultToken()
+		ss, err := sstorage.NewVaultAdapterAs(ConfigParams.VaultPKIBase, "pki-common-direct")
 		if (err != nil) {
-			return "",err
+			return caChain, fmt.Errorf("ERROR creating secure storage adapter: %v", err)
 		}
-
-		client := getHTTPClient()
-		req,reqerr := http.NewRequest("GET",ConfigParams.VaultCAUrl,nil)
-		if (reqerr != nil) {
-			return "",fmt.Errorf("ERROR creating req for vault ca chain: %v",
-				reqerr)
+		
+		err = ss.Lookup(ConfigParams.CAChainPath, &caChain)
+		if (err != nil) {
+			return caChain, fmt.Errorf("ERROR fetching CA Chain: %v", err)
 		}
-		base.SetHTTPUserAgent(req,instName)
-		req.Header.Set("X-Vault-Token",vaultToken)
-		rsp,rsperr := client.Do(req)
-		if (rsperr != nil) {
-			return "",fmt.Errorf("ERROR executing req for vault ca chain: %v",
-				rsperr)
-		}
-		body,berr := ioutil.ReadAll(rsp.Body)
-		defer rsp.Body.Close()
-
-		if (rsp.StatusCode != http.StatusOK) {
-			return "",fmt.Errorf("ERROR bad rsp code from req for vault ca chain: %d",
-				rsp.StatusCode)
-		}
-
-		if (berr != nil) {
-			return "",fmt.Errorf("ERROR can't read rsp body from vault ca chain req: %v",
-				berr)
-		}
-
-		return string(body),nil
+		return caChain, nil
 	}
 
 	//Nope, must be a file (from configmap)
 
 	data,err := ioutil.ReadFile(uri)
 	if (err != nil) {
-		return "",fmt.Errorf("ERROR reading file '%s': %v",uri,err)
+		return "", fmt.Errorf("ERROR reading file '%s': %v", uri, err)
 	}
-	return string(data),nil
+	return string(data), nil
 }
 
 // Take a cert/key pair and store it in Vault.

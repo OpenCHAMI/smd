@@ -4,11 +4,11 @@ go 1.21
 
 require (
 	github.com/Cray-HPE/hms-base v1.15.0
-	github.com/Cray-HPE/hms-certs v1.3.2
+	github.com/Cray-HPE/hms-certs v1.4.0
 	github.com/Cray-HPE/hms-compcredentials v1.11.2
 	github.com/Cray-HPE/hms-go-http-lib v1.5.3
 	github.com/Cray-HPE/hms-msgbus v1.11.0
-	github.com/Cray-HPE/hms-securestorage v1.12.2
+	github.com/Cray-HPE/hms-securestorage v1.13.0
 	github.com/DATA-DOG/go-sqlmock v1.3.3
 	github.com/Masterminds/squirrel v1.4.0
 	github.com/golang-migrate/migrate/v4 v4.17.1

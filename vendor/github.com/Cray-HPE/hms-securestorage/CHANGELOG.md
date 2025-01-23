@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.13.0] - 2022-06-01
+
+### Added
+
+- NewVaultAdapterAs() function to override the login role
+- StoreWithData() function to return the response from Vault when doing a store/PUT action.
+
+## [1.12.3] - 2021-08-10
+
+### Changed
+
+- Updated dockerfile and .github
+
 ## [1.12.2] - 2021-07-21
 
 ### Changed
