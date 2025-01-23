@@ -722,7 +722,6 @@ func TestDoHandleRFEvent(t *testing.T) {
 
 func DummyHandler(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(404)
-	return
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -794,11 +793,11 @@ var GigabyteCompEPs = []*sm.ComponentEndpoint{
 					"ForceRestart"},
 				Target: "/redfish/v1/Systems/Self/Actions/ComputerSystem.Reset"}},
 			EthNICInfo: []*rf.EthernetNICInfo{
-				&rf.EthernetNICInfo{RedfishId: "1",
+				{RedfishId: "1",
 					Oid:         "/redfish/v1/Systems/Self/EthernetInterfaces/1",
 					Description: "Ethernet Interface Lan1",
 					MACAddress:  "e0:d5:5e:65:91:62"},
-				&rf.EthernetNICInfo{RedfishId: "2",
+				{RedfishId: "2",
 					Oid:         "/redfish/v1/Systems/Self/EthernetInterfaces/2",
 					Description: "Ethernet Interface Lan2",
 					MACAddress:  "e0:d5:5e:65:91:63"}}}},

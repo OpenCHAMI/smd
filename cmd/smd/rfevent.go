@@ -216,7 +216,7 @@ func EventContextDecode(
 	fields := strings.Split(context, ":")
 	for i, field := range fields {
 		setID := false
-		if i == 0 || (xnameID == "" && anyXName == true) {
+		if i == 0 || (xnameID == "" && anyXName) {
 			normField := base.NormalizeHMSCompID(field)
 			if base.IsHMSTypeController(base.GetHMSType(normField)) {
 				xnameID = normField
@@ -224,7 +224,7 @@ func EventContextDecode(
 			}
 		}
 		// If not xname ID, add to generic list
-		if setID == false {
+		if !setID {
 			subLabels = append(subLabels, field)
 		}
 	}
@@ -318,7 +318,7 @@ func (s *SmD) GetEventActionParser(pe *processedRFEvent) EventActionParser {
 	// more compact.
 	for level := 1; level <= 3; level++ {
 		action, ok := eventActionParserLookup[strings.ToLower(lookup)]
-		if ok != true {
+		if !ok {
 			// No match at all, not even a nil pointer to keep trying.
 			// No action for event.
 			return nil
@@ -373,7 +373,7 @@ func ResourcePowerStateChangedParser(s *SmD, pe *processedRFEvent) (*CompUpdate,
 	uri := pe.Origin
 	op := ResourceUnknown
 	for _, arg := range pe.MessageArgs {
-		if strings.HasPrefix(arg, "/") == true {
+		if strings.HasPrefix(arg, "/") {
 			uri = arg
 		} else {
 			switch strings.ToLower(strings.TrimSpace(arg)) {
@@ -659,7 +659,7 @@ func AlertSystemPowerParser(s *SmD, pe *processedRFEvent) (*CompUpdate, error) {
 	uri := pe.Origin
 	op := ResourceUnknown
 	for _, arg := range pe.MessageArgs {
-		if strings.HasPrefix(arg, "/") == true {
+		if strings.HasPrefix(arg, "/") {
 			uri = arg
 		} else {
 			switch strings.ToLower(strings.TrimSpace(arg)) {
@@ -1043,7 +1043,7 @@ func (s *SmD) getIDForURI(epID, URI string) (string, error) {
 	for i := 0; i < 2; i++ {
 		if id == "" {
 			// Not found, try looking up directly in database
-			if didUpdate == false {
+			if !didUpdate {
 				// If found, make sure a sync occurs so it will be in the
 				// cache.
 				found, didUpdate, err = s.checkSyncCompEP(epID, snum)
@@ -1051,7 +1051,7 @@ func (s *SmD) getIDForURI(epID, URI string) (string, error) {
 					return "", err
 				}
 				// Not in DB
-				if found == false {
+				if !found {
 					return "", nil
 				}
 				// Found in DB, try the lookup from the cache again.
@@ -1081,7 +1081,7 @@ func (s *SmD) getCompEPbyID(epID string) (*sm.ComponentEndpoint, error) {
 	for i := 0; i < 2; i++ {
 		if cepi == nil {
 			// Not found, try looking up directly in database
-			if didUpdate == false {
+			if !didUpdate {
 				// If found, make sure a sync occurs so it will be in the
 				// cache.
 				found, didUpdate, err = s.checkSyncCompEP(epID, snum)
@@ -1089,7 +1089,7 @@ func (s *SmD) getCompEPbyID(epID string) (*sm.ComponentEndpoint, error) {
 					return nil, err
 				}
 				// Not in DB
-				if found == false {
+				if !found {
 					return nil, nil
 				}
 				// Found in DB, try the lookup from the cache again
@@ -1137,7 +1137,7 @@ func (s *SmD) getChildIDsForRfEP(epID string) ([]string, error) {
 	for i := 0; i < 2; i++ {
 		if idsStr == "" {
 			// Not found, try looking up directly in database
-			if didUpdate == false {
+			if !didUpdate {
 				// If found, make sure a sync occurs so it will be in the
 				// cache.
 				found, didUpdate, err = s.checkSyncCompEP(epID, snum)
@@ -1145,7 +1145,7 @@ func (s *SmD) getChildIDsForRfEP(epID string) ([]string, error) {
 					return []string{}, err
 				}
 				// Not in DB
-				if found == false {
+				if !found {
 					return []string{}, nil
 				}
 				// Found in DB, try the lookup from the cache again
@@ -1190,7 +1190,7 @@ func (s *SmD) getChildIDsForRfEP(epID string) ([]string, error) {
 func (s *SmD) checkSyncCompEP(xname string, snum int) (found, didUpdate bool, err error) {
 	found = false
 	didUpdate = false
-	ids := []string{}
+	var ids []string
 
 	for i := 0; i < CompEPSyncRetries; i++ {
 		if base.GetHMSType(xname) == base.CabinetPDUController {
