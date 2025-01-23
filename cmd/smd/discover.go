@@ -47,12 +47,12 @@ import (
 func (s *SmD) discoverFromEndpoints(eps []*sm.RedfishEndpoint, id uint, update, force bool) {
 	idsFiltered := make([]string, 0, len(eps))
 	for _, ep := range eps {
-		if update == true && ep.RediscOnUpdate != true {
+		if update && !ep.RediscOnUpdate {
 			s.LogAlways("Skipping discovery for %s since !RediscoverOnUpdate",
 				ep.ID)
 			continue
 		}
-		if ep.Enabled != true {
+		if !ep.Enabled {
 			s.LogAlways("Skipping discovery for %s since !Enabled",
 				ep.ID)
 			continue
@@ -130,11 +130,11 @@ func (s *SmD) discoverFromEndpoints(eps []*sm.RedfishEndpoint, id uint, update, 
 //	ep is a single RedfishEndpoint retrieved from the database.
 //	id is the id of the DiscoveryStatus object to write status to.
 func (s *SmD) discoverFromEndpoint(ep *sm.RedfishEndpoint, id uint, force bool) {
-	if ep.RediscOnUpdate != true {
+	if !ep.RediscOnUpdate {
 		s.LogAlways("Skipping discovery for %s: !RediscoverOnUpdate", ep.ID)
 		return
 	}
-	if ep.Enabled != true {
+	if !ep.Enabled {
 		s.LogAlways("Skipping discovery for %s since !Enabled", ep.ID)
 		return
 	}
@@ -582,7 +582,7 @@ func (s *SmD) DiscoverCompEthInterfaceArray(ep *sm.RedfishEndpoint, ceps *sm.Com
 				ethInfo = cep.RedfishManagerInfo.EthNICInfo
 			}
 		}
-		if ethInfo == nil || len(ethInfo) == 0 {
+		if len(ethInfo) == 0 {
 			continue
 		}
 		for _, ei := range ethInfo {

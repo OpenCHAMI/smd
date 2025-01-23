@@ -1294,14 +1294,10 @@ func NewHMSDB_Test(dsn string, l *log.Logger) (hmsds.HMSDB, *TestResults) {
 }
 
 // Conditional logging function (based on current log level set for conn)
-func (d *hmsdbtest) Log(l hmsds.LogLevel, format string, a ...interface{}) {
-	return
-}
+func (d *hmsdbtest) Log(l hmsds.LogLevel, format string, a ...interface{}) {}
 
 // Log to logging infrastructure regardless of current log level.
-func (d *hmsdbtest) LogAlways(format string, a ...interface{}) {
-	return
-}
+func (d *hmsdbtest) LogAlways(format string, a ...interface{}) {}
 
 // Works like log.Printf, but registers error for function calling the
 // function that is printing the error. e.g. instead of always saying
@@ -1460,7 +1456,8 @@ func (d *hmsdbtest) UpsertComponents(comps []*base.Component, force bool) (map[s
 //
 // If force = true ignores any starting state restrictions and will
 // always set ids to 'state', unless it is already set.
-//   Note: If flag is not set, it will be set to OK (i.e. no flag)
+//
+//	Note: If flag is not set, it will be set to OK (i.e. no flag)
 func (d *hmsdbtest) UpdateCompStates(ids []string, state string, flag string, force bool, pi *hmsds.PartInfo) ([]string, error) {
 	d.t.UpdateCompStates.Input.ids = ids
 	d.t.UpdateCompStates.Input.state = state
@@ -2230,9 +2227,9 @@ func (d *hmsdbtest) DeleteCompEthInterfacesAll() (int64, error) {
 
 // Add IP Address mapping to the existing component ethernet interface.
 // returns:
-//	- ErrHMSDSNoCompEthInterface if the parent component ethernet interface
-// 	- ErrHMSDSDuplicateKey if the parent component ethernet interface already
-//    has that IP address
+//   - ErrHMSDSNoCompEthInterface if the parent component ethernet interface
+//   - ErrHMSDSDuplicateKey if the parent component ethernet interface already
+//     has that IP address
 //
 // Returns key of new IP Address Mapping id, should be the IP address
 func (d *hmsdbtest) AddCompEthInterfaceIPAddress(id string, ipm *sm.IPAddressMapping) (string, error) {
@@ -2295,16 +2292,15 @@ func (d *hmsdbtest) UpsertDiscoveryStatus(stat *sm.DiscoveryStatus) error {
 
 // Atomically:
 //
-// 1. Update discovery-writable fields for RedfishEndpoint
-// 2. Upsert ComponentEndpointArray into database within the
-//    same transaction.
-// 3. Insert or update array of HWInventoryByLocation structs.
-//    If PopulatedFRU is present, these is also added to the DB  If
-//    it is not, this effectively "depopulates" the given locations.
-//    The actual HWInventoryByFRU is stored using within the same
-//    transaction.
-// 4. Inserts or updates HMS Components entries in ComponentArray
-//
+//  1. Update discovery-writable fields for RedfishEndpoint
+//  2. Upsert ComponentEndpointArray into database within the
+//     same transaction.
+//  3. Insert or update array of HWInventoryByLocation structs.
+//     If PopulatedFRU is present, these is also added to the DB  If
+//     it is not, this effectively "depopulates" the given locations.
+//     The actual HWInventoryByFRU is stored using within the same
+//     transaction.
+//  4. Inserts or updates HMS Components entries in ComponentArray
 func (d *hmsdbtest) UpdateAllForRFEndpoint(
 	ep *sm.RedfishEndpoint,
 	ceps *sm.ComponentEndpointArray,
