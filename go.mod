@@ -3,20 +3,20 @@ module github.com/Cray-HPE/hms-smd/v2
 go 1.21
 
 require (
-	github.com/Cray-HPE/hms-base v1.15.0
+	github.com/Cray-HPE/hms-base v1.15.1
 	github.com/Cray-HPE/hms-certs v1.4.0
-	github.com/Cray-HPE/hms-compcredentials v1.11.2
-	github.com/Cray-HPE/hms-go-http-lib v1.5.3
+	github.com/Cray-HPE/hms-compcredentials v1.11.3
+	github.com/Cray-HPE/hms-go-http-lib v1.5.4
 	github.com/Cray-HPE/hms-msgbus v1.11.0
 	github.com/Cray-HPE/hms-securestorage v1.13.0
-	github.com/DATA-DOG/go-sqlmock v1.3.3
-	github.com/Masterminds/squirrel v1.4.0
+	github.com/DATA-DOG/go-sqlmock v1.5.0
+	github.com/Masterminds/squirrel v1.5.2
 	github.com/golang-migrate/migrate/v4 v4.17.1
-	github.com/google/uuid v1.4.0
-	github.com/gorilla/mux v1.7.4
+	github.com/google/uuid v1.6.0
+	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-retryablehttp v0.7.0
 	github.com/lib/pq v1.10.9
-	github.com/sirupsen/logrus v1.9.2
+	github.com/sirupsen/logrus v1.9.3
 )
 
 require (

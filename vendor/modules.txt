@@ -1,13 +1,13 @@
-# github.com/Cray-HPE/hms-base v1.15.0
+# github.com/Cray-HPE/hms-base v1.15.1
 ## explicit; go 1.16
 github.com/Cray-HPE/hms-base
 # github.com/Cray-HPE/hms-certs v1.4.0
 ## explicit; go 1.16
 github.com/Cray-HPE/hms-certs/pkg/hms_certs
-# github.com/Cray-HPE/hms-compcredentials v1.11.2
+# github.com/Cray-HPE/hms-compcredentials v1.11.3
 ## explicit; go 1.16
 github.com/Cray-HPE/hms-compcredentials
-# github.com/Cray-HPE/hms-go-http-lib v1.5.3
+# github.com/Cray-HPE/hms-go-http-lib v1.5.4
 ## explicit; go 1.16
 github.com/Cray-HPE/hms-go-http-lib
 # github.com/Cray-HPE/hms-msgbus v1.11.0
@@ -16,11 +16,11 @@ github.com/Cray-HPE/hms-msgbus
 # github.com/Cray-HPE/hms-securestorage v1.13.0
 ## explicit; go 1.16
 github.com/Cray-HPE/hms-securestorage
-# github.com/DATA-DOG/go-sqlmock v1.3.3
+# github.com/DATA-DOG/go-sqlmock v1.5.0
 ## explicit
 github.com/DATA-DOG/go-sqlmock
-# github.com/Masterminds/squirrel v1.4.0
-## explicit
+# github.com/Masterminds/squirrel v1.5.2
+## explicit; go 1.14
 github.com/Masterminds/squirrel
 # github.com/confluentinc/confluent-kafka-go v1.7.0
 ## explicit
@@ -46,10 +46,10 @@ github.com/golang-migrate/migrate/v4/source/iofs
 github.com/golang/snappy
 # github.com/google/go-cmp v0.5.9
 ## explicit; go 1.13
-# github.com/google/uuid v1.4.0
+# github.com/google/uuid v1.6.0
 ## explicit
 github.com/google/uuid
-# github.com/gorilla/mux v1.7.4
+# github.com/gorilla/mux v1.8.0
 ## explicit; go 1.12
 github.com/gorilla/mux
 # github.com/hashicorp/errwrap v1.1.0
@@ -118,7 +118,7 @@ github.com/pierrec/lz4/internal/xxh32
 # github.com/ryanuber/go-glob v1.0.0
 ## explicit
 github.com/ryanuber/go-glob
-# github.com/sirupsen/logrus v1.9.2
+# github.com/sirupsen/logrus v1.9.3
 ## explicit; go 1.13
 github.com/sirupsen/logrus
 # go.uber.org/atomic v1.7.0

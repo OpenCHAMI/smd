@@ -1,11 +1,11 @@
-NAME ?= hms-compcredentials 
+NAME ?= hms-compcredentials
 VERSION ?= $(shell cat .version)
 
 all : unittest coverage
 
 unittest:
-		docker build --pull ${DOCKER_ARGS} --tag '${NAME}:${VERSION}' .
-		./runUnitTest.sh
+	docker build --pull ${DOCKER_ARGS} --tag '${NAME}:${VERSION}' .
+	./runUnitTest.sh
 
 coverage:
-		./runCoverage.sh	
+	./runCoverage.sh
