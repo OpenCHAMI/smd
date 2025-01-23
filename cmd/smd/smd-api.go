@@ -2219,7 +2219,6 @@ func (s *SmD) doRedfishEndpointPut(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// TODO: Change behavior to create a new RedfishEndpoint entry
 	retEP, affectedIDs, err := s.db.UpdateRFEndpointNoDiscInfo(ep)
 	if err != nil {
 		s.lg.Printf("failed: %s %s, Err: %s", r.RemoteAddr, string(body), err)
@@ -2247,34 +2246,29 @@ func (s *SmD) doRedfishEndpointPut(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// check for the data format sent via the schema version
-		var (
-			schemaVersion = s.getSchemaVersion(w, body)
-			eps           = &sm.RedfishEndpointArray{
-				RedfishEndpoints: []*sm.RedfishEndpoint{ep},
-			}
-		)
-		if schemaVersion <= 0 {
-			// parse data and populate component endpoints before inserting into db
-			err = s.parseRedfishEndpointData(w, eps, body)
-			if err != nil {
-				sendJsonError(w, http.StatusInternalServerError,
-					fmt.Sprintf("failed parsing post data: %v", err))
-			}
-		} else {
-			// parse data using the new inventory data format (will conform to schema)
-			err = s.parseRedfishEndpointDataV2(w, body, true)
-			if err != nil {
-				sendJsonError(w, http.StatusInternalServerError,
-					fmt.Sprintf("failed parsing post data (V2): %v", err))
-			}
-		}
+	}
 
-		// TODO: This is too be removed since we don't want this behavior.
-		//
-		// No error, but no update: Resource was not found.
-		// s.lg.Printf("doRedfishEndpointPut: No such entry %s", rep.ID)
-		// sendJsonError(w, http.StatusNotFound, "No such entry: "+rep.ID)
+	// parse incoming data to add components, component endpoints, and ethernet interfaces
+	var (
+		schemaVersion = s.getSchemaVersion(w, body)
+		eps           = &sm.RedfishEndpointArray{
+			RedfishEndpoints: []*sm.RedfishEndpoint{ep},
+		}
+	)
+	if schemaVersion <= 0 {
+		// parse data and populate component endpoints before inserting into db
+		err = s.parseRedfishEndpointData(w, eps, body)
+		if err != nil {
+			sendJsonError(w, http.StatusInternalServerError,
+				fmt.Sprintf("failed parsing post data: %v", err))
+		}
+	} else {
+		// parse data using the new inventory data format (will conform to schema)
+		err = s.parseRedfishEndpointDataV2(w, body, true)
+		if err != nil {
+			sendJsonError(w, http.StatusInternalServerError,
+				fmt.Sprintf("failed parsing post data (V2): %v", err))
+		}
 	}
 
 	// Store credentials that are given in vault
@@ -2762,31 +2756,38 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 			err = s.db.InsertCompEthInterface(cei)
 			if err != nil {
 				if err == hmsds.ErrHMSDSDuplicateKey {
-					sendJsonError(w, http.StatusConflict, "operation would conflict "+
-						"with an existing component ethernet interface that has the same MAC address.")
+					if forceUpdate {
+						// Duplicate key detected, but foreceUpdate enabled, so we delete and readd.
+
+						// try deleting and reinserting the CompEthInterface since there is not an upsert/update function
+						rowAffected, err := s.db.DeleteCompEthInterfaceByID(cei.ID)
+						if err != nil {
+							sendJsonDBError(w, "", "operation failed trying to delete component ethernet interface.", err)
+							continue
+						}
+						if rowAffected {
+							err = s.db.InsertCompEthInterface(cei)
+							if err != nil {
+								if err == hmsds.ErrHMSDSDuplicateKey {
+									sendJsonError(w, http.StatusConflict, "operation would conflict "+
+										"with an existing component ethernet interface that has the same MAC address.")
+								} else {
+									// Send this message as 500 or 400 plus error message if it is
+									// an HMSError and not, e.g. an internal DB error code.
+									sendJsonDBError(w, "", "operation  failed during store.", err)
+								}
+							}
+						}
+					} else {
+						// forceUpdate was not enabled when duplicate key was found, so we err.
+						sendJsonError(w, http.StatusConflict, "operation would conflict "+
+							"with an existing component ethernet interface that has the same MAC address.")
+					}
 				} else {
+					// Some other error occurred that we want to let the user know about.
 					// Send this message as 500 or 400 plus error message if it is
 					// an HMSError and not, e.g. an internal DB error code.
 					sendJsonDBError(w, "", "operation failed during store.", err)
-				}
-				if forceUpdate {
-					// try deleting and reinserting the CompEthInterface since there is not an upsert/update function
-					rowAffected, err := s.db.DeleteCompEthInterfaceByID(cei.ID)
-					if err != nil {
-						sendJsonDBError(w, "", "operation failed trying to delete component ethernet interface.", err)
-						continue
-					}
-					if rowAffected {
-						err = s.db.InsertCompEthInterface(cei)
-						if err == hmsds.ErrHMSDSDuplicateKey {
-							sendJsonError(w, http.StatusConflict, "operation would conflict "+
-								"with an existing component ethernet interface that has the same MAC address.")
-						} else {
-							// Send this message as 500 or 400 plus error message if it is
-							// an HMSError and not, e.g. an internal DB error code.
-							sendJsonDBError(w, "", "operation  failed during store.", err)
-						}
-					}
 				}
 				continue
 			}
