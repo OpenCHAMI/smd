@@ -2743,7 +2743,7 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 				// upsert here to keep allow returning error for duplicates when not forcing updates
 				_, err := s.db.UpsertComponents([]*base.Component{&component}, false)
 				if err != nil {
-					return fmt.Errorf("failed to update component: %v", rowsAffected, err)
+					return fmt.Errorf("failed to update component: %w", err)
 				}
 			} else {
 				return fmt.Errorf("failed to insert %d component(s): %v", rowsAffected, err)
@@ -2848,7 +2848,7 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 				// upsert here to keep allow returning error for duplicates when not forcing updates
 				_, err := s.db.UpsertComponents([]*base.Component{&component}, false)
 				if err != nil {
-					return fmt.Errorf("failed to update component: %v", rowsAffected, err)
+					return fmt.Errorf("failed to update component: %w", err)
 				}
 				return fmt.Errorf("failed to insert %d component(s): %v", rowsAffected, err)
 			}
