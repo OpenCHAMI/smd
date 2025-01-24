@@ -43,6 +43,7 @@ import (
 	sstorage "github.com/Cray-HPE/hms-securestorage"
 	"github.com/Cray-HPE/hms-smd/v2/internal/hbtdapi"
 	"github.com/Cray-HPE/hms-smd/v2/internal/hmsds"
+	"github.com/Cray-HPE/hms-smd/v2/internal/pgmigrate"
 	"github.com/Cray-HPE/hms-smd/v2/internal/slsapi"
 	"github.com/Cray-HPE/hms-smd/v2/pkg/rf"
 	"github.com/Cray-HPE/hms-smd/v2/pkg/sm"
@@ -522,6 +523,8 @@ func (s *SmD) GetHTTPClient() *retryablehttp.Client {
 	return s.httpClient
 }
 
+var applyMigrations bool
+
 // Parse command line options.
 func (s *SmD) parseCmdLine() {
 	flag.StringVar(&s.msgbusListen, "msg-host", "",
@@ -548,6 +551,7 @@ func (s *SmD) parseCmdLine() {
 	flag.StringVar(&s.dbHost, "dbhost", "", "Database hostname")
 	flag.StringVar(&s.dbPortStr, "dbport", "", "Database port")
 	flag.StringVar(&s.dbOpts, "dbopts", "", "Database options string")
+	flag.BoolVar(&applyMigrations, "migrate", false, "Apply all database migrations before starting")
 	help := flag.Bool("h", false, "Print help and exit")
 
 	flag.Parse()
@@ -718,6 +722,8 @@ func (s *SmD) setDSN() {
 }
 
 func main() {
+	PrintVersionInfo()
+
 	var s SmD
 	var err error
 
@@ -817,6 +823,24 @@ func main() {
 			hmsdsLgLvl = hmsds.LOG_DEBUG
 		}
 		s.db.SetLogLevel(hmsdsLgLvl)
+	}
+	if applyMigrations {
+		s.LogAlways("Applying all unapplied migrations")
+		for {
+			migrateConnection, err := pgmigrate.DBConnect(s.dbDSN)
+			if err != nil {
+				s.LogAlways("Error connecting to database: %s", err)
+				time.Sleep(5 * time.Second)
+				continue
+			}
+			err = pgmigrate.ApplyMigrations("/persistent_migrations", migrateConnection)
+			if err != nil {
+				s.LogAlways("Error applying migrations: %s", err)
+				time.Sleep(5 * time.Second)
+				continue
+			}
+			break
+		}
 	}
 	for {
 		if err := s.db.Open(); err != nil {
