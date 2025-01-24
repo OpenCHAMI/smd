@@ -194,7 +194,7 @@ func (s *SmD) SetLogLevel(lvl LogLevel) error {
 		s.lgLvl = lvl
 		return nil
 	} else {
-		err := errors.New("Warning: verbose level unchanged")
+		err := errors.New("warning: verbose level unchanged")
 		s.lg.Printf("%s", err)
 		return err
 	}
@@ -485,7 +485,7 @@ func (s *SmD) DiscoveryUpdater() {
 			s.discMapLock.Lock()
 			if len(s.discMap) > 0 {
 				discIDs := make([]string, 0, 1)
-				for id, _ := range s.discMap {
+				for id := range s.discMap {
 					discIDs = append(discIDs, id)
 				}
 				// Cause the discovery LastStatus to get updated for all of these IDs to
@@ -557,7 +557,7 @@ func (s *SmD) parseCmdLine() {
 	flag.Parse()
 
 	// Help message.
-	if help != nil && *help == true {
+	if help != nil && *help {
 		flag.Usage()
 		os.Exit(0)
 	}
@@ -767,7 +767,8 @@ func main() {
 			serviceName)
 	}
 
-	s.LogAlways("Starting...\n")
+	s.LogAlways("Starting... " + serviceName + " " + Version + " " + GitCommit + "\n")
+	s.LogAlways(VersionInfo())
 
 	// Route logs from Redfish interrogration to main smd log.
 	rf.SetLogger(s.lg)
@@ -883,7 +884,7 @@ func main() {
 	vurl := os.Getenv("SMD_LOG_INSECURE_FAILOVER")
 	if vurl != "" {
 		yn, _ := strconv.ParseBool(vurl)
-		if yn == false {
+		if !yn {
 			//Defaults to true
 			hms_certs.ConfigParams.LogInsecureFailover = false
 		}
@@ -928,7 +929,7 @@ func main() {
 	router := s.NewRouter(routes)
 
 	s.LogAlways("GOMAXPROCS is: %v", runtime.GOMAXPROCS(0))
-	s.LogAlways("Listening for connections.")
+	s.LogAlways("Listening for connections at: %v", s.httpListen)
 	err = s.setupCerts(s.tlsCert, s.tlsKey)
 	if err == nil {
 		err = http.ListenAndServeTLS(s.httpListen, s.tlsCert, s.tlsKey, router)
