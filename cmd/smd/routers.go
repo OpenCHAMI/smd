@@ -24,9 +24,13 @@ package main
 
 import (
 	"net/http"
+	"os"
 	"strings"
+	"time"
 
-	"github.com/gorilla/mux"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/gorilla/handlers"
 )
 
 type Route struct {
@@ -38,46 +42,56 @@ type Route struct {
 
 type Routes []Route
 
-func (s *SmD) NewRouter(routes []Route) *mux.Router {
-	router := mux.NewRouter().StrictSlash(true)
+func (s *SmD) NewRouter(publicRoutes []Route, protectedRoutes []Route) *chi.Mux {
+	// create router and use recommended middleware
+	router := chi.NewRouter()
+	router.Use(middleware.RequestID)
+	router.Use(middleware.RealIP)
+	router.Use(middleware.Logger)
+	router.Use(middleware.Recoverer)
+	router.Use(middleware.StripSlashes)
+	// todo resolve openchami source usage
+	// router.Use(openchami_logger.OpenCHAMILogger(logger))
+	router.NotFound(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		s.Logger(http.NotFoundHandler(), "NotFoundHandler")
+	}))
+
+	router.Use(middleware.Timeout(60 * time.Second))
+	// todo make jwksURL check and changes
+
+	routes := append(publicRoutes, protectedRoutes...)
 	for _, route := range routes {
 		var handler http.Handler
 		handler = route.HandlerFunc
 		if s.lgLvl >= LOG_DEBUG ||
 			(!strings.Contains(route.Name, "doReadyGet") &&
-			!strings.Contains(route.Name, "doLivenessGet")) {
-			handler = s.Logger(handler, route.Name)
+				!strings.Contains(route.Name, "doLivenessGet")) {
+			handler = handlers.CombinedLoggingHandler(os.Stdout, handler)
 		}
-
-		router.
-			Methods(route.Method).
-			Path(route.Pattern).
-			Name(route.Name).
-			Handler(handler)
+		router.Method(
+			route.Method,
+			route.Pattern,
+			handler,
+		)
 	}
 
-	router.MethodNotAllowedHandler = http.HandlerFunc(s.doMethodNotAllowedHandler)
+	router.MethodNotAllowed(http.HandlerFunc(s.doMethodNotAllowedHandler))
 	s.router = router
-
 	return router
 }
 
 func (s *SmD) getAllMethodsForRequest(req *http.Request) []string {
-	var allMethods []string
+	var methods []string
 	smdRoutes := s.generateRoutes()
+	path := req.URL.Path
 	for _, smdRoute := range smdRoutes {
-		route := s.router.Get(smdRoute.Name)
-		if route != nil {
-			var match mux.RouteMatch
-			if route.Match(req, &match) || match.MatchErr == mux.ErrMethodMismatch {
-				methods, err := route.GetMethods()
-				if err == nil {
-					allMethods = append(allMethods, methods...)
-				}
-			}
+		// toto match patterns
+		// for example be able to match a url to the pattern: /hsm/v2/State/Components/{xname}
+		if strings.EqualFold(path, smdRoute.Pattern) {
+			methods = append(methods, smdRoute.Method)
 		}
 	}
-	return allMethods
+	return methods
 }
 
 func (s *SmD) doMethodNotAllowedHandler(w http.ResponseWriter, r *http.Request) {
@@ -93,7 +107,7 @@ func (s *SmD) doMethodNotAllowedHandler(w http.ResponseWriter, r *http.Request) 
 	sendJsonError(w, http.StatusMethodNotAllowed, "allow "+allowString)
 }
 
-func (s *SmD) generateRoutes() Routes {
+func (s *SmD) generatePublicRoutes() Routes {
 	return Routes{
 
 		///////////////////////////////////////////////////////////////////////
@@ -167,6 +181,25 @@ func (s *SmD) generateRoutes() Routes {
 			s.valuesBaseV2 + "/type",
 			s.doTypeValuesGet,
 		},
+		// other
+		Route{
+			"doComponentsGetV2",
+			strings.ToUpper("Get"),
+			s.componentsBaseV2,
+			s.doComponentsGet,
+		},
+		Route{
+			"doCompEthInterfacesGetV2",
+			strings.ToUpper("Get"),
+			s.compEthIntBaseV2,
+			s.doCompEthInterfacesGetV2,
+		},
+	}
+}
+
+func (s *SmD) generateProtectedRoutes() Routes {
+	return Routes{
+
 		// Components
 		Route{
 			"doComponentGetV2",
@@ -185,12 +218,6 @@ func (s *SmD) generateRoutes() Routes {
 			strings.ToUpper("Delete"),
 			s.componentsBaseV2 + "/{xname}",
 			s.doComponentDelete,
-		},
-		Route{
-			"doComponentsGetV2",
-			strings.ToUpper("Get"),
-			s.componentsBaseV2,
-			s.doComponentsGet,
 		},
 		Route{
 			"doComponentsPostV2",
@@ -366,12 +393,6 @@ func (s *SmD) generateRoutes() Routes {
 		},
 
 		// Component Ethernet Interfaces - V2
-		Route{
-			"doCompEthInterfacesGetV2",
-			strings.ToUpper("Get"),
-			s.compEthIntBaseV2,
-			s.doCompEthInterfacesGetV2,
-		},
 		Route{
 			"doCompEthInterfacePostV2",
 			strings.ToUpper("Post"),
@@ -934,4 +955,8 @@ func (s *SmD) generateRoutes() Routes {
 			s.doPowerMapsDeleteAll,
 		},
 	}
+}
+
+func (s *SmD) generateRoutes() Routes {
+	return append(s.generatePublicRoutes(), s.generateProtectedRoutes()...)
 }

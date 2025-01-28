@@ -47,7 +47,7 @@ import (
 	"github.com/Cray-HPE/hms-smd/v2/internal/slsapi"
 	"github.com/Cray-HPE/hms-smd/v2/pkg/rf"
 	"github.com/Cray-HPE/hms-smd/v2/pkg/sm"
-	"github.com/gorilla/mux"
+	"github.com/go-chi/chi/v5"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/sirupsen/logrus"
 )
@@ -93,18 +93,19 @@ type SmD struct {
 	dbPort    int
 	dbOpts    string
 
-	logDir          string
-	tlsCert         string
-	tlsKey          string
-	proxyURL        string
-	httpListen      string
-	msgbusListen    string
-	logLevelIn      int
-	msgbusConfig    msgbus.MsgBusConfig
-	msgbusHandle    msgbus.MsgBusIO
-	hwInvHistAgeMax int
-	smapCompEP      *SyncMap
-	genTestPayloads string
+	logDir           string
+	tlsCert          string
+	tlsKey           string
+	proxyURL         string
+	httpListen       string
+	msgbusListen     string
+	logLevelIn       int
+	msgbusConfig     msgbus.MsgBusConfig
+	msgbusHandle     msgbus.MsgBusIO
+	hwInvHistAgeMax  int
+	smapCompEP       *SyncMap
+	genTestPayloads  string
+	disableDiscovery bool
 
 	// v2 APIs
 	apiRootV2           string
@@ -160,7 +161,7 @@ type SmD struct {
 	discMapLock sync.Mutex
 
 	//router
-	router *mux.Router
+	router *chi.Mux
 
 	httpClient *retryablehttp.Client
 }
@@ -552,6 +553,7 @@ func (s *SmD) parseCmdLine() {
 	flag.StringVar(&s.dbPortStr, "dbport", "", "Database port")
 	flag.StringVar(&s.dbOpts, "dbopts", "", "Database options string")
 	flag.BoolVar(&applyMigrations, "migrate", false, "Apply all database migrations before starting")
+	flag.BoolVar(&s.disableDiscovery, "disable-discovery", false, "Disable discovery-related subroutines")
 	help := flag.Bool("h", false, "Print help and exit")
 
 	flag.Parse()
@@ -921,15 +923,21 @@ func main() {
 	s.srfpJobList = make(map[string]*Job, 0)
 	s.discMap = make(map[string]int, 0)
 	s.JobSync()
-	s.DiscoverySync()
-	s.DiscoveryUpdater()
+	if !s.disableDiscovery {
+		s.DiscoverySync()
+		s.DiscoveryUpdater()
+	}
 
 	// Start serving HTTP
-	routes := s.generateRoutes()
-	router := s.NewRouter(routes)
+	var router *chi.Mux
+	publicRoutes := s.generatePublicRoutes()
+	protectedRoutes := s.generateProtectedRoutes()
+	router = s.NewRouter(publicRoutes, protectedRoutes)
 
 	s.LogAlways("GOMAXPROCS is: %v", runtime.GOMAXPROCS(0))
 	s.LogAlways("Listening for connections at: %v", s.httpListen)
+	s.LogAlways("Registered SMD protected routes: %v", protectedRoutes)
+	s.LogAlways("Registered SMD public routes: %v", publicRoutes)
 	err = s.setupCerts(s.tlsCert, s.tlsKey)
 	if err == nil {
 		err = http.ListenAndServeTLS(s.httpListen, s.tlsCert, s.tlsKey, router)
