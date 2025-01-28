@@ -83,6 +83,12 @@ type MemberAddBody struct {
 	ID string `json:"id"` // xname
 }
 
+// For PUT to members endpoint to set group member list
+type MemberPutBody struct {
+	Group string   `json:"group"`
+	IDs   []string `json:"ids"`
+}
+
 // Check ids array for xname fitneess.  If no error is returned,
 // the ids are valid.
 func (ms *Members) Verify() error {

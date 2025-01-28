@@ -4694,6 +4694,69 @@ func (s *SmD) doGroupMembersPost(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// Set the member list for group {group_label} to the list of component xname
+// IDs provided in the payload. If any members in the payload already exist in
+// the group, they remain in the group. If any members in the payload do not
+// already exist in the group, they are added to the group. Any xnames that
+// exist in the group that are not in the payload are removed from the group.
+func (s *SmD) doGroupMembersPut(w http.ResponseWriter, r *http.Request) {
+	var membersIn sm.MemberPutBody
+
+	label := sm.NormalizeGroupField(chi.URLParam(r, "group_label"))
+
+	if sm.VerifyGroupField(label) != nil {
+		s.lg.Printf("doGroupMemberPut(): Invalid group label.")
+		sendJsonError(w, http.StatusBadRequest,
+			"Invalid group label.")
+		return
+	}
+	body, err := ioutil.ReadAll(r.Body)
+	err = json.Unmarshal(body, &membersIn)
+	if err != nil {
+		s.lg.Printf("doGroupMemberPut(): Unmarshal body: %s", err)
+		sendJsonError(w, http.StatusInternalServerError,
+			"error decoding JSON "+err.Error())
+		return
+	}
+	var invalidCompIDs []string
+	var validCompIDs   []string
+	for _, compID := range membersIn.IDs {
+		normID := base.NormalizeHMSCompID(compID)
+		if !base.IsHMSCompIDValid(normID) {
+			s.lg.Printf("doGroupMemberPost(): Invalid xname ID: %s", compID)
+			invalidCompIDs = append(invalidCompIDs, compID)
+		} else {
+			validCompIDs = append(validCompIDs, normID)
+		}
+	}
+	if len(invalidCompIDs) > 0 {
+		sendJsonError(w, http.StatusBadRequest, fmt.Sprintf("invalid xname IDs: %v", invalidCompIDs))
+		return
+	}
+	ids, err := s.db.SetGroupMembers(label, validCompIDs)
+	if err != nil {
+		s.lg.Printf("doGroupMemberPut(): %s %s Err: %s", r.RemoteAddr, string(body), err)
+		if err == hmsds.ErrHMSDSNoGroup {
+			sendJsonError(w, http.StatusNotFound, "No such group: "+label)
+		} else if err == hmsds.ErrHMSDSExclusiveGroup {
+			sendJsonError(w, http.StatusConflict, "operation would conflict "+
+				"with an existing member in another exclusive group.")
+		} else {
+			// Send this message as 500 or 400 plus error message if it is
+			// an HMSError and not, e.g. an internal DB error code.
+			sendJsonDBError(w, "", "operation 'PUT' failed during store.", err)
+		}
+		return
+	}
+
+	var uris []*sm.ResourceURI
+	for _, id := range ids {
+		uris = append(uris, &sm.ResourceURI{URI: s.groupsBaseV2 + "/" + label + "/members/" + id})
+	}
+	sendJsonNewResourceIDArray(w, s.groupsBaseV2, uris)
+
+}
+
 // Remove component {xname_id} from the members of group {group_label}.
 func (s *SmD) doGroupMemberDelete(w http.ResponseWriter, r *http.Request) {
 

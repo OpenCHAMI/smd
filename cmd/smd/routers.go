@@ -823,6 +823,12 @@ func (s *SmD) generateProtectedRoutes() Routes {
 			s.doGroupMembersPost,
 		},
 		Route{
+			"doGroupMembersPutV2",
+			strings.ToUpper("Put"),
+			s.groupsBaseV2 + "/{group_label}/members",
+			s.doGroupMembersPut,
+		},
+		Route{
 			"doGroupMemberDeleteV2",
 			strings.ToUpper("Delete"),
 			s.groupsBaseV2 + "/{group_label}/members/{xname_id}",

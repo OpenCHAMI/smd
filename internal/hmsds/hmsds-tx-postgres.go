@@ -5156,6 +5156,28 @@ func (t *hmsdbPgTx) DeleteMemberTx(uuid, id string) (bool, error) {
 	return false, nil
 }
 
+// Given an internal group_id uuid, delete all of its members. Returns the
+// number of deletions, if any, and any error that may have occurred.
+func (t *hmsdbPgTx) DeleteMembersAllTx(guuid string) (int64, error) {
+	// Build query
+	query := sq.Delete(compGroupMembersTable).Where("group_id = ?", guuid)
+
+	// Execute - Can delete one or more rows
+	query = query.PlaceholderFormat(sq.Dollar)
+	res, err := query.RunWith(t.sc).ExecContext(t.ctx)
+	if err != nil {
+		return 0, fmt.Errorf("Error: DeleteMembersAllTx(): failed to exec delete query: %w", err)
+	}
+
+	// Calculate number of deletions
+	num, err := res.RowsAffected()
+	if err != nil {
+		err = fmt.Errorf("Error: DeleteMembersAllTx(): failed to get number of affected rows: %w", err)
+	}
+
+	return num, err
+}
+
 ////////////////////////////////////////////////////////////////////////////
 //
 // Component Lock Management

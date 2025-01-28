@@ -3863,6 +3863,68 @@ func (d *hmsdbPg) DeleteGroupMember(label, id string) (bool, error) {
 	return didDelete, err
 }
 
+// Sets membership list of group label to ids. If any xnames in ids already
+// exist in group, they stay in the group. If any xnames in ids do not already
+// exist in group, they are added. If any xnames that already exist in group are
+// not in ids, they are removed. An error is returned if one occurs, otherwise
+// nil.
+func (d *hmsdbPg) SetGroupMembers(label string, ids []string) ([]string, error) {
+	// Prepare membership data and verify member xnames
+	ms := new(sm.Members)
+	ms.IDs = ids
+	ms.Normalize()
+	if err := ms.Verify(); err != nil {
+		return []string{}, fmt.Errorf("failed to verify member xnames: %w", err)
+	}
+
+	// Start transaction
+	t, err := d.Begin()
+	if err != nil {
+		return []string{}, fmt.Errorf("failed to begin postgres transaction: %w", err)
+	}
+
+	// Group needs to exist for this to work
+	uuid, g, err := t.GetEmptyGroupTx(label)
+	if err != nil {
+		// A different error occurred
+		return []string{}, fmt.Errorf("failed to get group %q: %w", err)
+	} else if g == nil || uuid == "" {
+		// Group does not exist
+		t.Rollback()
+		return []string{}, ErrHMSDSNoGroup
+	}
+
+	// Determine namespace
+	//
+	// Default is non-exclusive group name
+	namespace := g.Label
+	if g.ExclusiveGroup != "" {
+		// exclusive group - uniquified exclusive group as namespace
+		namespace = "%" + g.ExclusiveGroup + "%"
+	}
+
+	// Delete old groups
+	if _, err := t.DeleteMembersAllTx(uuid); err != nil {
+		t.Rollback()
+		return []string{}, fmt.Errorf("failed to delete old groups from %q: %w", label, err)
+	}
+
+	// Add new groups
+	err = t.InsertMembersTx(uuid, namespace, ms)
+	if err != nil {
+		t.Rollback()
+		return []string{}, fmt.Errorf("failed to add new members %v to group %q: %w", ids, label, err)
+	}
+
+	// Commit changes
+	err = t.Commit()
+	if err != nil {
+		err = fmt.Errorf("failed to commit changes: %w")
+	}
+
+	return ms.IDs, err
+}
+
 //
 // Partitions
 //

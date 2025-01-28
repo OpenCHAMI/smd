@@ -4157,7 +4157,7 @@ paths:
             $ref: '#/definitions/ResourceURI.1.0.0'
           examples:
             application/json:
-              uri: /hsm/v2/Inventory/a4bf012b7311
+              URI: /hsm/v2/Inventory/a4bf012b7311
         "400":
           description: Bad Request
           schema:
@@ -4877,7 +4877,7 @@ paths:
               $ref: '#/definitions/ResourceURI.1.0.0'
           examples:
             application/json:
-              - uri: /hsm/v2/groups/mygrouplabel
+              - URI: /hsm/v2/groups/mygrouplabel
         "400":
           description: Bad Request
           schema:
@@ -5108,7 +5108,7 @@ paths:
               $ref: '#/definitions/ResourceURI.1.0.0'
           examples:
             application/json:
-              - uri: /hsm/v2/groups/mygrouplabel/members/x0c0s1b0n0
+              - URI: /hsm/v2/groups/mygrouplabel/members/x0c0s1b0n0
         "400":
           description: Bad Request - e.g. malformed string
           schema:
@@ -5119,6 +5119,57 @@ paths:
             $ref: '#/definitions/Problem7807'
         "409":
           description: Conflict. Duplicate resource would be created.
+          schema:
+            $ref: '#/definitions/Problem7807'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Problem7807'
+    put:
+      tags:
+        - Group
+      summary: Set member of existing group (via PUT)
+      description: >-
+        Set the member list for group {group_label} to the list of
+        component xname IDs provided in the payload. If any members
+        in the payload already exist in the group, they remain in
+        the group. If any members in the payload do not already
+        exist in the group, they are added to the group. Any xnames
+        that exist in the group that are not in the payload are
+        removed from the group.
+      operationId: doGroupMembersPut
+      parameters:
+        - name: group_label
+          in: path
+          type: string
+          required: true
+          description: >-
+            Specifies an existing group {group_label} whose member list to set.
+        - name: payload
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/MemberList'
+      responses:
+        "201":
+          description: >-
+            Success, returns array containing the created member URIs.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ResourceURI.1.0.0'
+          examples:
+            application/json:
+              - URI: /hsm/v2/groups/compute/members/x0c0s1b0n0
+              - URI: /hsm/v2/groups/compute/members/x0c0s1b0n1
+              - URI: /hsm/v2/groups/compute/members/x0c0s3b0n0
+              - URI: /hsm/v2/groups/compute/members/x0c0s3b0n1
+        "400":
+          description: Bad Request - e.g. malformed string
+          schema:
+            $ref: '#/definitions/Problem7807'
+        "404":
+          description: Does not exist - No such group {group_label}
           schema:
             $ref: '#/definitions/Problem7807'
         default:
@@ -5237,7 +5288,7 @@ paths:
               $ref: '#/definitions/ResourceURI.1.0.0'
           examples:
             application/json:
-              - uri: /hsm/v2/partitions/p1
+              - URI: /hsm/v2/partitions/p1
         "400":
           description: Bad Request
           schema:
@@ -5456,7 +5507,7 @@ paths:
               $ref: '#/definitions/ResourceURI.1.0.0'
           examples:
             application/json:
-              - uri: /hsm/v2/partitions/p1/members/x0c0s1b0n0
+              - URI: /hsm/v2/partitions/p1/members/x0c0s1b0n0
         "400":
           description: Bad Request - Bad partition_name or malformed string?
           schema:
@@ -10514,6 +10565,30 @@ definitions:
           $ref: '#/definitions/XNameRW.1.0.0'   # String with XName format
     type: object
     example:
+      ids:
+        - x1c0s1b0n0
+        - x1c0s1b0n1
+        - x2c0s3b0n0
+        - x2c0s3b0n1
+  MemberList:
+    description: >-
+      A MemberList is a mapping of group name to its members.
+    properties:
+      group:
+        description: >-
+          The group's ID
+        type: string
+        example:
+          group: compute
+      ids:
+        description: >-
+          Set of Component XName IDs that represent the membership of the
+          group or partition.
+        type: array
+        items:
+          $ref: '#/definitions/XNameRW.1.0.0'   # String with XName format
+    example:
+      group: compute
       ids:
         - x1c0s1b0n0
         - x1c0s1b0n1

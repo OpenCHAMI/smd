@@ -803,6 +803,14 @@ type HMSDB interface {
 	// group was present to remove.
 	DeleteGroupMember(label, id string) (bool, error)
 
+	// Set group member list for label to ids. If xnames in ids are in the
+	// group, they remain in the group. If xnames in ids are not in the
+	// group, they are added to the group. If xnames are not in ids but are
+	// in the group, they are removed from the group.
+	//
+	// Returns the ids of the members set in the group's member list.
+	SetGroupMembers(label string, ids []string) ([]string, error)
+
 	//                        Partitions
 
 	// Create a partition.  Returns new name (should match one in struct,
@@ -1538,6 +1546,10 @@ type HMSDBTx interface {
 	// Given an internal group_id uuid, delete the given id, if it exists.
 	// if it does not, result will be false, nil vs. true,nil on deletion.
 	DeleteMemberTx(uuid, id string) (bool, error)
+
+	// Given an internal group_id uuid, if it exists, delete all of its
+	// member ids. Result is number of member ids deleted.
+	DeleteMembersAllTx(guuid string) (int64, error)
 
 	//                                                                    //
 	//                    Component Lock Management                       //
