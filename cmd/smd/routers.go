@@ -60,7 +60,7 @@ func (s *SmD) NewRouter(publicRoutes []Route, protectedRoutes []Route) *chi.Mux 
 
 	router.Use(middleware.Timeout(60 * time.Second))
 
-	// todo make this only active in a CSM mode
+	// todo ochami make this only active in a CSM mode
 	routes := append(publicRoutes, protectedRoutes...)
 	for _, route := range routes {
 		var handler http.Handler

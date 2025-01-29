@@ -370,7 +370,7 @@ func (s *SmD) JobSync() {
 			if err != nil {
 				s.LogAlways("JobSync(): Lookup failure: %s", err)
 				failed = true
-			} else if jobs != nil {
+			} else {
 				for _, job := range jobs {
 					if job.Status == sm.JobComplete {
 						s.db.DeleteJob(job.Id)
@@ -425,7 +425,7 @@ func (s *SmD) DiscoverySync() {
 			if err != nil {
 				s.LogAlways("DiscoverySync(): Lookup failure: %s", err)
 				failed = true
-			} else if eps != nil {
+			} else {
 				for _, ep := range eps {
 					lastAttempt, _ := time.Parse("2006-01-02T15:04:05.000000Z07:00", ep.DiscInfo.LastAttempt)
 					// Consider discovery jobs that have not updated
@@ -922,6 +922,7 @@ func main() {
 	s.wpRFEvent.Run()
 
 	// Start monitoring message bus, if configured
+	// todo disable for ochami
 	s.smapCompEP = NewSyncMap(ComponentEndpointSMap(&s))
 	go s.StartRFEventMonitor()
 
