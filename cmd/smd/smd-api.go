@@ -25,6 +25,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -37,6 +38,8 @@ import (
 	"github.com/Cray-HPE/hms-smd/v2/pkg/rf"
 	"github.com/Cray-HPE/hms-smd/v2/pkg/sm"
 	"github.com/go-chi/chi/v5"
+	"github.com/openchami/schemas/schemas"
+	redfish "github.com/openchami/schemas/schemas/csm"
 )
 
 type componentArrayIn struct {
@@ -2482,10 +2485,307 @@ func (s *SmD) doRedfishEndpointsPost(w http.ResponseWriter, r *http.Request) {
 		go s.discoverFromEndpoints(eps.RedfishEndpoints, 0, true, false)
 	}
 
+	if s.ochami {
+		// check for the data format sent via the schema version
+		schemaVersion := s.getSchemaVersion(w, body)
+		if schemaVersion <= 0 {
+			// parse data and populate component endpoints before inserting into db
+			err = s.parseRedfishPostData(w, eps, body)
+			if err != nil {
+				sendJsonError(w, http.StatusInternalServerError,
+					fmt.Sprintf("failed parsing post data: %v", err))
+			}
+		} else {
+			// parse data using the new inventory data format (will conform to schema)
+			err = s.parseRedfishPostDataV2(w, body)
+			if err != nil {
+				sendJsonError(w, http.StatusInternalServerError,
+					fmt.Sprintf("failed parsing post data (V2): %v", err))
+			}
+		}
+	}
+
 	// Send a URI array of the created resources, along with 201 (created).
 	uris := eps.GetResourceURIArray(s.redfishEPBaseV2)
 	sendJsonNewResourceIDArray(w, s.redfishEPBaseV2, uris)
 	return
+}
+
+// Parse the incoming JSON data, extracts specific keys, and writes the data
+// to the database
+// Used for ochami where discovery is diabled
+func (s *SmD) parseRedfishPostData(w http.ResponseWriter, eps *sm.RedfishEndpointArray, data []byte) error {
+	s.lg.Printf("parsing request data using default parsing method...")
+	var obj map[string]any
+	err := json.Unmarshal(data, &obj)
+	if err != nil {
+		sendJsonError(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to unmarshal data: %v", err))
+	}
+
+	// systems
+	systems, foundSystems := obj["Systems"]
+	if foundSystems && systems != nil {
+		for _, system := range systems.([]any) {
+			// component
+			data, foundData := system.(map[string]any)["Data"]
+			status, ok := data.(map[string]any)["Status"].(map[string]any)["State"]
+			enabled := ok && status == "Enabled"
+			if foundData {
+				// get ethernet interface link status
+				component := base.Component{
+					ID: obj["ID"].(string),
+					// State: "On",
+					Type:    "Node",
+					Enabled: &enabled,
+				}
+				_, err := s.db.InsertComponent(&component)
+				if err != nil {
+					sendJsonError(w, http.StatusInternalServerError,
+						fmt.Sprintf("failed to insert component: %v", err))
+					return err
+				}
+			}
+
+			// component endpoints
+			uuid, ok := data.(map[string]any)["UUID"]
+			if !ok {
+				uuid = ""
+			}
+			// get system status (specifically if it is enabled?)
+
+			cep := sm.ComponentEndpoint{
+				ComponentDescription: rf.ComponentDescription{
+					ID:             obj["ID"].(string),
+					Type:           "Node",
+					RedfishType:    "ComputerSystem",
+					RedfishSubtype: data.(map[string]any)["SystemType"].(string),
+					UUID:           uuid.(string),
+					RfEndpointID:   obj["ID"].(string),
+				},
+				RfEndpointFQDN:        "",
+				URL:                   data.(map[string]any)["@odata.id"].(string),
+				ComponentEndpointType: "ComponentEndpointComputerSystem",
+				Enabled:               enabled,
+				RedfishSystemInfo:     nil,
+			}
+
+			// add ethernet interfaces to component endpoint
+			interfaces, foundInterfaces := system.(map[string]any)["EthernetInterfaces"]
+			if foundInterfaces {
+				nicInfo := []*rf.EthernetNICInfo{}
+				for _, i := range interfaces.([]any) {
+					in := i.(map[string]any)
+					enabled := in["InterfaceEnabled"].(bool)
+					nicInfo = append(nicInfo, &rf.EthernetNICInfo{
+						InterfaceEnabled: &enabled,
+						RedfishId:        in["Id"].(string),
+						Oid:              in["@odata.id"].(string),
+						Description:      in["Description"].(string),
+						MACAddress:       strings.ToLower(in["MACAddress"].(string)),
+					})
+				}
+				cep.RedfishSystemInfo = &rf.ComponentSystemInfo{
+					Actions:    nil,
+					EthNICInfo: nicInfo,
+				}
+			}
+
+			// finally, insert component endpoint into DB
+			err = s.db.UpsertCompEndpoint(&cep)
+			if err != nil {
+				sendJsonError(w, http.StatusInternalServerError,
+					fmt.Sprintf("failed to upsert component endpoint: %v", err))
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// Used for ochami where discovery is diabled
+func (s *SmD) parseRedfishPostDataV2(w http.ResponseWriter, data []byte) error {
+	s.lg.Printf("parsing request data using V2 parsing method...")
+
+	// NOTE: temporary definition for manager
+	type Manager struct {
+		URI                string                      `json:"uri,omitempty"`
+		UUID               string                      `json:"uuid,omitempty"`
+		Name               string                      `json:"name,omitempty"`
+		Description        string                      `json:"description,omitempty"`
+		Model              string                      `json:"model,omitempty"`
+		Type               string                      `json:"type,omitempty"`
+		FirmwareVersion    string                      `json:"firmware_version,omitempty"`
+		EthernetInterfaces []schemas.EthernetInterface `json:"ethernet_interfaces,omitempty"`
+	}
+
+	type Root struct {
+		redfish.RedfishEndpoint
+		Systems  []schemas.InventoryDetail
+		Managers []Manager
+	}
+	var (
+		root Root
+		err  error
+	)
+
+	// unmarshal the root JSON object from data
+	err = json.Unmarshal(data, &root)
+	if err != nil {
+		sendJsonError(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to unmarshal Redfish data: %v", err))
+		return fmt.Errorf("failed to unmarshal Redfish data: %v", err)
+	}
+
+	var addEthernetInterfacesToNICInfo = func(eths []schemas.EthernetInterface, enabled bool) []*rf.EthernetNICInfo {
+		// append NIC info to component endpoint
+		nicInfo := make([]*rf.EthernetNICInfo, len(eths))
+		for i, eth := range eths {
+			nicInfo[i] = &rf.EthernetNICInfo{
+				InterfaceEnabled: &enabled,        // NOTE: get via RF "InterfaceEnabled"
+				RedfishId:        eth.URI,         // NOTE: what should this value be from RF?
+				Oid:              eth.URI,         // NOTE: what should this value be from RF?
+				Description:      eth.Description, // NOTE: intentionally set explicitly since this is included in V1
+				MACAddress:       eth.MAC,
+			}
+		}
+		return nicInfo
+	}
+
+	// iterate over all of the managers to create NodeBMC components and component endpoints
+	for _, manager := range root.Managers {
+		var (
+			enabled   = true
+			component = base.Component{
+				ID: root.ID,
+				// State:   manager.PowerState,
+				Type:    base.NodeBMC.String(),
+				Enabled: &enabled,
+			}
+		)
+		// components
+		rowsAffected, err := s.db.InsertComponent(&component)
+		if err != nil {
+			sendJsonError(w, http.StatusInternalServerError,
+				fmt.Sprintf("failed to insert %d component(s): %v", rowsAffected, err))
+			return fmt.Errorf("failed to insert %d component(s): %v", rowsAffected, err)
+		}
+
+		// create a new ethernet interface with reference to the component above
+		for _, eth := range manager.EthernetInterfaces {
+			// convert IP address from manager ethernet interface to IPAddressMapping
+			ips := []sm.IPAddressMapping{sm.IPAddressMapping{IPAddr: eth.IP}}
+			cei, err := sm.NewCompEthInterfaceV2(eth.Description, eth.MAC, component.ID, ips)
+			if err != nil {
+				sendJsonError(w, http.StatusBadRequest, err.Error())
+				continue
+			}
+			err = s.db.InsertCompEthInterface(cei)
+			if err != nil {
+				if err == hmsds.ErrHMSDSDuplicateKey {
+					sendJsonError(w, http.StatusConflict, "operation would conflict "+
+						"with an existing component ethernet interface that has the same MAC address.")
+				} else {
+					// Send this message as 500 or 400 plus error message if it is
+					// an HMSError and not, e.g. an internal DB error code.
+					sendJsonDBError(w, "", "operation 'POST' failed during store.", err)
+				}
+				continue
+			}
+		}
+	}
+
+	// iterate over all of the systems to create components and component endpoints
+	knownCEs := make(map[string]string)
+	ceNum := 0
+	for _, system := range root.Systems {
+		var nid json.Number
+		nidJNum, err := json.Marshal(ceNum + 1)
+		if err != nil {
+			s.Log(LOG_NOTICE, "failed to marshal NID %d into json: %v", ceNum+1, err)
+		} else {
+			err = json.Unmarshal(nidJNum, &nid)
+			if err != nil {
+				s.Log(LOG_NOTICE, "failed to unmarshal NID %d into json.Number: %v", ceNum+1, err)
+			}
+		}
+		// use map to store known component endpoints by UUID to avoid adding duplicates
+		if _, gotten := knownCEs[system.UUID]; !gotten {
+			var (
+				enabled   = strings.ToLower(system.PowerState) == "on"
+				component = base.Component{
+					ID:      root.ID + fmt.Sprintf("n%d", ceNum),
+					NID:     nid,
+					State:   system.PowerState,
+					Type:    base.Node.String(),
+					Enabled: &enabled,
+				}
+				componentEndpoint = sm.ComponentEndpoint{
+					ComponentDescription: rf.ComponentDescription{
+						ID:             root.ID + fmt.Sprintf("n%d", ceNum),
+						Type:           base.Node.String(),
+						RedfishType:    rf.ComputerSystemType, // TODO: need to get the RF type
+						RedfishSubtype: system.SystemType,     // TODO: need to get the RF subtype (SystemType)
+						UUID:           system.UUID,           // TODO: need to get the UUID (UUID)
+						RfEndpointID:   root.ID,
+					},
+					RfEndpointFQDN:        "",
+					URL:                   system.URI,
+					ComponentEndpointType: "ComponentEndpointComputerSystem",
+					Enabled:               enabled,
+					RedfishSystemInfo: &rf.ComponentSystemInfo{
+						Actions:    nil,
+						EthNICInfo: addEthernetInterfacesToNICInfo(system.EthernetInterfaces, enabled),
+					},
+				}
+			)
+			knownCEs[system.UUID] = componentEndpoint.ComponentDescription.ID
+			ceNum++
+
+			// components
+			rowsAffected, err := s.db.InsertComponent(&component)
+			if err != nil {
+				sendJsonError(w, http.StatusInternalServerError,
+					fmt.Sprintf("failed to insert %d component(s): %v", rowsAffected, err))
+				return fmt.Errorf("failed to insert %d component(s): %v", rowsAffected, err)
+			}
+
+			// component endpoints
+			err = s.db.UpsertCompEndpoint(&componentEndpoint)
+			if err != nil {
+				sendJsonError(w, http.StatusInternalServerError,
+					fmt.Sprintf("failed to upsert component endpoint: %v", err))
+				return fmt.Errorf("failed to upsert component endpoint: %v", err)
+			}
+		}
+	}
+
+	return nil
+}
+
+// getSchemaVersion() tries to extract the schema version from the JSON data.
+// Used for ochami where discovery is diabled
+func (s *SmD) getSchemaVersion(w http.ResponseWriter, data []byte) int {
+	var (
+		schemaVersion int = 0 // default to 0
+		root          map[string]any
+		ok            bool
+		err           error
+	)
+
+	// unmarshal JSON to root
+	err = json.Unmarshal(data, &root)
+	if err != nil {
+		sendJsonError(w, http.StatusInternalServerError,
+			fmt.Sprintf("failed to unmarshal data: %v", err))
+	}
+
+	// try and extract schema version and set if valid
+	version, ok := root["SchemaVersion"]
+	if ok {
+		schemaVersion = int(version.(float64))
+	}
+	return schemaVersion
 }
 
 /////////////////////////////////////////////////////////////////////////////

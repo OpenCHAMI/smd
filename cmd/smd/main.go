@@ -107,6 +107,7 @@ type SmD struct {
 	smapCompEP       *SyncMap
 	genTestPayloads  string
 	disableDiscovery bool
+	ochami           bool
 
 	// v2 APIs
 	apiRootV2           string
@@ -558,6 +559,7 @@ func (s *SmD) parseCmdLine() {
 	flag.StringVar(&s.jwksURL, "jwks-url", "", "Set the JWKS URL to fetch public key for validation")
 	flag.BoolVar(&applyMigrations, "migrate", false, "Apply all database migrations before starting")
 	flag.BoolVar(&s.disableDiscovery, "disable-discovery", false, "Disable discovery-related subroutines")
+	flag.BoolVar(&s.ochami, "ochami", false, "Enabled OCHAMI features")
 	help := flag.Bool("h", false, "Print help and exit")
 
 	flag.Parse()
@@ -922,9 +924,13 @@ func main() {
 	s.wpRFEvent.Run()
 
 	// Start monitoring message bus, if configured
-	// todo disable for ochami
-	s.smapCompEP = NewSyncMap(ComponentEndpointSMap(&s))
-	go s.StartRFEventMonitor()
+	if s.ochami {
+		s.LogAlways("OCHAMI: No redfish event monitoring.")
+	} else {
+		s.smapCompEP = NewSyncMap(ComponentEndpointSMap(&s))
+		go s.StartRFEventMonitor()
+		s.LogAlways("Started redfish event monitoring.")
+	}
 
 	// Start the component lock cleanup thread
 	s.CompReservationCleanup()
