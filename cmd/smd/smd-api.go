@@ -4959,13 +4959,16 @@ func (s *SmD) doPartitionMembersPost(w http.ResponseWriter, r *http.Request) {
 			"error decoding JSON "+err.Error())
 		return
 	}
-	// todo ochami - find out if the xname check should be removed
-	// s.lg.Printf("doParitionMembersPost(): Skipping 'xname' check.")
-	normID := base.NormalizeHMSCompID(memberIn.ID)
-	if !base.IsHMSCompIDValid(normID) {
-		s.lg.Printf("doPartitionMembersPost(): Invalid xname ID.")
-		sendJsonError(w, http.StatusBadRequest, "invalid xname ID")
-		return
+	normID := memberIn.ID
+	if !s.ochami {
+		// CSM requires that the ID is an xname.
+		// OCHAMI allows for any string.
+		normID = base.NormalizeHMSCompID(memberIn.ID)
+		if !base.IsHMSCompIDValid(normID) {
+			s.lg.Printf("doPartitionMembersPost(): Invalid xname ID.")
+			sendJsonError(w, http.StatusBadRequest, "invalid xname ID")
+			return
+		}
 	}
 	id, err := s.db.AddPartitionMember(name, normID)
 	if err != nil {
