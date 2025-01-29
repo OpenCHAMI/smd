@@ -47,6 +47,7 @@ import (
 	"github.com/Cray-HPE/hms-smd/v2/internal/slsapi"
 	"github.com/Cray-HPE/hms-smd/v2/pkg/rf"
 	"github.com/Cray-HPE/hms-smd/v2/pkg/sm"
+	jwtauth "github.com/OpenCHAMI/jwtauth/v5"
 	"github.com/go-chi/chi/v5"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/sirupsen/logrus"
@@ -161,7 +162,9 @@ type SmD struct {
 	discMapLock sync.Mutex
 
 	//router
-	router *chi.Mux
+	router    *chi.Mux
+	tokenAuth *jwtauth.JWTAuth
+	jwksURL   string
 
 	httpClient *retryablehttp.Client
 }
@@ -552,6 +555,7 @@ func (s *SmD) parseCmdLine() {
 	flag.StringVar(&s.dbHost, "dbhost", "", "Database hostname")
 	flag.StringVar(&s.dbPortStr, "dbport", "", "Database port")
 	flag.StringVar(&s.dbOpts, "dbopts", "", "Database options string")
+	flag.StringVar(&s.jwksURL, "jwks-url", "", "Set the JWKS URL to fetch public key for validation")
 	flag.BoolVar(&applyMigrations, "migrate", false, "Apply all database migrations before starting")
 	flag.BoolVar(&s.disableDiscovery, "disable-discovery", false, "Disable discovery-related subroutines")
 	help := flag.Bool("h", false, "Print help and exit")
@@ -611,6 +615,13 @@ func (s *SmD) parseCmdLine() {
 			s.dbPortStr = val
 		}
 	}
+	envvar = "SMD_JWKS_URL"
+	if s.jwksURL == "" {
+		if val := os.Getenv(envvar); val != "" {
+			s.jwksURL = val
+		}
+	}
+
 	if s.dbPortStr == "" {
 		fmt.Printf("Missing DB port number")
 		flag.Usage()
@@ -926,6 +937,21 @@ func main() {
 	if !s.disableDiscovery {
 		s.DiscoverySync()
 		s.DiscoveryUpdater()
+	}
+
+	// Initialize token authorization and load JWKS well-knowns from .well-known endpoint
+	if s.jwksURL != "" {
+		s.LogAlways("Fetching public key from server...")
+		for i := 0; i <= 5; i++ {
+			err = s.fetchPublicKeyFromURL(s.jwksURL)
+			if err != nil {
+				s.LogAlways("failed to initialize auth token: %v", err)
+				time.Sleep(5 * time.Second)
+				continue
+			}
+			s.LogAlways("Initialized the auth token successfully.")
+			break
+		}
 	}
 
 	// Start serving HTTP

@@ -28,9 +28,11 @@ import (
 	"strings"
 	"time"
 
+	jwtauth "github.com/OpenCHAMI/jwtauth/v5"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/gorilla/handlers"
+	openchami_authenticator "github.com/openchami/chi-middleware/auth"
 )
 
 type Route struct {
@@ -57,8 +59,8 @@ func (s *SmD) NewRouter(publicRoutes []Route, protectedRoutes []Route) *chi.Mux 
 	}))
 
 	router.Use(middleware.Timeout(60 * time.Second))
-	// todo make jwksURL check and changes
 
+	// todo make this only active in a CSM mode
 	routes := append(publicRoutes, protectedRoutes...)
 	for _, route := range routes {
 		var handler http.Handler
@@ -73,6 +75,64 @@ func (s *SmD) NewRouter(publicRoutes []Route, protectedRoutes []Route) *chi.Mux 
 			route.Pattern,
 			handler,
 		)
+	}
+
+	if s.jwksURL != "" {
+		router.Group(func(r chi.Router) {
+			r.Use(
+				jwtauth.Verifier(s.tokenAuth),
+				openchami_authenticator.AuthenticatorWithRequiredClaims(s.tokenAuth, []string{"sub", "iss", "aud"}),
+			)
+
+			// Register protected routes
+			for _, route := range protectedRoutes {
+				var handler http.Handler = route.HandlerFunc
+				if s.lgLvl >= LOG_DEBUG ||
+					(!strings.Contains(route.Name, "doReadyGet") &&
+						!strings.Contains(route.Name, "doLivenessGet")) {
+					handler = handlers.CombinedLoggingHandler(os.Stdout, handler)
+					handler = s.Logger(handler, route.Name)
+				}
+				r.Method(
+					route.Method,
+					route.Pattern,
+					handler,
+				)
+			}
+		})
+
+		// Register public routes
+		for _, route := range publicRoutes {
+			var handler http.Handler
+			handler = route.HandlerFunc
+			if s.lgLvl >= LOG_DEBUG ||
+				(!strings.Contains(route.Name, "doReadyGet") &&
+					!strings.Contains(route.Name, "doLivenessGet")) {
+				handler = handlers.CombinedLoggingHandler(os.Stdout, handler)
+			}
+			router.Method(
+				route.Method,
+				route.Pattern,
+				handler,
+			)
+		}
+
+	} else {
+		routes := append(publicRoutes, protectedRoutes...)
+		for _, route := range routes {
+			var handler http.Handler
+			handler = route.HandlerFunc
+			if s.lgLvl >= LOG_DEBUG ||
+				(!strings.Contains(route.Name, "doReadyGet") &&
+					!strings.Contains(route.Name, "doLivenessGet")) {
+				handler = handlers.CombinedLoggingHandler(os.Stdout, handler)
+			}
+			router.Method(
+				route.Method,
+				route.Pattern,
+				handler,
+			)
+		}
 	}
 
 	router.MethodNotAllowed(http.HandlerFunc(s.doMethodNotAllowedHandler))
