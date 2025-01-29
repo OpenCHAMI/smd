@@ -4428,6 +4428,7 @@ func (s *SmD) doGroupPatch(w http.ResponseWriter, r *http.Request) {
 		s.lg.Printf("doGroupPatch(): Request must have at least one patch field.")
 		sendJsonError(w, http.StatusBadRequest,
 			"Request must have at least one patch field.")
+		return
 	}
 	if sm.VerifyGroupField(label) != nil {
 		s.lg.Printf("doGroupPatch(): Invalid group label.")
@@ -4861,6 +4862,7 @@ func (s *SmD) doPartitionPatch(w http.ResponseWriter, r *http.Request) {
 		s.lg.Printf("doPartitionPatch(): Request must have at least one patch field.")
 		sendJsonError(w, http.StatusBadRequest,
 			"Request must have at least one patch field.")
+		return
 	}
 	if sm.VerifyGroupField(name) != nil {
 		s.lg.Printf("doPartitionPatch(): Invalid partition name.")

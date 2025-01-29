@@ -870,7 +870,7 @@ func TestDoComponentGet(t *testing.T) {
 		nil,
 		errors.New("unexpected DB error"), // Could be any non HMSError
 		"x0c0s27",
-		json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","detail":"failed to query DB.","status":500}
+		json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","status":500}
 `),
 	}}
 
@@ -951,7 +951,7 @@ func TestDoComponentByNIDGet(t *testing.T) {
 		hmsdsRespID:  nil,
 		hmsdsRespErr: errors.New("unexpected DB error"), // Could be any non-HMS error
 		expectedID:   "864",
-		expectedResp: json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","detail":"failed to query DB.","status":500}` + "\n"),
+		expectedResp: json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","status":500}` + "\n"),
 	}}
 
 	for i, test := range tests {
@@ -4098,7 +4098,7 @@ func TestDoHWInvByLocationGet(t *testing.T) {
 		nil,
 		errors.New("unexpected error"), // non-HMS error
 		"x0c0s27",
-		json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","detail":"failed to query DB.","status":500}
+		json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","status":500}
 `),
 	}, {
 		"GET",
@@ -4171,7 +4171,7 @@ func TestDoHWInvByFRUGet(t *testing.T) {
 		nil,
 		errors.New("unexpected error"), // non-HMSError
 		fruid,
-		json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","detail":"failed to query DB.","status":500}
+		json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","status":500}
 `),
 	}}
 
@@ -4457,7 +4457,7 @@ func TestDoHWInvByLocationDelete(t *testing.T) {
 		false,
 		errors.New("unexpected error"), // actual error here doesn't really matter- any non-HMS error.
 		"x0c0s0b0n0",
-		json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","detail":"failed to query DB.","status":500}`),
+		json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","status":500}`),
 	}, {
 		"DELETE",
 		"https://localhost/hsm/v2/Inventory/Hardware/x0c0s0b0n0",
@@ -4532,7 +4532,7 @@ func TestDoHWInvByFRUDelete(t *testing.T) {
 		false,
 		errors.New("unexpected DB error"), // actual error here doesn't really matter- any non-HMS error.
 		"some_fruid",
-		json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","detail":"failed to query DB.","status":500}
+		json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","status":500}
 `),
 	}, {
 		"DELETE",
@@ -5270,7 +5270,7 @@ func TestDoHWInvHistByLocationDelete(t *testing.T) {
 		hmsdsRespNumRows: 0,
 		hmsdsRespErr:     errors.New("unexpected DB error"),
 		expectedID:       "x5c4s3b2n1p0",
-		expectedResp:     json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","detail":"failed to query DB.","status":500}` + "\n"),
+		expectedResp:     json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","status":500}` + "\n"),
 	}}
 
 	for i, test := range tests {
@@ -5328,7 +5328,7 @@ func TestDoHWInvHistByFRUDelete(t *testing.T) {
 		hmsdsRespNumRows: 0,
 		hmsdsRespErr:     errors.New("unexpected DB error"),
 		expectedFruId:    "MFR-PARTNUMBER-SERIALNUMBER_1",
-		expectedResp:     json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","detail":"failed to query DB.","status":500}` + "\n"),
+		expectedResp:     json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","status":500}` + "\n"),
 	}}
 
 	for i, test := range tests {
@@ -5382,7 +5382,7 @@ func TestDoHWInvHistDeleteAll(t *testing.T) {
 		reqURI:           "https://localhost/hsm/v2/Inventory/Hardware/History",
 		hmsdsRespNumRows: 0,
 		hmsdsRespErr:     errors.New("unexpected DB error"),
-		expectedResp:     json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","detail":"failed to query DB.","status":500}` + "\n"),
+		expectedResp:     json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","status":500}` + "\n"),
 	}}
 
 	for i, test := range tests {
@@ -5449,7 +5449,7 @@ func TestDoRedfishEndpointGet(t *testing.T) {
 		hmsdsRespEP:  nil,
 		hmsdsRespErr: errors.New("unexpected DB error"),
 		expectedID:   xname,
-		expectedResp: json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","detail":"failed to query DB.","status":500}` + "\n"),
+		expectedResp: json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","status":500}` + "\n"),
 	}}
 
 	for i, test := range tests {
@@ -5812,7 +5812,7 @@ func TestDoRedfishEndpointDelete(t *testing.T) {
 		hmsdsDidDelete:  false,
 		hmsdsExpectedId: []string{"x0c0s14b0"},
 		hmsdsRespErr:    errors.New("Unknown error"),
-		expectedResp:    json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","detail":"failed to query DB.","status":500}` + "\n"),
+		expectedResp:    json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","status":500}` + "\n"),
 	}}
 
 	for i, test := range tests {
@@ -6117,7 +6117,7 @@ func TestDoComponentEndpointGet(t *testing.T) {
 		hmsdsRespEP:  nil,
 		hmsdsRespErr: errors.New("unexpected DB error"),
 		expectedID:   xname,
-		expectedResp: json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","detail":"failed to query DB.","status":500}` + "\n"),
+		expectedResp: json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","status":500}` + "\n"),
 	}}
 
 	for i, test := range tests {
@@ -6235,7 +6235,7 @@ func TestDoComponentEndpointsGet(t *testing.T) {
 		hmsdsRespEPs:   stest.SampleCompEndpoints,
 		hmsdsRespErr:   errors.New("Unknown error"),
 		expectedFilter: &hmsds.CompEPFilter{},
-		expectedResp:   json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","detail":"failed to query DB.","status":500}` + "\n"),
+		expectedResp:   json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","status":500}` + "\n"),
 		expectError:    true,
 	}}
 
@@ -6309,7 +6309,7 @@ func TestDoComponentEndpointDelete(t *testing.T) {
 		hmsdsDidDelete:  false,
 		hmsdsExpectedId: []string{"x1c4"},
 		hmsdsRespErr:    errors.New("Unknown error"),
-		expectedResp:    json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","detail":"failed to query DB.","status":500}` + "\n"),
+		expectedResp:    json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","status":500}` + "\n"),
 	}}
 
 	for i, test := range tests {
@@ -6448,7 +6448,7 @@ func TestDoServiceEndpointGet(t *testing.T) {
 		hmsdsRespErr: errors.New("Argument was not a valid xname"),
 		expectedSVC:  "UpdateService",
 		expectedID:   "foo",
-		expectedResp: json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","detail":"failed to query DB.","status":500}`),
+		expectedResp: json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","status":500}`),
 	}, {
 		reqType:      "GET",
 		reqURI:       "https://localhost/hsm/v2/Inventory/ServiceEndpoints/foo/RedfishEndpoints/x0c0s21b0",
@@ -6562,7 +6562,7 @@ func TestDoServiceEndpointsGetAll(t *testing.T) {
 		expectedFilter: hmsds.ServiceEPFilter{
 			RfEndpointID: []string{"foo"},
 		},
-		expectedResp: json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","detail":"failed to query DB.","status":500}`),
+		expectedResp: json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","status":500}`),
 	}}
 
 	for i, test := range tests {
@@ -6662,7 +6662,7 @@ func TestDoServiceEndpointsGet(t *testing.T) {
 			Service:      []string{"UpdateService"},
 			RfEndpointID: []string{"foo"},
 		},
-		expectedResp: json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","detail":"failed to query DB.","status":500}`),
+		expectedResp: json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","status":500}`),
 	}}
 
 	for i, test := range tests {
@@ -6745,7 +6745,7 @@ func TestDoServiceEndpointDelete(t *testing.T) {
 		hmsdsRespErr: errors.New("Argument was not a valid xname"),
 		expectedSVC:  "UpdateService",
 		expectedID:   "foo",
-		expectedResp: json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","detail":"failed to query DB.","status":500}`),
+		expectedResp: json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","status":500}`),
 	}, {
 		reqType:      "DELETE",
 		reqURI:       "https://localhost/hsm/v2/Inventory/ServiceEndpoints/foo/RedfishEndpoints/x0c0s21b0",
@@ -6824,7 +6824,7 @@ func TestDoServiceEndpointsDeleteAll(t *testing.T) {
 		reqURI:         "https://localhost/hsm/v2/Inventory/ServiceEndpoints",
 		hmsdsRespCount: 0,
 		hmsdsRespErr:   errors.New("DB Error"),
-		expectedResp:   json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","detail":"failed to query DB.","status":500}`),
+		expectedResp:   json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","status":500}`),
 	}}
 
 	for i, test := range tests {
