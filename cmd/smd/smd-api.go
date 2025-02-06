@@ -2702,6 +2702,7 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 		return fmt.Errorf("failed to unmarshal Redfish data: %v", err)
 	}
 
+	// function to add EthernetInterface to NICs
 	var addEthernetInterfacesToNICInfo = func(eths []schemas.EthernetInterface, enabled bool) []*rf.EthernetNICInfo {
 		// append NIC info to component endpoint
 		nicInfo := make([]*rf.EthernetNICInfo, len(eths))
@@ -2717,35 +2718,9 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 		return nicInfo
 	}
 
-	// iterate over all of the managers to create NodeBMC components and component endpoints
-	for _, manager := range root.Managers {
-		var (
-			enabled   = true
-			component = base.Component{
-				ID: root.ID,
-				// State:   manager.PowerState,
-				Type:    base.NodeBMC.String(),
-				Enabled: &enabled,
-			}
-		)
-		// components
-		rowsAffected, err := s.db.InsertComponent(&component)
-		if err != nil {
-			sendJsonError(w, http.StatusInternalServerError,
-				fmt.Sprintf("failed to insert %d component(s): %v", rowsAffected, err))
-			if forceUpdate {
-				// upsert here to keep allow returning error for duplicates when not forcing updates
-				_, err := s.db.UpsertComponents([]*base.Component{&component}, false)
-				if err != nil {
-					return fmt.Errorf("failed to update component: %w", err)
-				}
-			} else {
-				return fmt.Errorf("failed to insert %d component(s): %v", rowsAffected, err)
-			}
-		}
-
-		// create a new ethernet interface with reference to the component above
-		for _, eth := range manager.EthernetInterfaces {
+	// function to create CompEthInterfaceV2 from collection of EthernetInterfaces
+	var createCompEthInterfacesV2 = func(component base.Component, eths []schemas.EthernetInterface) {
+		for _, eth := range eths {
 			// convert IP address from manager ethernet interface to IPAddressMapping
 			ips := []sm.IPAddressMapping{sm.IPAddressMapping{IPAddr: eth.IP}}
 			cei, err := sm.NewCompEthInterfaceV2(eth.Description, eth.MAC, component.ID, ips)
@@ -2792,6 +2767,38 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 				continue
 			}
 		}
+
+	}
+
+	// iterate over all of the managers to create NodeBMC components and component endpoints
+	for _, manager := range root.Managers {
+		var (
+			enabled   = true
+			component = base.Component{
+				ID: root.ID,
+				// State:   manager.PowerState,
+				Type:    base.NodeBMC.String(),
+				Enabled: &enabled,
+			}
+		)
+		// components
+		rowsAffected, err := s.db.InsertComponent(&component)
+		if err != nil {
+			sendJsonError(w, http.StatusInternalServerError,
+				fmt.Sprintf("failed to insert %d component(s): %v", rowsAffected, err))
+			if forceUpdate {
+				// upsert here to keep allow returning error for duplicates when not forcing updates
+				_, err := s.db.UpsertComponents([]*base.Component{&component}, false)
+				if err != nil {
+					return fmt.Errorf("failed to update component: %w", err)
+				}
+			} else {
+				return fmt.Errorf("failed to insert %d component(s): %w", rowsAffected, err)
+			}
+		}
+
+		// create a new ethernet interface with reference to the component above
+		createCompEthInterfacesV2(component, manager.EthernetInterfaces)
 	}
 
 	// iterate over all of the systems to create components and component endpoints
@@ -2838,6 +2845,9 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 					},
 				}
 			)
+
+			// add the corresponding CompEthInterfaceV2 for each ComponentEndpoint created
+			createCompEthInterfacesV2(component, system.EthernetInterfaces)
 			knownCEs[system.UUID] = componentEndpoint.ComponentDescription.ID
 			ceNum++
 
@@ -4719,7 +4729,7 @@ func (s *SmD) doGroupMembersPut(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var invalidCompIDs []string
-	var validCompIDs   []string
+	var validCompIDs []string
 	for _, compID := range membersIn.IDs {
 		normID := base.NormalizeHMSCompID(compID)
 		if !base.IsHMSCompIDValid(normID) {
