@@ -254,8 +254,7 @@ https://github.com/OpenCHAMI/smd/blob/master/api/swagger_v2.yaml (current)
 
 
 ## SMD Features
-
-__________________________________________________________________
+---
 
 ### Feature Map
 
@@ -337,8 +336,8 @@ endpoint discovery performed by MEDS and REDS, as well as system info provided b
 ---
 
 ### States
-
-Note that these are the States HSM directly has access to.  They are basically just the hardware states, with the Ready, et. al states above On being tracked by the heartbeat monitor is the case of nodes (and in the case of controllers, by HSM directly confirming that a component can be accessed for Redfish operations).  Other hardware types will generally go no higher than on.
+> [!NOTE]
+> Note that these are the States HSM directly has access to.  They are basically just the hardware states, with the Ready, et. al states above On being tracked by the heartbeat monitor is the case of nodes (and in the case of controllers, by HSM directly confirming that a component can be accessed for Redfish operations).  Other hardware types will generally go no higher than on.
 
 A separate field, SoftwareStatus, is intended for any additional state that might exist for a heart beating node.   Note that we have no table of these states, nor a transition diagram, because these are a function of the managed plane and we do not limit what can appear there so that there are no dependencies created.
 ```text
@@ -356,8 +355,8 @@ StateReady     HMSState = "Ready"   // Both On and Ready to provide its expected
 #### State Transition Rules
 
 To avoid undesirable behavior (bad ordering, invalid states), only certain state transitions are allowed based upon events or REST operations. 
-
-Note that the inventory discovery process has the ability to perform any state change, e.g. when a new component is added or is powered on after appearing to disappear from the system.
+> [!NOTE]
+> Note that the inventory discovery process has the ability to perform any state change, e.g. when a new component is added or is powered on after appearing to disappear from the system.
 
 Desired new state    -     Required current state
 ```text
@@ -561,7 +560,7 @@ hmsds=> \h
 
 #### Loading a Database Backup from a Real System:
 
-I don't have step-by-step instructions but the basic idea is to:
+The basic idea is to:
 
 1. At some point use the above instructions to access postgres on a real system and run pg_dump.
 2. On Craystack, access postgres on the primary node after smd is first installed and load the dump
