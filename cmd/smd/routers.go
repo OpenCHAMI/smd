@@ -33,6 +33,9 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/gorilla/handlers"
 	openchami_authenticator "github.com/openchami/chi-middleware/auth"
+	openchami_logger "github.com/openchami/chi-middleware/log"
+	"github.com/rs/zerolog"
+	zlog "github.com/rs/zerolog/log"
 )
 
 type Route struct {
@@ -52,29 +55,34 @@ func (s *SmD) NewRouter(publicRoutes []Route, protectedRoutes []Route) *chi.Mux 
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.StripSlashes)
-	// todo resolve openchami source usage
-	// router.Use(openchami_logger.OpenCHAMILogger(logger))
+	if s.ochami {
+		zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+		logger := zlog.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+
+		router.Use(openchami_logger.OpenCHAMILogger(logger))
+	}
 	router.NotFound(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		s.Logger(http.NotFoundHandler(), "NotFoundHandler")
 	}))
 
 	router.Use(middleware.Timeout(60 * time.Second))
 
-	// todo ochami make this only active in a CSM mode
-	routes := append(publicRoutes, protectedRoutes...)
-	for _, route := range routes {
-		var handler http.Handler
-		handler = route.HandlerFunc
-		if s.lgLvl >= LOG_DEBUG ||
-			(!strings.Contains(route.Name, "doReadyGet") &&
-				!strings.Contains(route.Name, "doLivenessGet")) {
-			handler = handlers.CombinedLoggingHandler(os.Stdout, handler)
+	if s.ochami {
+		routes := append(publicRoutes, protectedRoutes...)
+		for _, route := range routes {
+			var handler http.Handler
+			handler = route.HandlerFunc
+			if s.lgLvl >= LOG_DEBUG ||
+				(!strings.Contains(route.Name, "doReadyGet") &&
+					!strings.Contains(route.Name, "doLivenessGet")) {
+				handler = handlers.CombinedLoggingHandler(os.Stdout, handler)
+			}
+			router.Method(
+				route.Method,
+				route.Pattern,
+				handler,
+			)
 		}
-		router.Method(
-			route.Method,
-			route.Pattern,
-			handler,
-		)
 	}
 
 	if s.jwksURL != "" {
@@ -145,7 +153,7 @@ func (s *SmD) getAllMethodsForRequest(req *http.Request) []string {
 	smdRoutes := s.generateRoutes()
 	path := req.URL.Path
 	for _, smdRoute := range smdRoutes {
-		// toto match patterns
+		// todo match patterns
 		// for example be able to match a url to the pattern: /hsm/v2/State/Components/{xname}
 		if strings.EqualFold(path, smdRoute.Pattern) {
 			methods = append(methods, smdRoute.Method)

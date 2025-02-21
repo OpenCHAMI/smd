@@ -20,7 +20,9 @@ require (
 	github.com/lestrrat-go/jwx/v2 v2.1.3
 	github.com/lib/pq v1.10.9
 	github.com/openchami/chi-middleware/auth v0.0.0-20240812224658-b16b83c70700
+	github.com/openchami/chi-middleware/log v0.0.0-20240812224658-b16b83c70700
 	github.com/openchami/schemas v0.0.0-20240826142248-37b8af32208a
+	github.com/rs/zerolog v1.33.0
 	github.com/sirupsen/logrus v1.9.3
 )
 
@@ -51,6 +53,8 @@ require (
 	github.com/lestrrat-go/iter v1.0.2 // indirect
 	github.com/lestrrat-go/option v1.0.1 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.3.0 // indirect
 	github.com/pierrec/lz4 v2.4.1+incompatible // indirect
