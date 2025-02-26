@@ -3887,7 +3887,7 @@ func (d *hmsdbPg) SetGroupMembers(label string, ids []string) ([]string, error) 
 	uuid, g, err := t.GetEmptyGroupTx(label)
 	if err != nil {
 		// A different error occurred
-		return []string{}, fmt.Errorf("failed to get group %q: %w", err)
+		return []string{}, fmt.Errorf("failed to get group %q: %w", label, err)
 	} else if g == nil || uuid == "" {
 		// Group does not exist
 		t.Rollback()
@@ -3919,7 +3919,7 @@ func (d *hmsdbPg) SetGroupMembers(label string, ids []string) ([]string, error) 
 	// Commit changes
 	err = t.Commit()
 	if err != nil {
-		err = fmt.Errorf("failed to commit changes: %w")
+		err = fmt.Errorf("failed to commit changes: %w", err)
 	}
 
 	return ms.IDs, err

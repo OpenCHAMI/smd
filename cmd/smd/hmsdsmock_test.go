@@ -2434,6 +2434,10 @@ func (d *hmsdbtest) DeleteGroupMember(label, id string) (bool, error) {
 	return d.t.DeleteGroupMember.Return.didDelete, d.t.DeleteGroupMember.Return.err
 }
 
+func (d *hmsdbtest) SetGroupMembers(label string, ids []string) ([]string, error) {
+	return nil, nil
+}
+
 //
 // Partitions
 //
