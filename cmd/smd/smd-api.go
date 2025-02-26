@@ -2314,14 +2314,14 @@ func (s *SmD) doRedfishEndpointPut(w http.ResponseWriter, r *http.Request) {
 		err = s.parseRedfishPostData(w, eps, body)
 		if err != nil {
 			sendJsonError(w, http.StatusInternalServerError,
-				fmt.Sprintf("failed parsing post data: %w", err))
+				fmt.Sprintf("failed parsing post data: %v", err))
 		}
 	} else {
 		// parse data using the new inventory data format (will conform to schema)
 		err = s.parseRedfishPostDataV2(w, body)
 		if err != nil {
 			sendJsonError(w, http.StatusInternalServerError,
-				fmt.Sprintf("failed parsing post data (V2): %w", err))
+				fmt.Sprintf("failed parsing post data (V2): %v", err))
 		}
 	}
 
