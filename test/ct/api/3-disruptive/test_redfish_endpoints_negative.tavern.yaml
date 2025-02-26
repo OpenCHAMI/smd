@@ -450,42 +450,43 @@ stages:
                 enum:
                   - 400
 
+  # todo ochami added the ability to put a non-existent RFEndpoint
   # PUT /Inventory/RedfishEndpoints/{xname} non-existent
-  - name: hsmAPIRedfishEndpointPUT - non-existent
-    request:
-      url: "{hsm_base_url}/hsm/v2/Inventory/RedfishEndpoints/x9999c7s99b91"
-      method: PUT
-      verify: !bool "{verify}"
-      json: {"ID":"x9999c7s99b91"}
-    response:
-      status_code: 404
-      verify_response_with:
-        function: tavern.testutils.helpers:validate_pykwalify
-        extra_kwargs:
-          schema:
-            type: map
-            required: True
-            mapping:
-              type:
-                type: str
-                required: True
-                enum:
-                  - "about:blank"
-              title:
-                type: str
-                required: True
-                enum:
-                  - "Not Found"
-              detail:
-                type: str
-                required: True
-                enum:
-                  - "No such entry: x9999c7s99b91"
-              status:
-                type: int
-                required: True
-                enum:
-                  - 404
+  # - name: hsmAPIRedfishEndpointPUT - non-existent
+  #   request:
+  #     url: "{hsm_base_url}/hsm/v2/Inventory/RedfishEndpoints/x9999c7s99b91"
+  #     method: PUT
+  #     verify: !bool "{verify}"
+  #     json: {"ID":"x9999c7s99b91"}
+  #   response:
+  #     status_code: 404
+  #     verify_response_with:
+  #       function: tavern.testutils.helpers:validate_pykwalify
+  #       extra_kwargs:
+  #         schema:
+  #           type: map
+  #           required: True
+  #           mapping:
+  #             type:
+  #               type: str
+  #               required: True
+  #               enum:
+  #                 - "about:blank"
+  #             title:
+  #               type: str
+  #               required: True
+  #               enum:
+  #                 - "Not Found"
+  #             detail:
+  #               type: str
+  #               required: True
+  #               enum:
+  #                 - "No such entry: x9999c7s99b91"
+  #             status:
+  #               type: int
+  #               required: True
+  #               enum:
+  #                 - 404
 
   # PATCH /Inventory/RedfishEndpoints/{xname} Invalid xname
   - name: hsmAPIRedfishEndpointPATCH - Invalid xname
