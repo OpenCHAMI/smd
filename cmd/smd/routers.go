@@ -48,9 +48,6 @@ type Route struct {
 type Routes []Route
 
 func (s *SmD) NewRouter(publicRoutes []Route, protectedRoutes []Route) *chi.Mux {
-	// Setup logger
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	logger := zlog.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
 	// create router and use recommended middleware
 	router := chi.NewRouter()
@@ -59,12 +56,38 @@ func (s *SmD) NewRouter(publicRoutes []Route, protectedRoutes []Route) *chi.Mux 
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.StripSlashes)
-	router.Use(openchami_logger.OpenCHAMILogger(logger))
 	router.NotFound(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		s.Logger(http.NotFoundHandler(), "NotFoundHandler")
 	}))
 
+	// Setup logger
+	if s.ochami {
+		zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+		logger := zlog.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+
+		router.Use(openchami_logger.OpenCHAMILogger(logger))
+	}
+
 	router.Use(middleware.Timeout(60 * time.Second))
+
+	if s.ochami {
+		routes := append(publicRoutes, protectedRoutes...)
+		for _, route := range routes {
+			var handler http.Handler
+			handler = route.HandlerFunc
+			if s.lgLvl >= LOG_DEBUG ||
+				(!strings.Contains(route.Name, "doReadyGet") &&
+					!strings.Contains(route.Name, "doLivenessGet")) {
+				handler = handlers.CombinedLoggingHandler(os.Stdout, handler)
+			}
+			router.Method(
+				route.Method,
+				route.Pattern,
+				handler,
+			)
+		}
+	}
+
 	if s.jwksURL != "" {
 		router.Group(func(r chi.Router) {
 			r.Use(
@@ -125,19 +148,21 @@ func (s *SmD) NewRouter(publicRoutes []Route, protectedRoutes []Route) *chi.Mux 
 
 	router.MethodNotAllowed(http.HandlerFunc(s.doMethodNotAllowedHandler))
 	s.router = router
-
 	return router
 }
 
 func (s *SmD) getAllMethodsForRequest(req *http.Request) []string {
-	var allMethods []string
+	var methods []string
 	smdRoutes := s.generateRoutes()
+	path := req.URL.Path
 	for _, smdRoute := range smdRoutes {
-		if s.router.Match(chi.NewRouteContext(), smdRoute.Method, smdRoute.Pattern) {
-			return []string{smdRoute.Method}
+		// todo match patterns
+		// for example be able to match a url to the pattern: /hsm/v2/State/Components/{xname}
+		if strings.EqualFold(path, smdRoute.Pattern) {
+			methods = append(methods, smdRoute.Method)
 		}
 	}
-	return allMethods
+	return methods
 }
 
 func (s *SmD) doMethodNotAllowedHandler(w http.ResponseWriter, r *http.Request) {

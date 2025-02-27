@@ -138,7 +138,7 @@ stages:
                 type: str
                 required: True
                 enum:
-                  - "allow POST,DELETE"
+                  - "allow GET,POST,DELETE"
               status:
                 type: int
                 required: True

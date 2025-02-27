@@ -34,7 +34,7 @@ echo "COMPOSE_FILE: $COMPOSE_FILE"
 
 function cleanup() {
   echo "Cleaning up containers..."
-  docker-compose down
+  docker compose down
   if ! [[ $? -eq 0 ]]; then
     echo "Failed to decompose environment!"
     exit 1
@@ -44,16 +44,16 @@ function cleanup() {
 
 # Get the base containers running
 echo "Starting containers..."
-docker-compose build --no-cache
-docker-compose up --exit-code-from wait-for-smd wait-for-smd
-docker-compose up --exit-code-from smoke-tests smoke-tests
+docker compose build --no-cache
+docker compose up --exit-code-from wait-for-smd wait-for-smd
+docker compose up --exit-code-from smoke-tests smoke-tests
 test_result=$?
 if [[ $test_result -ne 0 ]]; then
   echo "CT smoke tests FAILED!"
   cleanup 1
 fi
 
-docker-compose up --exit-code-from tavern-tests tavern-tests
+docker compose up --exit-code-from tavern-tests tavern-tests
 test_result=$?
 if [[ $test_result -ne 0 ]]; then
   echo "CT tavern tests FAILED!"

@@ -39,6 +39,7 @@ import (
 	base "github.com/Cray-HPE/hms-base"
 	"github.com/Cray-HPE/hms-certs/pkg/hms_certs"
 	compcreds "github.com/Cray-HPE/hms-compcredentials"
+	msgbus "github.com/Cray-HPE/hms-msgbus"
 	sstorage "github.com/Cray-HPE/hms-securestorage"
 	jwtauth "github.com/OpenCHAMI/jwtauth/v5"
 	"github.com/OpenCHAMI/smd/v2/internal/hbtdapi"
@@ -93,17 +94,20 @@ type SmD struct {
 	dbPort    int
 	dbOpts    string
 
-	tlsCert      string
-	tlsKey       string
-	proxyURL     string
-	httpListen   string
-	msgbusListen string
-	logLevelIn   int
-
+	logDir           string
+	tlsCert          string
+	tlsKey           string
+	proxyURL         string
+	httpListen       string
+	msgbusListen     string
+	logLevelIn       int
+	msgbusConfig     msgbus.MsgBusConfig
+	msgbusHandle     msgbus.MsgBusIO
 	hwInvHistAgeMax  int
 	smapCompEP       *SyncMap
 	genTestPayloads  string
 	disableDiscovery bool
+	ochami           bool
 
 	// v2 APIs
 	apiRootV2           string
@@ -555,6 +559,7 @@ func (s *SmD) parseCmdLine() {
 	flag.StringVar(&s.jwksURL, "jwks-url", "", "Set the JWKS URL to fetch public key for validation")
 	flag.BoolVar(&applyMigrations, "migrate", false, "Apply all database migrations before starting")
 	flag.BoolVar(&s.disableDiscovery, "disable-discovery", false, "Disable discovery-related subroutines")
+	flag.BoolVar(&s.ochami, "ochami", true, "Enabled OCHAMI features")
 	help := flag.Bool("h", false, "Print help and exit")
 
 	flag.Parse()
@@ -916,16 +921,13 @@ func main() {
 	s.wpRFEvent.Run()
 
 	// Start monitoring message bus, if configured
-	// s.smapCompEP = NewSyncMap(ComponentEndpointSMap(&s))
-	// if s.msgbusListen != "" {
-	// if err := s.MsgBusConfig(s.msgbusListen); err != nil {
-	// s.LogAlways("WARNING: Cannot parse message bus host: %s", err)
-	// } else {
-	// go s.StartRFEventMonitor()
-	// }
-	// } else {
-	// s.LogAlways("No message bus host given (msg-host == \"%v\"). Not listening for events on the message bus.", s.msgbusListen)
-	// }
+	if s.ochami {
+		s.LogAlways("OCHAMI: No redfish event monitoring.")
+	} else {
+		s.smapCompEP = NewSyncMap(ComponentEndpointSMap(&s))
+		go s.StartRFEventMonitor()
+		s.LogAlways("Started redfish event monitoring.")
+	}
 
 	// Start the component lock cleanup thread
 	s.CompReservationCleanup()

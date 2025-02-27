@@ -17,7 +17,7 @@ type Response struct {
 func sendJSON(w http.ResponseWriter, code int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
-	if data != nil {
+	if data != nil && code != http.StatusNoContent {
 		if err := json.NewEncoder(w).Encode(data); err != nil {
 			fmt.Printf("Couldn't encode JSON: %s\n", err)
 		}
@@ -59,7 +59,6 @@ func sendResource(w http.ResponseWriter, code int, uri *sm.ResourceURI) {
 	}
 	sendJSON(w, code, uri)
 }
-
 
 func sendJsonNewResourceIDArray(w http.ResponseWriter, collectionURI string, uris []*sm.ResourceURI) {
 	if len(uris) == 0 {
