@@ -15,3 +15,11 @@ kubernetes/cray-smd/helm
 *.pem
 
 dist/
+
+# binaries
+smd
+smd-init
+smd-init-native
+smd-loader
+smd-loader-native
+smd-native
