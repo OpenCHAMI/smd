@@ -49,7 +49,7 @@ image:
 	docker build $(NO_CACHE) --pull $(DOCKER_ARGS) --tag '$(NAME):$(VERSION)' -f Dockerfile .
 
 unittest:
-	./runUnitTest.sh
+	go test -cover -v -tags musl ./...
 
 snyk:
 	./runSnyk.sh
