@@ -47,6 +47,16 @@
 test_name: hsmAPILocksNegative
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
 
   # POST /locks/reservations/remove Invalid processing model
   - name: hsmAPILocksReservationsRemovePOSTInvalidParams - Invalid processing model
@@ -54,6 +64,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/reservations/remove"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ProcessingModel":"fail"}
     response:
       status_code: 400
@@ -91,6 +103,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/reservations/release"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ProcessingModel":"fail"}
     response:
       status_code: 400
@@ -128,6 +142,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/reservations/release"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {}
     response:
       status_code: 400
@@ -165,6 +181,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/reservations"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ProcessingModel":"fail"}
     response:
       status_code: 400
@@ -202,6 +220,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/service/reservations/release"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ProcessingModel":"fail"}
     response:
       status_code: 400
@@ -239,6 +259,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/service/reservations/release"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {}
     response:
       status_code: 400
@@ -276,6 +298,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/service/reservations"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ProcessingModel":"fail"}
     response:
       status_code: 400
@@ -313,6 +337,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/service/reservations"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ReservationDuration":16}
     response:
       status_code: 400
@@ -350,6 +376,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/service/reservations/renew"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ProcessingModel":"fail"}
     response:
       status_code: 400
@@ -387,6 +415,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/service/reservations/renew"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ReservationDuration":16}
     response:
       status_code: 400
@@ -424,6 +454,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/service/reservations/renew"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ReservationDuration":1}
     response:
       status_code: 400
@@ -461,6 +493,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/service/reservations/check"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {}
     response:
       status_code: 400
@@ -498,6 +532,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/status"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ComponentIDs":["foo","bar"]}
     response:
       status_code: 400
@@ -535,6 +571,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/status?role=foo"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 400
       verify_response_with:
@@ -571,6 +609,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/lock"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ProcessingModel":"fail"}
     response:
       status_code: 400
@@ -608,6 +648,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/unlock"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ProcessingModel":"fail"}
     response:
       status_code: 400
@@ -645,6 +687,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/disable"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ProcessingModel":"fail"}
     response:
       status_code: 400
@@ -682,6 +726,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/repair"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ProcessingModel":"fail"}
     response:
       status_code: 400

@@ -46,6 +46,16 @@
 test_name: Query the ComponentEndpoints collection
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # GET /ComponentEndpoints API response code
   # GET /ComponentEndpoints API response body
   - name: Ensure that we can conduct a query on the ComponentEndpoints collection
@@ -53,6 +63,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ComponentEndpoints"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -394,6 +406,16 @@ Accelerator[0-9]+"
 test_name: Query the ComponentEndpoints collection and get Node Information
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # GET /ComponentEndpoints?type=Node API response code
   # GET /ComponentEndpoints?type=Node API response body
   - name: Ensure that we can conduct a query on the ComponentEndpoints collection for a particular node
@@ -401,6 +423,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ComponentEndpoints?type=Node"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -445,6 +469,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ComponentEndpoints/{id}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -472,6 +498,16 @@ stages:
 test_name: Query the ComponentEndpoints collection and get NodeBMC Information
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # GET /ComponentEndpoints?type=NodeBMC API response code
   # GET /ComponentEndpoints?type=NodeBMC API response body
   - name: Ensure that we can conduct a query on the ComponentEndpoints collection for a particular BMC
@@ -479,6 +515,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ComponentEndpoints?type=NodeBMC"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -523,6 +561,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ComponentEndpoints/{id}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -550,6 +590,16 @@ stages:
 test_name: Query the ComponentEndpoints collection and get Node Enclosure Information
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # GET /ComponentEndpoints?type=NodeEnclosure API response code
   # GET /ComponentEndpoints?type=NodeEnclosure API response body
   - name: Ensure that we can conduct a query on the ComponentEndpoints collection for a particular node enclosure
@@ -557,6 +607,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ComponentEndpoints?type=NodeEnclosure"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -601,6 +653,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ComponentEndpoints/{id}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -628,12 +682,24 @@ stages:
 test_name: Attempt to query the ComponentEndpoints collection with a valid but nonexistent xname
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # GET /ComponentEndpoints/{nodeBMC} valid nonexistent API response code
   - name: Verify failure when providing a valid but nonexistent BMC xname in the ComponentEndpoints collection
     request:
       url: "{hsm_base_url}/hsm/v2/Inventory/ComponentEndpoints/x9999c7s9b9"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
 
@@ -641,12 +707,24 @@ stages:
 test_name: Attempt to query the ComponentEndpoints collection with an invalid xname
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # GET /ComponentEndpoints/{nodeBMC} invalid API response code
   - name: Verify failure when providing an invalid BMC xname in the ComponentEndpoints collection
     request:
       url: "{hsm_base_url}/hsm/v2/Inventory/ComponentEndpoints/x9999999c7s9b9"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 400
 
@@ -654,11 +732,23 @@ stages:
 test_name: Attempt to query the ComponentEndpoints collection with a nid instead of an xname
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # GET /ComponentEndpoints/{nid} unsupported id API response code
   - name: Verify failure when providing a nid name instead of a valid BMC xname in the ComponentEndpoints collection
     request:
       url: "{hsm_base_url}/hsm/v2/Inventory/ComponentEndpoints/1"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 400

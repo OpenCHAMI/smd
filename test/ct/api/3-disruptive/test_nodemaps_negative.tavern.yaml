@@ -89,6 +89,16 @@
 test_name: hsmAPIdefaultsNodeMapsNegative
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # POST /Defaults/NodeMaps Missing ID API response code
   # POST /Defaults/NodeMaps Missing ID API response body
   - name: hsmAPIdefaultsNodeMapsPOSTmissingID - Attempt to create a NodeMap with a payload that is missing its ID using POST.
@@ -96,6 +106,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NodeMaps":[{"NID":9999999999,"Role":"Compute","SubRole":"Worker"}]}
     response:
       status_code: 400
@@ -134,6 +146,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NodeMaps":[{"ID":"x9999c7s9b9n9","Role":"Compute","SubRole":"Worker"}]}
     response:
       status_code: 400
@@ -172,6 +186,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NodeMaps":[{"ID":"x9999c7s9b9n9v0","Role":"Compute","SubRole":"Worker"}]}
     response:
       status_code: 400
@@ -210,6 +226,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NodeMaps":[{"ID":"x9999c7s9b9n9","NID":9999999999,"Role":"Compute","SubRole":"Worker"},{"ID":"x9999c7s9b9n8","NID":9999999999,"Role":"Compute","SubRole":"Worker"}]}
     response:
       status_code: 409
@@ -248,6 +266,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NodeMaps":[{"ID":"x9999c7s9b9n9v0","NID":9999999999,"Role":"Compute","SubRole":"Worker"},{"ID":"x9999c7s9b9n8v0","NID":9999999999,"Role":"Compute","SubRole":"Worker"}]}
     response:
       status_code: 409
@@ -286,6 +306,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NodeMaps":[{"ID":"x9999c7s9b9n9","NID":9999999999,"Role":"FAKE","SubRole":"Worker"}]}
     response:
       status_code: 400
@@ -324,6 +346,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NodeMaps":[{"ID":"x9999c7s9b9n9v0","NID":9999999999,"Role":"FAKE","SubRole":"Worker"}]}
     response:
       status_code: 400
@@ -362,6 +386,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NodeMaps":[{"ID":"x9999c7s9b9n9","NID":9999999999,"Role":"Compute","SubRole":"FAKE"}]}
     response:
       status_code: 400
@@ -400,6 +426,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NodeMaps":[{"ID":"x9999c7s9b9n9v0","NID":9999999999,"Role":"Compute","SubRole":"FAKE"}]}
     response:
       status_code: 400
@@ -438,6 +466,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b8n9"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
       verify_response_with:
@@ -475,6 +505,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b8n9"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
       verify_response_with:
@@ -512,6 +544,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b8"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
       verify_response_with:
@@ -549,6 +583,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/FAKE"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       #TODO: this should be a "Bad Request" with "invalid xname" returned, instead it attempts to use the invalid xname CASMHMS-5829
       status_code: 404
@@ -587,6 +623,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b8n9"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
       verify_response_with:
@@ -624,6 +662,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b8n9v0"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
       verify_response_with:
@@ -661,6 +701,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b8"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
       verify_response_with:
@@ -698,6 +740,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/FAKE"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 400
       verify_response_with:
@@ -735,6 +779,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/FAKE"
       method: PUT
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NID":9999999999,"Role":"Storage","SubRole":"Storage"}
     response:
       status_code: 400
@@ -773,6 +819,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b7n9"
       method: PUT
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Role":"Storage","SubRole":"Storage"}
     response:
       status_code: 400
@@ -811,6 +859,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b7n9v0"
       method: PUT
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Role":"Storage","SubRole":"Storage"}
     response:
       status_code: 400
@@ -849,6 +899,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n9"
       method: PUT
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NID":9999999999,"Role":"FAKE","SubRole":"Worker"}
     response:
       status_code: 400
@@ -887,6 +939,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n9v0"
       method: PUT
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NID":9999999999,"Role":"FAKE","SubRole":"Worker"}
     response:
       status_code: 400
@@ -925,6 +979,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n9"
       method: PUT
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NID":9999999999,"Role":"Service","SubRole":"FAKE"}
     response:
       status_code: 400
@@ -963,6 +1019,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n9v0"
       method: PUT
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NID":9999999999,"Role":"Service","SubRole":"FAKE"}
     response:
       status_code: 400
@@ -1001,6 +1059,10 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NodeMaps":[{"ID":"x9999c7s9b9n9","NID":9999999999,"Role":"Compute","SubRole":"Worker"}]}
     response:
       status_code: 200
@@ -1029,6 +1091,10 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n8"
       method: PUT
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NID":9999999999,"Role":"Compute","SubRole":"Worker"}
     response:
       status_code: 409
@@ -1067,6 +1133,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n9"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -1094,6 +1162,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NodeMaps":[{"ID":"x9999c7s9b9n9v0","NID":9999999999,"Role":"Compute","SubRole":"Worker"}]}
     response:
       status_code: 200
@@ -1122,6 +1192,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n8v0"
       method: PUT
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NID":9999999999,"Role":"Compute","SubRole":"Worker"}
     response:
       status_code: 409
@@ -1160,6 +1232,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n9v0"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:

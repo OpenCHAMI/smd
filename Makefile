@@ -51,14 +51,8 @@ image:
 unittest:
 	go test -cover -v -tags musl ./...
 
-snyk:
-	./runSnyk.sh
-
-ct:
-	./runCT.sh
-
-ct_image:
-	docker build --no-cache -f test/ct/Dockerfile test/ct/ --tag smd-test:$(VERSION})
+ct-image:
+	docker build --no-cache -f test/Dockerfile test/ --tag smd-test:$(VERSION)
 
 binaries: smd smd-init smd-loader native
 

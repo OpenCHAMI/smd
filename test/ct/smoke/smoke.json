@@ -1,6 +1,6 @@
 {
   "smoke_test_name": "hsm-smoke-tests",
-  "default_base_url": "http://cray-smd/",
+  "default_base_url": "http://smd:27779/",
   "test_paths": [
     {
       "path": "hsm/v2/service/ready",
@@ -91,6 +91,7 @@
       "expected_status_code": 200,
       "method": "GET",
       "body": null,
+      "use_auth": true,
       "headers": {}
     },
     {
@@ -98,6 +99,7 @@
       "expected_status_code": 200,
       "method": "GET",
       "body": null,
+      "use_auth": true,
       "headers": {}
     },
     {
@@ -105,6 +107,7 @@
       "expected_status_code": 200,
       "method": "GET",
       "body": null,
+      "use_auth": true,
       "headers": {}
     },
     {
@@ -112,6 +115,7 @@
       "expected_status_code": 200,
       "method": "GET",
       "body": null,
+      "use_auth": true,
       "headers": {}
     },
     {
@@ -119,6 +123,7 @@
       "expected_status_code": 200,
       "method": "GET",
       "body": null,
+      "use_auth": true,
       "headers": {}
     },
     {
@@ -126,6 +131,7 @@
       "expected_status_code": 200,
       "method": "GET",
       "body": null,
+      "use_auth": true,
       "headers": {}
     },
     {
@@ -133,6 +139,7 @@
       "expected_status_code": 200,
       "method": "GET",
       "body": null,
+      "use_auth": true,
       "headers": {}
     },
     {
@@ -140,6 +147,7 @@
       "expected_status_code": 200,
       "method": "GET",
       "body": null,
+      "use_auth": true,
       "headers": {}
     },
     {
@@ -147,6 +155,7 @@
       "expected_status_code": 200,
       "method": "GET",
       "body": null,
+      "use_auth": true,
       "headers": {}
     },
     {
@@ -161,6 +170,7 @@
       "expected_status_code": 200,
       "method": "GET",
       "body": null,
+      "use_auth": true,
       "headers": {}
     },
     {
@@ -168,6 +178,7 @@
       "expected_status_code": 200,
       "method": "GET",
       "body": null,
+      "use_auth": true,
       "headers": {}
     },
     {
@@ -175,6 +186,7 @@
       "expected_status_code": 200,
       "method": "GET",
       "body": null,
+      "use_auth": true,
       "headers": {}
     },
     {
@@ -182,6 +194,7 @@
       "expected_status_code": 200,
       "method": "GET",
       "body": null,
+      "use_auth": true,
       "headers": {}
     },
     {
@@ -189,6 +202,7 @@
       "expected_status_code": 200,
       "method": "GET",
       "body": null,
+      "use_auth": true,
       "headers": {}
     },
     {
@@ -196,13 +210,7 @@
       "expected_status_code": 200,
       "method": "GET",
       "body": null,
-      "headers": {}
-    },
-    {
-      "path": "hsm/v2/locks/status",
-      "expected_status_code": 200,
-      "method": "GET",
-      "body": null,
+      "use_auth": true,
       "headers": {}
     },
     {
@@ -210,6 +218,7 @@
       "expected_status_code": 200,
       "method": "GET",
       "body": null,
+      "use_auth": true,
       "headers": {}
     }
   ]

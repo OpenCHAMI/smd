@@ -67,11 +67,23 @@
 test_name: Verify POST, GET, PATCH, and DELETE methods for various /partitions APIs
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   - name: Get four Node xnames from the HSM Components collection to use in upcoming stages
     request:
       url: "{hsm_base_url}/hsm/v2/State/Components?type=Node"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       save:
@@ -86,6 +98,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/partitions/p98"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
 
   # POST /partitions partition1 API response code
   - name: Verify /partitions POST method
@@ -94,6 +108,8 @@ stages:
       json: {"name":"p98","description":"Test partition 1 for HSM API testing in CT framework.","tags":["p98_tag1","p98_tag2"],"members":{"ids":["{xname1}","{xname2}"]}}
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 201
 
@@ -104,6 +120,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/partitions/p98"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -155,6 +173,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/partitions?partition=p98"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       save:
@@ -173,6 +193,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/partitions?tag=p98_tag1"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       save:
@@ -191,6 +213,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/partitions?tag=p98_tag2"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       save:
@@ -210,6 +234,8 @@ stages:
       json: {"description":"Fake test partition for HSM API testing in CT framework.","tags":["FAKE_tag1","FAKE_tag2"]}
       method: PATCH
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
       verify_response_with:
@@ -247,6 +273,8 @@ stages:
       json: {"description":"Test partition 1 for HSM API testing in CT framework (UPDATED).","tags":["p98_tag3","p98_tag4"]}
       method: PATCH
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 204
 
@@ -257,6 +285,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/partitions/p98"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -306,6 +336,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/partitions/p99"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
 
   # POST /partitions partition2 API response code
   - name: Verify /partitions POST method
@@ -314,6 +346,8 @@ stages:
       json: {"name":"p99","description":"Test partition 2 for HSM API testing in CT framework.","tags":["p99_tag1","p99_tag2"],"members":{"ids":["{xname3}"]}}
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 201
 
@@ -324,6 +358,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/partitions/p99"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -374,6 +410,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/partitions/names"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -405,6 +443,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/partitions/p98/members"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -443,6 +483,8 @@ stages:
       json: {"id":"{xname4}"}
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 201
 
@@ -453,6 +495,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/partitions/p98/members"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -495,6 +539,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/partitions/p98/members/{xname1}"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -522,6 +568,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/partitions/p98/members"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -563,6 +611,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/partitions/p98/members/FAKE"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 400
       verify_response_with:
@@ -600,6 +650,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/partitions/p98"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -627,6 +679,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/partitions/p99"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -654,6 +708,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/partitions/names"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -683,6 +739,8 @@ stages:
       json: {"id":"{xname4}"}
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
       verify_response_with:
