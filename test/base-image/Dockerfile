@@ -48,15 +48,24 @@ RUN set -ex \
         musl-dev
 
 RUN mkdir -p /opt/ochami-pytest && \
-    mkdir -p /var/logs/ochami-pytest
+    mkdir -p /var/logs/ochami-pytest && \
+    mkdir -p /tests && \
+    mkdir -p /.pytest_cache && \
+    chown -R 65534:65534 /.pytest_cache && \
+    chmod 755 /.pytest_cache && \
+    chown -R 65534:65534 /opt/ochami-pytest && \
+    chown -R 65534:65534 /tests && \
+    chown -R 65534:65534 /var/logs/ochami-pytest && \
+    chmod 755 /var/logs/ochami-pytest
 COPY bin  /opt/ochami-pytest/bin
 COPY libs /opt/ochami-pytest/libs
+COPY smoke_pytest /opt/ochami-pytest/smoke_pytest
+
 
 
 # Run as nobody
-RUN chown -R 65534:65534 /opt/ochami-pytest
 USER 65534:65534
 ENV PATH="$PATH:/opt/ochami-pytest/bin"
 
-WORKDIR /opt/ochami-pytest
+WORKDIR /
 CMD [ "/opt/ochami-pytest/bin/ochami-pytest", "help" ]
