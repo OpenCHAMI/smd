@@ -55,6 +55,16 @@
 test_name: Query the ServiceEndpoints collection
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # GET /ServiceEndpoints API response code
   # GET /ServiceEndpoints API response body
   - name: Ensure that we can conduct a query on the ServiceEndpoints collection
@@ -62,6 +72,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ServiceEndpoints"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       json:
@@ -74,6 +86,16 @@ stages:
 test_name: Query the ServiceEndpoints collection for the AccountService
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # GET /ServiceEndpoints/AccountService API response code
   # GET /ServiceEndpoints/AccountService API response body
   - name: Ensure that we can conduct a query on the ServiceEndpoints collection for the AccountService
@@ -81,6 +103,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ServiceEndpoints/AccountService"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       save:
@@ -93,6 +117,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ServiceEndpoints?service=AccountService"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
 
@@ -102,6 +128,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ServiceEndpoints/AccountService/RedfishEndpoints/{id}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
 
@@ -109,6 +137,16 @@ stages:
 test_name: Query the ServiceEndpoints collection for the EventService
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # GET /ServiceEndpoints/EventService API response code
   # GET /ServiceEndpoints/EventService API response body
   - name: Ensure that we can conduct a query on the ServiceEndpoints collection for the EventService
@@ -116,6 +154,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ServiceEndpoints/EventService"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       save:
@@ -128,6 +168,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ServiceEndpoints?service=EventService"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
 
@@ -137,6 +179,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ServiceEndpoints/EventService/RedfishEndpoints/{id}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
 
@@ -144,6 +188,16 @@ stages:
 test_name: Query the ServiceEndpoints collection for the SessionService
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # GET /ServiceEndpoints/SessionService API response code
   # GET /ServiceEndpoints/SessionService API response body
   - name: Ensure that we can conduct a query on the ServiceEndpoints collection for the SessionService
@@ -151,6 +205,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ServiceEndpoints/SessionService"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       save:
@@ -163,6 +219,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ServiceEndpoints?service=SessionService"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
 
@@ -172,6 +230,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ServiceEndpoints/SessionService/RedfishEndpoints/{id}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
 
@@ -179,6 +239,16 @@ stages:
 test_name: Query the ServiceEndpoints collection for the UpdateService
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # GET /ServiceEndpoints/UpdateService API response code
   # GET /ServiceEndpoints/UpdateService API response body
   - name: Ensure that we can conduct a query on the ServiceEndpoints collection for the UpdateService
@@ -186,6 +256,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ServiceEndpoints/UpdateService"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       save:
@@ -198,6 +270,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ServiceEndpoints?service=UpdateService"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
 
@@ -207,6 +281,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ServiceEndpoints/UpdateService/RedfishEndpoints/{id}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
 
@@ -214,12 +290,24 @@ stages:
 test_name: Attempt to query the ServiceEndpoints collection for the AccountService with a valid but nonexistent xname
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # GET /ServiceEndpoints/AccountService/RedfishEndpoints/{xname} valid nonexistent nodeBMC API response code
   - name: Verify failure when providing a valid but nonexistent xname for the AccountService in the ServiceEndpoints collection
     request:
       url: "{hsm_base_url}/hsm/v2/Inventory/ServiceEndpoints/AccountService/RedfishEndpoints/x1025c7s4b4"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
 
@@ -227,12 +315,24 @@ stages:
 test_name: Attempt to query the ServiceEndpoints collection for the EventService with a valid but nonexistent xname
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # GET /ServiceEndpoints/EventService/RedfishEndpoints/{xname} valid nonexistent nodeBMC API response code
   - name: Verify failure when providing a valid but nonexistent xname for the EventService in the ServiceEndpoints collection
     request:
       url: "{hsm_base_url}/hsm/v2/Inventory/ServiceEndpoints/EventService/RedfishEndpoints/x1025c7s4b4"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
 
@@ -240,12 +340,24 @@ stages:
 test_name: Attempt to query the ServiceEndpoints collection for the SessionService with a valid but nonexistent xname
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # GET /ServiceEndpoints/SessionService/RedfishEndpoints/{xname} valid nonexistent nodeBMC API response code
   - name: Verify failure when providing a valid but nonexistent xname for the SessionService in the ServiceEndpoints collection
     request:
       url: "{hsm_base_url}/hsm/v2/Inventory/ServiceEndpoints/SessionService/RedfishEndpoints/x1025c7s4b4"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
 
@@ -253,12 +365,24 @@ stages:
 test_name: Attempt to query the ServiceEndpoints collection for the UpdateService with a valid but nonexistent xname
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # GET /ServiceEndpoints/UpdateService/RedfishEndpoints/{xname} valid nonexistent nodeBMC API response code
   - name: Verify failure when providing a valid but nonexistent xname for the UpdateService in the ServiceEndpoints collection
     request:
       url: "{hsm_base_url}/hsm/v2/Inventory/ServiceEndpoints/UpdateService/RedfishEndpoints/x1025c7s4b4"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
 
@@ -266,12 +390,24 @@ stages:
 test_name: Attempt to query the ServiceEndpoints collection for the AccountService with an invalid xname
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # GET /ServiceEndpoints/AccountService/RedfishEndpoints/{xname} invalid nodeBMC API response code
   - name: Verify failure when providing an invalid xname for the AccountService in the ServiceEndpoints collection
     request:
       url: "{hsm_base_url}/hsm/v2/Inventory/ServiceEndpoints/AccountService/RedfishEndpoints/x1025000c7s4b4"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 400
 
@@ -279,12 +415,24 @@ stages:
 test_name: Attempt to query the ServiceEndpoints collection for the EventService with an invalid xname
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # GET /ServiceEndpoints/EventService/RedfishEndpoints/{xname} invalid nodeBMC API response code
   - name: Verify failure when providing an invalid xname for the EventService in the ServiceEndpoints collection
     request:
       url: "{hsm_base_url}/hsm/v2/Inventory/ServiceEndpoints/EventService/RedfishEndpoints/x1025000c7s4b4"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 400
 
@@ -292,12 +440,24 @@ stages:
 test_name: Attempt to query the ServiceEndpoints collection for the SessionService with an invalid xname
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # GET /ServiceEndpoints/SessionService/RedfishEndpoints/{xname} invalid nodeBMC API response code
   - name: Verify failure when providing an invalid xname for the SessionService in the ServiceEndpoints collection
     request:
       url: "{hsm_base_url}/hsm/v2/Inventory/ServiceEndpoints/SessionService/RedfishEndpoints/x1025000c7s4b4"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 400
 
@@ -305,11 +465,23 @@ stages:
 test_name: Attempt to query the ServiceEndpoints collection for the UpdateService with an invalid xname
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # GET /ServiceEndpoints/UpdateService/RedfishEndpoints/{xname} invalid nodeBMC API response code
   - name: Verify failure when providing an invalid xname for the UpdateService in the ServiceEndpoints collection
     request:
       url: "{hsm_base_url}/hsm/v2/Inventory/ServiceEndpoints/UpdateService/RedfishEndpoints/x1025000c7s4b4"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 400
