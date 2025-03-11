@@ -49,6 +49,16 @@
 test_name: Ensure that we can gather information from the memberships collection
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # GET /memberships API response code
   # GET /memberships API response body
   - name: Ensure that we can conduct a query on the memberships collection
@@ -56,6 +66,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/memberships"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -83,6 +95,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?type=NodeBMC"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       save:
@@ -96,6 +110,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/memberships/{bmc_id}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -119,6 +135,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?type=Node"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       save:
@@ -138,6 +156,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/memberships/{node_id}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -163,6 +183,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/memberships?arch={arch}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -191,6 +213,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/memberships?flag={flag}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -219,6 +243,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/memberships?id={node_id}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -247,6 +273,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/memberships?nid={nid}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -275,6 +303,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/memberships?role={role}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -303,6 +333,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/memberships?state={state}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -331,6 +363,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/memberships?type={type}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:

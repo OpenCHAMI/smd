@@ -273,6 +273,16 @@ stages:
 test_name: Verify that we can query for NodeBMCs in the Components collection
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # GET /Components?type=NodeBMC API response code
   # GET /Components?type=NodeBMC API response body
   - name: Retrieve a NodeBMC from the Components collection to use in upcoming stages
@@ -280,6 +290,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?type=NodeBMC"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       json:
@@ -295,6 +307,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -352,6 +366,16 @@ strict:
   - json:off
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # GET /Components?type=Node API response code
   # GET /Components?type=Node API response code
   - name: Verify that we can query for compute Nodes in the Components collection
@@ -361,6 +385,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?type=Node&role=Compute"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       json:
@@ -385,6 +411,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/{node_xname}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       json:
@@ -406,6 +434,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/ByNID/{NID}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -466,6 +496,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/{node_xname}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -528,6 +560,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?type=Node&role=Compute"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -599,6 +633,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?type=Node&role=Compute&Flag={Flag}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -672,6 +708,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?type=Node&role=Compute&Arch=X86"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -743,6 +781,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?type=Node&nid={NID}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -819,6 +859,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?role=Compute"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -888,6 +930,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?type=Booster"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 400
       json:
@@ -903,6 +947,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?state=Ready"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       json:
@@ -918,6 +964,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?stateonly=True"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -952,6 +1000,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?flagonly=True"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -983,6 +1033,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?roleonly=True"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -1017,6 +1069,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?nidonly=True"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -1045,6 +1099,16 @@ stages:
 test_name: Verify the Component Query API with Node xnames
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # GET /Components?type=Node API response code
   # GET /Components?type=Node API response body
   - name: Retrieve a Node from the Components collection to use in upcoming stages
@@ -1052,6 +1116,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?type=Node"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       json:
@@ -1067,6 +1133,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/Query/{xname}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -1136,6 +1204,16 @@ stages:
 test_name: Verify that we can call the Component Query API with NodeBMC xnames
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # GET /Components?type=NodeBMC API response code
   # GET /Components?type=NodeBMC API response body
   - name: Retrieve a NodeBMC from the Components collection to use in upcoming stages
@@ -1143,6 +1221,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?type=NodeBMC"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       json:
@@ -1158,6 +1238,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/Query/{xname}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
