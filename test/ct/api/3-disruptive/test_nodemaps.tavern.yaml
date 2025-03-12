@@ -71,6 +71,16 @@
 test_name: hsmAPIdefaultsNodeMapsDisruptive
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # DELETE /Defaults/NodeMaps/{xname} NodeA API response code
   # DELETE /Defaults/NodeMaps/{xname} NodeA API response body
   - name: hsmAPIdefaultsNodeMapsXnameDELETEnodeA - DELETE any previously leftover test NodeMap for NodeA.
@@ -78,6 +88,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n9"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code:
         - 200
@@ -90,6 +102,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n8"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code:
         - 200
@@ -102,6 +116,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n7"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code:
         - 200
@@ -114,6 +130,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NodeMaps":[{"ID":"x9999c7s9b9n9","NID":9999999999,"Role":"Compute","SubRole":"Worker"},{"ID":"x9999c7s9b9n8","NID":9999999998,"Role":"Compute","SubRole":"Worker"},{"ID":"x9999c7s9b9n7","NID":9999999997,"Role":"Compute","SubRole":"Worker"}]}
     response:
       status_code: 200
@@ -142,6 +160,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -187,6 +207,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n9"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -224,6 +246,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n8"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -261,6 +285,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n7"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -298,6 +324,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NodeMaps":[{"ID":"x9999c7s9b9n9","NID":9999999999,"Role":"Compute","SubRole":"Worker"},{"ID":"x9999c7s9b9n8","NID":9999999988,"Role":"Service","SubRole":"Master"},{"ID":"x9999c7s9b9n7","NID":9999999987,"Role":"Service","SubRole":"Worker"}]}
     response:
       status_code: 200
@@ -326,6 +354,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -371,6 +401,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n9"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -408,6 +440,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n8"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -445,6 +479,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n7"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -482,6 +518,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n8"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -509,6 +547,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n7"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -536,6 +576,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n9"
       method: PUT
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NID":9999999979,"Role":"Storage","SubRole":"Storage"}
     response:
       status_code: 200
@@ -574,6 +616,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n9"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -611,6 +655,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n8"
       method: PUT
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NID":9999999978,"Role":"Management","SubRole":"Master"}
     response:
       status_code: 200
@@ -649,6 +695,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n8"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -686,6 +734,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n9"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -713,6 +763,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n8"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
