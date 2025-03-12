@@ -51,6 +51,16 @@
 test_name: hsmAPIinventoryEthernetInterfacesDisruptive
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # DELETE /Inventory/EthernetInterfaces/{ethInterfaceID}
   - name: Delete test component ethernet interface (if present)
     request:
@@ -64,6 +74,8 @@ stages:
       json: {"Description":"Test Component Interface","MACAddress":"9A:99:99:99:99:99","IPAddresses":[{"IPAddress":"99.9.9.9","Network":"HSMTavernTest"}]}
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 201
       json:
@@ -78,6 +90,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/EthernetInterfaces"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -131,6 +145,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/EthernetInterfaces?ComponentID={compID}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -183,6 +199,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/EthernetInterfaces?ComponentID=BADID"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 400
       json:
@@ -197,6 +215,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/EthernetInterfaces/9a9999999999"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -254,6 +274,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/EthernetInterfaces/9a9999999999"
       method: PATCH
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Description":"Test Patch Component Interface"}
     response:
       status_code: 200
@@ -264,6 +286,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/EthernetInterfaces/9a9999999999"
       method: PATCH
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"IPAddresses":[{"IPAddress":"99.9.9.9","Network":"HSMTavernTestPatch"}]}
     response:
       status_code: 200
@@ -274,6 +298,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/EthernetInterfaces/9a9999999999"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -331,6 +357,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/EthernetInterfaces/9a9999999999/IPAddresses"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -361,6 +389,8 @@ stages:
       json: {"IPAddress":"99.9.9.8","Network":"HSMTavernTestPatch"}
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 201
       json:
@@ -372,6 +402,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/EthernetInterfaces/9a9999999999/IPAddresses"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -404,6 +436,8 @@ stages:
       json: {"Network":"HSMTavernTest2"}
       method: PATCH
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
 
@@ -413,6 +447,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/EthernetInterfaces/9a9999999999/IPAddresses"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -445,6 +481,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/EthernetInterfaces/9a9999999999/IPAddresses/99.9.9.8"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       json:
@@ -457,6 +495,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/EthernetInterfaces/9a9999999999/IPAddresses"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -487,6 +527,8 @@ stages:
       json: {"IPAddress":"99.9.9.7","Network":"HSMTavernTestPatch"}
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 201
       json:
@@ -500,6 +542,8 @@ stages:
       json: {"Network":"HSMTavernTest2PATCH"}
       method: PATCH
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
 
@@ -510,6 +554,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/EthernetInterfaces/9a9999999999/IPAddresses/99.9.9.7"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       json:
@@ -522,6 +568,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/EthernetInterfaces/9a9999999999"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       json:
@@ -534,6 +582,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/EthernetInterfaces/9a9999999999"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
       json:
@@ -548,6 +598,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/EthernetInterfaces/9a9999999999"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
       json:
