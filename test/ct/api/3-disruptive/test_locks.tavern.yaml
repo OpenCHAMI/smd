@@ -64,6 +64,16 @@
 test_name: hsmAPILocks
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   ##############################################
   # Remove any test components we previously created.
   # This will also remove any locks/reservations
@@ -75,21 +85,29 @@ stages:
     request:
       url: "{hsm_base_url}/hsm/v2/State/Components/p9999.9996"
       method: DELETE
+      headers:
+        Authorization: "Bearer {access_token}"
   # DELETE /State/Components/p9999.9997
   - name: hsmAPIlocksDELETE - Delete leftover test component p9999.9997
     request:
       url: "{hsm_base_url}/hsm/v2/State/Components/p9999.9997"
       method: DELETE
+      headers:
+        Authorization: "Bearer {access_token}"
   # DELETE /State/Components/p9999.9998
   - name: hsmAPIlocksDELETE - Delete leftover test component p9999.9998
     request:
       url: "{hsm_base_url}/hsm/v2/State/Components/p9999.9998"
       method: DELETE
+      headers:
+        Authorization: "Bearer {access_token}"
   # DELETE /State/Components/p9999.9999
   - name: hsmAPIlocksDELETE - Delete leftover test component p9999.9999
     request:
       url: "{hsm_base_url}/hsm/v2/State/Components/p9999.9999"
       method: DELETE
+      headers:
+        Authorization: "Bearer {access_token}"
 
   ##############################################
   # Begin Tests
@@ -101,6 +119,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/status"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ComponentIDs":["p9999.9996","p9999.9997","p9999.9998","p9999.9999"]}
     response:
       status_code: 400
@@ -138,6 +158,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/status?type=Partition"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 400
       verify_response_with:
@@ -177,6 +199,8 @@ stages:
     request:
       url: "{hsm_base_url}/hsm/v2/State/Components"
       method: POST
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Components":[{"ID":"p9999.9996","State":"Populated"},{"ID":"p9999.9997","State":"Populated"},{"ID":"p9999.9998","State":"Populated"},{"ID":"p9999.9999","State":"Populated"}]}
 
   # POST /lock/status w/ Components
@@ -185,6 +209,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/status"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ComponentIDs":["p9999.9996","p9999.9997","p9999.9998","p9999.9999"]}
     response:
       status_code: 200
@@ -239,6 +265,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/status?type=Partition"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -292,6 +320,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/lock"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Type":["Partition"]}
     response:
       status_code: 200
@@ -362,6 +392,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/lock"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Type":["Partition"]}
     response:
       status_code: 400
@@ -399,6 +431,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/unlock"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Type":["Partition"]}
     response:
       status_code: 200
@@ -469,6 +503,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/unlock"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Type":["Partition"]}
     response:
       status_code: 400
@@ -506,6 +542,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/lock"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ComponentIDs":["p9999.9996","p9999.9997"]}
     response:
       status_code: 200
@@ -574,6 +612,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/service/reservations"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Type":["Partition"],"ReservationDuration":15,"ProcessingModel":"rigid"}
     response:
       status_code: 400
@@ -611,6 +651,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/service/reservations"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Type":["Partition"],"ReservationDuration":15,"ProcessingModel":"flexible"}
     response:
       status_code: 200
@@ -681,6 +723,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/service/reservations"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ComponentIDs":["p9999.9998","p9999.9999"],"ReservationDuration":15,"ProcessingModel":"flexible"}
     response:
       status_code: 200
@@ -744,6 +788,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/service/reservations/check"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"DeputyKeys":[{"ID":"{service_key_data_0.ID}","Key":"{service_key_data_0.DeputyKey}"},{"ID":"{service_key_data_1.ID}","Key":"{service_key_data_1.DeputyKey}"}]}
     response:
       status_code: 200
@@ -808,6 +854,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/service/reservations/renew"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ReservationKeys":[{"ID":"{service_key_data_0.ID}","Key":"{service_key_data_0.ReservationKey}"},{"ID":"{service_key_data_1.ID}","Key":"{service_key_data_1.ReservationKey}"}],"ReservationDuration":15}
     response:
       status_code: 200
@@ -879,6 +927,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/service/reservations/release"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ReservationKeys":[{"ID":"{service_key_data_0.ID}","Key":"{service_key_data_0.ReservationKey}"}]}
     response:
       status_code: 200
@@ -949,6 +999,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/service/reservations/release"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ReservationKeys":[{"ID":"{service_key_data_0.ID}","Key":"{service_key_data_0.ReservationKey}"}]}
     response:
       status_code: 400
@@ -986,6 +1038,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/service/reservations/check"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"DeputyKeys":[{"ID":"{service_key_data_0.ID}","Key":"{service_key_data_0.DeputyKey}"},{"ID":"{service_key_data_1.ID}","Key":"{service_key_data_1.DeputyKey}"}]}
     response:
       status_code: 200
@@ -1052,6 +1106,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/service/reservations/renew"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ReservationKeys":[{"ID":"{service_key_data_0.ID}","Key":"{service_key_data_0.ReservationKey}"},{"ID":"{service_key_data_1.ID}","Key":"{service_key_data_1.ReservationKey}"}],"ReservationDuration":15}
     response:
       status_code: 400
@@ -1089,6 +1145,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/service/reservations/renew"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ReservationKeys":[{"ID":"{service_key_data_0.ID}","Key":"{service_key_data_0.ReservationKey}"},{"ID":"{service_key_data_1.ID}","Key":"{service_key_data_1.ReservationKey}"}],"ReservationDuration":15,"ProcessingModel":"flexible"}
     response:
       status_code: 200
@@ -1163,6 +1221,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/lock"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ComponentIDs":["p9999.9999"]}
     response:
       status_code: 400
@@ -1200,6 +1260,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/reservations"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Type":["Partition"]}
     response:
       status_code: 400
@@ -1237,6 +1299,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/reservations"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Type":["Partition"],"ProcessingModel":"flexible"}
     response:
       status_code: 200
@@ -1303,6 +1367,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/reservations/remove"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Type":["Partition"]}
     response:
       status_code: 400
@@ -1340,6 +1406,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/reservations/remove"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Type":["Partition"],"ProcessingModel":"flexible"}
     response:
       status_code: 200
@@ -1416,6 +1484,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/reservations"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Type":["Partition"],"ProcessingModel":"flexible"}
     response:
       status_code: 200
@@ -1483,6 +1553,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/reservations/release"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ReservationKeys":[{"ID":"{key_data_0.ID}","Key":"{key_data_0.ReservationKey}"}]}
     response:
       status_code: 200
@@ -1553,6 +1625,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/reservations/release"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ReservationKeys":[{"ID":"{key_data_0.ID}","Key":"{key_data_0.ReservationKey}"}]}
     response:
       status_code: 400
@@ -1590,6 +1664,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/disable"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ComponentIDs":["p9999.9998","p9999.9999"]}
     response:
       status_code: 200
@@ -1661,6 +1737,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/disable"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Type":["Partition"]}
     response:
       status_code: 200
@@ -1734,6 +1812,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/repair"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ComponentIDs":["p9999.9998","p9999.9999"]}
     response:
       status_code: 200
@@ -1805,6 +1885,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/repair"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Type":["Partition"]}
     response:
       status_code: 200
@@ -1878,6 +1960,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/unlock"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Type":["Partition"]}
     response:
       status_code: 400
@@ -1915,6 +1999,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/locks/unlock"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Type":["Partition"],"ProcessingModel":"flexible"}
     response:
       status_code: 200
@@ -1995,18 +2081,26 @@ stages:
     request:
       url: "{hsm_base_url}/hsm/v2/State/Components/p9999.9996"
       method: DELETE
+      headers:
+        Authorization: "Bearer {access_token}"
   # DELETE /State/Components/p9999.9997
   - name: hsmAPIlocksDELETE - Delete leftover test component p9999.9997
     request:
       url: "{hsm_base_url}/hsm/v2/State/Components/p9999.9997"
       method: DELETE
+      headers:
+        Authorization: "Bearer {access_token}"
   # DELETE /State/Components/p9999.9998
   - name: hsmAPIlocksDELETE - Delete leftover test component p9999.9998
     request:
       url: "{hsm_base_url}/hsm/v2/State/Components/p9999.9998"
       method: DELETE
+      headers:
+        Authorization: "Bearer {access_token}"
   # DELETE /State/Components/p9999.9999
   - name: hsmAPIlocksDELETE - Delete leftover test component p9999.9999
     request:
       url: "{hsm_base_url}/hsm/v2/State/Components/p9999.9999"
       method: DELETE
+      headers:
+        Authorization: "Bearer {access_token}"

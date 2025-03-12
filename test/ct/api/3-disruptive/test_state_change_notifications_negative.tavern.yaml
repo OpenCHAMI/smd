@@ -34,12 +34,24 @@
 test_name: Verify negative cases for the State Change Notifications APIs
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # POST /Subscriptions/SCN missing subscriber
   - name: Attempt to create a State Change Notification subscription with no subscriber
     request:
       url: "{hsm_base_url}/hsm/v2/Subscriptions/SCN"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Enabled":true,"Roles":["compute","service"],"SoftwareStatus":["Invalid SCN subscription for CT testing."],"States":["Empty","Populated","Off","On","Standby","Halt","Ready"],"Url":"http://test-FAKE"}
     response:
       status_code: 400
@@ -77,6 +89,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Subscriptions/SCN"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Subscriber":"test-FAKE","Enabled":true,"Roles":["compute","service"],"SoftwareStatus":["Invalid SCN subscription for CT testing."],"States":["Empty","Populated","Off","On","Standby","Halt","Ready"]}
     response:
       status_code: 400
@@ -114,6 +128,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Subscriptions/SCN"
       method: PUT
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Subscriber":"test-FAKE","Enabled":true,"Roles":["compute","service"],"SoftwareStatus":["SCN subscription for CT testing."],"States":["Empty","Populated","Off","On","Standby","Halt","Ready"],"Url":"http://test-FAKE"}
     response:
       status_code: 405
@@ -151,6 +167,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Subscriptions/SCN/999999999"
       method: PUT
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Enabled":true,"Roles":["compute","service"],"SoftwareStatus":["Invalid SCN subscription for CT testing."],"States":["Empty","Populated","Off","On","Standby","Halt","Ready"],"Url":"http://test-FAKE"}
     response:
       status_code: 400
@@ -188,6 +206,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Subscriptions/SCN/999999999"
       method: PUT
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Subscriber":"test-FAKE","Enabled":true,"Roles":["compute","service"],"SoftwareStatus":["Invalid SCN subscription for CT testing."],"States":["Empty","Populated","Off","On","Standby","Halt","Ready"]}
     response:
       status_code: 400

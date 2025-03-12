@@ -47,12 +47,25 @@ test_name: hsmAPIRedfishEndpointsNegative
 
 stages:
 
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
+
   # GET /Inventory/RedfishEndpoints Invalid xname
   - name: hsmAPIRedfishEndpointsGET - Invalid xname
     request:
       url: "{hsm_base_url}/hsm/v2/Inventory/RedfishEndpoints?id=foo"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 400
       verify_response_with:
@@ -89,6 +102,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/RedfishEndpoints?type=foo"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 400
       verify_response_with:
@@ -125,6 +140,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/RedfishEndpoints"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ID":"foo"}
     response:
       status_code: 400
@@ -162,6 +179,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/RedfishEndpoints"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ID":"x9999c7s99b91","FQDN":"MyFQDN","Hostname":"MyHostname"}
     response:
       status_code: 400
@@ -199,6 +218,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/RedfishEndpoints"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"RedfishEndpoints":[{"ID":"foo"}]}
     response:
       status_code: 400
@@ -236,6 +257,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/RedfishEndpoints"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"RedfishEndpoints":[{"ID":"x9999c7s99b91","FQDN":"MyFQDN","Hostname":"MyHostname"}]}
     response:
       status_code: 400
@@ -273,6 +296,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/RedfishEndpoints/foo"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
       verify_response_with:
@@ -309,6 +334,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/RedfishEndpoints/x9999c7s99b91"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
       verify_response_with:
@@ -345,6 +372,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/RedfishEndpoints/foo"
       method: PUT
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ID":"foo"}
     response:
       status_code: 400
@@ -382,6 +411,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/RedfishEndpoints/x9999c7s99b91"
       method: PUT
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ID":"foo"}
     response:
       status_code: 400
@@ -419,6 +450,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/RedfishEndpoints/x9999c7s99b91"
       method: PUT
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ID":"x9999c7s99b91","FQDN":"MyFQDN","Hostname":"MyHostname"}
     response:
       status_code: 400
@@ -457,6 +490,8 @@ stages:
   #     url: "{hsm_base_url}/hsm/v2/Inventory/RedfishEndpoints/x9999c7s99b91"
   #     method: PUT
   #     verify: !bool "{verify}"
+  #     headers:
+  #       Authorization: "Bearer {access_token}"
   #     json: {"ID":"x9999c7s99b91"}
   #   response:
   #     status_code: 404
@@ -494,6 +529,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/RedfishEndpoints/foo"
       method: PATCH
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ID":"foo"}
     response:
       status_code: 400
@@ -531,6 +568,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/RedfishEndpoints/x9999c7s99b91"
       method: PATCH
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ID":"x9999c7s99b91"}
     response:
       status_code: 404
@@ -568,6 +607,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/RedfishEndpoints/foo"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 400
       verify_response_with:
@@ -604,6 +645,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/RedfishEndpoints/x9999c7s99b91"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
       verify_response_with:
