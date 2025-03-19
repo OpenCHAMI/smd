@@ -32,12 +32,25 @@
 test_name: Verify DELETE ALL method for the State Change Notifications API
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
+
   # DELETE /Subscriptions/SCN
   - name: Delete all State Change Notification subscriptions
     request:
       url: "{hsm_base_url}/hsm/v2/Subscriptions/SCN"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -62,6 +75,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Subscriptions/SCN"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -86,6 +101,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Subscriptions/SCN"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:

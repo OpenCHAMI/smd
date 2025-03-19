@@ -33,12 +33,25 @@
 test_name: HSM Ethernet Interfaces Collection
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
+
   # POST /Inventory/EthernetInterfaces
   - name: Create new component ethernet interface
     request:
       url: "{hsm_base_url}/hsm/v2/Inventory/EthernetInterfaces"
       json: {"Description":"Test Component Interface","MACAddress":"9A:99:99:99:99:99","IPAddresses":[{"IPAddress":"99.9.9.9","Network":"HSMTavernTest"}]}
       method: POST
+      headers:
+        Authorization: "Bearer {access_token}"
 
   # DELETE /Inventory/EthernetInterfaces
   # Warning: this will delete ALL ENTRIES
@@ -46,6 +59,8 @@ stages:
     request:
       url: "{hsm_base_url}/hsm/v2/Inventory/EthernetInterfaces"
       method: DELETE
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
 
@@ -55,6 +70,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/EthernetInterfaces"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
       json:
@@ -69,5 +86,7 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/EthernetInterfaces"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
