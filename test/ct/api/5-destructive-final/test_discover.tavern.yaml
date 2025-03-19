@@ -32,11 +32,24 @@
 test_name: hsmAPIinventoryDiscover
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
+
   - name: Retrieve three NodeBMC RedfishEndpoints from HSM to use in upcoming stages
     request:
       url: "{hsm_base_url}/hsm/v2/Inventory/RedfishEndpoints?type=NodeBMC"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       save:
@@ -51,6 +64,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/Discover"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"xnames":["{redfishEndpoint1}"],"force":false}
     response:
       status_code: 200
@@ -76,6 +91,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/Discover"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"xnames":["{redfishEndpoint2}","{redfishEndpoint3}"],"force":false}
     response:
       status_code: 200
@@ -101,6 +118,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/DiscoveryStatus"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:

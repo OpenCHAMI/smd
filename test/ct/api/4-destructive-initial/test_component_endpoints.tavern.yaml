@@ -37,12 +37,25 @@
 test_name: Verify destructive ComponentEndpoint operations
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
+
   # GET /Inventory/ComponentEndpoints retrieve ID
   - name: Retrieve a ComponentEndpoint ID for a Node to be used in later stages
     request:
       url: "{hsm_base_url}/hsm/v2/Inventory/ComponentEndpoints?type=Node"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -77,6 +90,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ComponentEndpoints/{id}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -101,6 +116,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ComponentEndpoints/{id}"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       json:
@@ -113,6 +130,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ComponentEndpoints/{id}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
       json:
@@ -127,6 +146,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ComponentEndpoints"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
 
@@ -136,6 +157,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ComponentEndpoints"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
       json:
@@ -150,6 +173,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ComponentEndpoints/FAKE"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 400
       json:
