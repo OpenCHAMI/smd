@@ -1,0 +1,86 @@
+services:
+#  emulator-loader:
+#    image: artifactory.algol60.net/docker.io/library/golang:1.23-alpine
+#    command: >
+#      sh -c "apk add curl && sleep 10 &&
+#      curl -X POST -d '{\"RedfishEndpoints\":[{
+#        \"ID\":\"x0c0s1b0\",
+#        \"FQDN\":\"x0c0s1b0\",
+#        \"RediscoverOnUpdate\":true,
+#        \"User\":\"root\",
+#        \"Password\":\"root_password\"
+#      },{
+#        \"ID\":\"x0c0s2b0\",
+#        \"FQDN\":\"x0c0s2b0\",
+#        \"RediscoverOnUpdate\":true,
+#        \"User\":\"root\",
+#        \"Password\":\"root_password\"
+#      },{
+#        \"ID\":\"x0c0s3b0\",
+#        \"FQDN\":\"x0c0s3b0\",
+#        \"RediscoverOnUpdate\":true,
+#        \"User\":\"root\",
+#        \"Password\":\"root_password\"
+#      },{
+#        \"ID\":\"x0c0s4b0\",
+#        \"FQDN\":\"x0c0s4b0\",
+#        \"RediscoverOnUpdate\":true,
+#        \"User\":\"root\",
+#        \"Password\":\"root_password\"
+#      }]}' http://cray-smd:27779/hsm/v2/Inventory/RedfishEndpoints"
+#    depends_on:
+#      - cray-smd
+#      - rfemulator0
+#      - rfemulator1
+#      - rfemulator2
+#      - rfemulator3
+#    networks:
+#      - internal
+  rfemulator0:
+    hostname: x0c0s1b0
+    image: artifactory.algol60.net/csm-docker/stable/csm-rie:1.6.0
+    environment:
+      - MOCKUPFOLDER=EX235a
+      - MAC_SCHEMA=Mountain
+      - XNAME=x0c0s1b0
+      - PORT=443
+    networks:
+      internal:
+        aliases:
+          - x0c0s1b0
+  rfemulator1:
+    hostname: x0c0s2b0
+    image: artifactory.algol60.net/csm-docker/stable/csm-rie:1.6.0
+    environment:
+      - MOCKUPFOLDER=EX235a
+      - MAC_SCHEMA=Mountain
+      - XNAME=x0c0s2b0
+      - PORT=443
+    networks:
+      internal:
+        aliases:
+          - x0c0s2b0
+  rfemulator2:
+    hostname: x0c0s3b0
+    image: artifactory.algol60.net/csm-docker/stable/csm-rie:1.6.0
+    environment:
+      - MOCKUPFOLDER=EX235a
+      - MAC_SCHEMA=Mountain
+      - XNAME=x0c0s3b0
+      - PORT=443
+    networks:
+      internal:
+        aliases:
+          - x0c0s3b0
+  rfemulator3:
+    hostname: x0c0s4b0
+    image: artifactory.algol60.net/csm-docker/stable/csm-rie:1.6.0
+    environment:
+      - MOCKUPFOLDER=EX235a
+      - MAC_SCHEMA=Mountain
+      - XNAME=x0c0s4b0
+      - PORT=443
+    networks:
+      internal:
+        aliases:
+          - x0c0s4b0
