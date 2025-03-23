@@ -382,7 +382,6 @@ func (s *SmD) getHMSValues(valSelect HMSValueSelect, w http.ResponseWriter, r *h
 
 // Get single HMS component by xname ID
 func (s *SmD) doComponentGet(w http.ResponseWriter, r *http.Request) {
-	// TODO: get route variables using chi instead of mux
 
 	xname := base.NormalizeHMSCompID(chi.URLParam(r, "xname"))
 
@@ -2177,6 +2176,7 @@ func (s *SmD) doRedfishEndpointPut(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		sendJsonError(w, http.StatusInternalServerError,
 			"error reading response body "+err.Error())
+		return
 	}
 
 	// We expect the RedfishEndpoint to be in JSON format in the request body.
