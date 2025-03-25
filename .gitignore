@@ -17,9 +17,9 @@ kubernetes/cray-smd/helm
 dist/
 
 # binaries
-smd
-smd-init
-smd-init-native
-smd-loader
-smd-loader-native
-smd-native
+/smd
+/smd-init
+/smd-init-native
+/smd-loader
+/smd-loader-native
+/smd-native
