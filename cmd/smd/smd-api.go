@@ -2720,10 +2720,18 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 	var createCompEthInterfacesV2 = func(component base.Component, eths []schemas.EthernetInterface) {
 		for _, eth := range eths {
 			// convert IP address from manager ethernet interface to IPAddressMapping
-			ips := []sm.IPAddressMapping{sm.IPAddressMapping{IPAddr: eth.IP}}
-			cei, err := sm.NewCompEthInterfaceV2(eth.Description, eth.MAC, component.ID, ips)
-			if err != nil {
-				sendJsonError(w, http.StatusBadRequest, err.Error())
+			var (
+				ips = []sm.IPAddressMapping{sm.IPAddressMapping{IPAddr: eth.IP}}
+				cei = &sm.CompEthInterfaceV2{
+					ID:      component.ID,
+					Desc:    eth.Description,
+					MACAddr: eth.MAC,
+					IPAddrs: ips,
+				}
+			)
+			// check for required MAC address
+			if cei.MACAddr == "" {
+				sendJsonError(w, http.StatusBadRequest, sm.ErrCompEthInterfaceBadMAC.Error())
 				continue
 			}
 			err = s.db.InsertCompEthInterface(cei)
