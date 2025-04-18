@@ -4,8 +4,8 @@ services:
 ###
   # sets up postgres for SMD data
   smd-init:
-    # image: ghcr.io/openchami/smd:v2.17.7
     image: smd:v2.18.0
+    # image: ghcr.io/openchami/smd:v2.18.0
     container_name: smd-init
     hostname: smd-init
     environment:
@@ -24,8 +24,8 @@ services:
       - /smd-init
   # SMD
   smd:
-    # image: ghcr.io/openchami/smd:v2.17.7
     image: smd:v2.18.0
+    # image: ghcr.io/openchami/smd:v2.18.0
     container_name: smd
     hostname: smd
     environment:

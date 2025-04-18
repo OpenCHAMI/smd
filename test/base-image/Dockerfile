@@ -36,6 +36,7 @@ RUN set -ex \
         tar \
         gcc \
         musl-dev \
+        jq \
     && pip3 install --upgrade \
         pip \
         pytest==7.1.2 \
