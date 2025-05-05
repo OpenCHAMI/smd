@@ -93,6 +93,7 @@ stages:
                               - "DiscoveryStarted"
                               # expected for ncn-m001 which is not connected to the site network
                               - "HTTPsGetFailed"
+                              - "NotYetQueried"
                           RedfishVersion:
                             type: str
                             required: False
@@ -181,6 +182,7 @@ stages:
                               - "DiscoveryStarted"
                               # expected for ncn-m001 which is not connected to the site network
                               - "HTTPsGetFailed"
+                              - "NotYetQueried"
                           RedfishVersion:
                             type: str
                             required: False
@@ -269,6 +271,7 @@ stages:
                       - "DiscoveryStarted"
                       # expected for ncn-m001 which is not connected to the site network
                       - "HTTPsGetFailed"
+                      - "NotYetQueried"
                   RedfishVersion:
                     type: str
                     required: False
@@ -356,6 +359,7 @@ stages:
                               - "DiscoveryStarted"
                               # expected for ncn-m001 which is not connected to the site network
                               - "HTTPsGetFailed"
+                              - "NotYetQueried"
                           RedfishVersion:
                             type: str
                             required: False
@@ -440,6 +444,7 @@ stages:
                               - "DiscoveryStarted"
                               # expected for ncn-m001 which is not connected to the site network
                               - "HTTPsGetFailed"
+                              - "NotYetQueried"
                           RedfishVersion:
                             type: str
                             required: False
@@ -526,6 +531,7 @@ stages:
   #                            - "DiscoveryStarted"
   #                            # expected for ncn-m001 which is not connected to the site network
   #                            - "HTTPsGetFailed"
+  #                            - "NotYetQueried"
   #                        RedfishVersion:
   #                          type: str
   #                          required: False
