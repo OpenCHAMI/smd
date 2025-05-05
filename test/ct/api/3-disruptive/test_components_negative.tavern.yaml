@@ -327,7 +327,7 @@ stages:
                 type: str
                 required: True
                 enum:
-                  - "error decoding JSON json: cannot unmarshal string into Go struct field Component.Components.Enabled of type bool"
+                  - "error decoding JSON json: cannot unmarshal string into Go struct field Component.ComponentArray.Components.Enabled of type bool"
               status:
                 type: int
                 required: True

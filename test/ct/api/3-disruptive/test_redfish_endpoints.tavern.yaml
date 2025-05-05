@@ -1267,6 +1267,7 @@ stages:
                     enum:
                       - "DiscoveryStarted"
                       - "HTTPsGetFailed"
+                      - "NotYetQueried"
                   RedfishVersion:
                     type: str
                     required: False
@@ -1440,6 +1441,7 @@ stages:
                     enum:
                       - "DiscoveryStarted"
                       - "HTTPsGetFailed"
+                      - "NotYetQueried"
                   RedfishVersion:
                     type: str
                     required: False
