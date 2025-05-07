@@ -78,6 +78,7 @@ stages:
                             required: True
                             enum:
                               - "DiscoverOK"
+                              - "DiscoveryStarted"
                               # expected for ncn-m001 which is not connected to the site network
                               - "HTTPsGetFailed"
                           RedfishVersion:
@@ -163,6 +164,7 @@ stages:
                             required: True
                             enum:
                               - "DiscoverOK"
+                              - "DiscoveryStarted"
                               # expected for ncn-m001 which is not connected to the site network
                               - "HTTPsGetFailed"
                           RedfishVersion:
@@ -246,6 +248,7 @@ stages:
                     required: True
                     enum:
                       - "DiscoverOK"
+                      - "DiscoveryStarted"
                       # expected for ncn-m001 which is not connected to the site network
                       - "HTTPsGetFailed"
                   RedfishVersion:
@@ -330,6 +333,7 @@ stages:
                             required: True
                             enum:
                               - "DiscoverOK"
+                              - "DiscoveryStarted"
                               # expected for ncn-m001 which is not connected to the site network
                               - "HTTPsGetFailed"
                           RedfishVersion:
@@ -411,6 +415,7 @@ stages:
                             required: True
                             enum:
                               - "DiscoverOK"
+                              - "DiscoveryStarted"
                               # expected for ncn-m001 which is not connected to the site network
                               - "HTTPsGetFailed"
                           RedfishVersion:
@@ -494,6 +499,7 @@ stages:
   #                          required: True
   #                          enum:
   #                            - "DiscoverOK"
+  #                            - "DiscoveryStarted"
   #                            # expected for ncn-m001 which is not connected to the site network
   #                            - "HTTPsGetFailed"
   #                        RedfishVersion:

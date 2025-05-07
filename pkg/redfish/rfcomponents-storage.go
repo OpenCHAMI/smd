@@ -28,7 +28,8 @@ import (
 	"sort"
 	"strconv"
 
-	base "github.com/Cray-HPE/hms-base"
+	base "github.com/Cray-HPE/hms-base/v2"
+	"github.com/Cray-HPE/hms-xname/xnametypes"
 )
 
 /////////////////////////////////////////////////////////////////////////////
@@ -113,7 +114,7 @@ type EpStorageCollections struct {
 func NewEpStorageCollection(s *EpStorage, odataID ResourceID, rawOrdinal int) *EpStorageCollection {
 	sc := new(EpStorageCollection)
 	sc.OdataID = odataID.Oid
-	sc.Type = base.StorageGroup.String()
+	sc.Type = xnametypes.StorageGroup.String()
 	sc.BaseOdataID = odataID.Basename()
 	sc.RedfishType = StorageGroupType
 	sc.RfEndpointID = s.epRF.ID
@@ -240,7 +241,7 @@ type EpDrives struct {
 func NewEpDrive(s *EpStorageCollection, odataID ResourceID, rawOrdinal int) *EpDrive {
 	d := new(EpDrive)
 	d.OdataID = odataID.Oid
-	d.Type = base.Drive.String()
+	d.Type = xnametypes.Drive.String()
 	d.BaseOdataID = odataID.Basename()
 	d.RedfishType = DriveType
 	d.RfEndpointID = s.epRF.ID
@@ -372,8 +373,8 @@ func (d *EpDrive) discoverLocalPhase2() {
 		d.Flag = base.FlagOK.String()
 	}
 	// Check if we have something valid to insert into the data store
-	if base.GetHMSType(d.ID) != base.Drive ||
-		d.Type != base.Drive.String() {
+	if xnametypes.GetHMSType(d.ID) != xnametypes.Drive ||
+		d.Type != xnametypes.Drive.String() {
 		errlog.Printf("Error: Bad xname ID ('%s') or Type ('%s') for: %s\n",
 			d.ID, d.Type, d.DriveURL)
 		d.LastStatus = VerificationFailed

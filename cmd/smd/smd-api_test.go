@@ -1,6 +1,6 @@
 // MIT License
 //
-// (C) Copyright [2018-2023] Hewlett Packard Enterprise Development LP
+// (C) Copyright [2018-2023,2025] Hewlett Packard Enterprise Development LP
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
@@ -35,13 +35,14 @@ import (
 	"strings"
 	"testing"
 
-	base "github.com/Cray-HPE/hms-base"
+	base "github.com/Cray-HPE/hms-base/v2"
 	compcreds "github.com/Cray-HPE/hms-compcredentials"
 	sstorage "github.com/Cray-HPE/hms-securestorage"
 	"github.com/OpenCHAMI/smd/v2/internal/hmsds"
 	rf "github.com/OpenCHAMI/smd/v2/pkg/redfish"
 	stest "github.com/OpenCHAMI/smd/v2/pkg/sharedtest"
 	"github.com/OpenCHAMI/smd/v2/pkg/sm"
+	"github.com/Cray-HPE/hms-xname/xnametypes"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -2710,7 +2711,7 @@ func TestDoCompNIDPatch(t *testing.T) {
 		reqBody:      json.RawMessage(`{"NID": "foo"}`),
 		hmsdsRespErr: hmsds.ErrHMSDSArgNoMatch,
 		expectedComp: &base.Component{},
-		expectedResp: json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","detail":"error decoding JSON json: cannot unmarshal string into Go struct field compPatchIn.NID of type int64","status":500}` + "\n"),
+		expectedResp: json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","detail":"error decoding JSON json: cannot unmarshal string into Go struct field compPatchIn.CompUpdate.NID of type int64","status":500}` + "\n"),
 	}}
 
 	for i, test := range tests {
@@ -4729,7 +4730,7 @@ func TestDoHWInvByLocationQueryGet(t *testing.T) {
 		hmsdsRespErr: nil,
 		expectedFilter: &hmsds.HWInvLocFilter{
 			ID:       []string{"x0c0s0b0n0"},
-			Type:     []string{base.Processor.String()},
+			Type:     []string{xnametypes.Processor.String()},
 			Children: true,
 		},
 		expectedResp: payload3,
@@ -8185,7 +8186,21 @@ func TestDoGroupsPost(t *testing.T) {
 			ExclusiveGroup: "my_system",
 			Members:        sm.Members{IDs: []string{"x0c0s1b0n0", "x0c0s2b0n0"}},
 		},
-		expectedResp: json.RawMessage(`{"type":"about:blank","title":"Conflict","detail":"operation would conflict with an existing group that has the same label.","status":409}` + "\n"),
+		expectedResp: json.RawMessage(`{"type":"about:blank","title":"Conflict","detail":"operation would conflict with an existing group that has the same label or duplicate ids found in request.","status":409}` + "\n"),
+		expectError:  true,
+	}, {
+		reqType:      "POST",
+		reqURI:       "https://localhost/hsm/v2/groups",
+		reqBody:      json.RawMessage(`{"label":"my_group2","description":"This is my group2","tags":["foo","bar"],"members":{"ids":["x0c0s1b0n0","x0c0s1b0n0"]}}`),
+		hmsdsResp:    "",
+		hmsdsRespErr: hmsds.ErrHMSDSDuplicateKey,
+		expectedGroup: &sm.Group{
+			Label:       "my_group2",
+			Description: "This is my group2",
+			Tags:        []string{"foo", "bar"},
+			Members:     sm.Members{IDs: []string{"x0c0s1b0n0", "x0c0s1b0n0"}},
+		},
+		expectedResp: json.RawMessage(`{"type":"about:blank","title":"Conflict","detail":"operation would conflict with an existing group that has the same label or duplicate ids found in request.","status":409}` + "\n"),
 		expectError:  true,
 	}}
 

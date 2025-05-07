@@ -30,7 +30,7 @@ import (
 	"database/sql"
 	"strings"
 
-	base "github.com/Cray-HPE/hms-base"
+	"github.com/Cray-HPE/hms-xname/xnametypes"
 
 	sq "github.com/Masterminds/squirrel"
 )
@@ -913,7 +913,7 @@ func selectComponentsHierarchy(
 				// Build a regex for the id.
 				// TODO: Explore the performance implications of making all
 				//       the ids one big regex instead of a regex per id.
-				arg := base.NormalizeHMSCompID(ids[i]) + "([[:alpha:]][[:alnum:]]*)?"
+				arg := xnametypes.NormalizeHMSCompID(ids[i]) + "([[:alpha:]][[:alnum:]]*)?"
 				args = append(args, arg)
 			}
 			query = query.Where(sq.Expr(filterQuery, args...))
@@ -922,7 +922,7 @@ func selectComponentsHierarchy(
 			// specified literally, (e.g. no component expansion).
 			// No need to use REGEXP.
 			for i := 0; i < len(ids); i++ {
-				args = append(args, base.NormalizeHMSCompID(ids[i]))
+				args = append(args, xnametypes.NormalizeHMSCompID(ids[i]))
 			}
 			query = query.Where(sq.Eq{idCol: args})
 		}
@@ -1293,8 +1293,11 @@ func getHWInvByLocQuery(f_opts ...HWInvLocFiltFunc) (sq.SelectBuilder, error) {
 				if f.Parents {
 					childId := id
 					for {
-						childId = base.GetHMSCompParent(childId)
-						if len(childId) > 0 {
+						childId = xnametypes.GetHMSCompParent(childId)
+						// Do not include the system as a parent.
+						// The hms-xname package gives back proper parents when GetHMSCompParent is called on a Cabinet or CDU.
+						// The older hms-base implementation of GetHMSCompParent would return empty string for Cabinet or CDU types.
+						if childId != "s0" && len(childId) > 0 {
 							// Put it in a map to ensure uniqueness
 							parentIDs[childId] = true
 						} else {
@@ -1311,7 +1314,7 @@ func getHWInvByLocQuery(f_opts ...HWInvLocFiltFunc) (sq.SelectBuilder, error) {
 					filterQuery += "(" + idCol + " SIMILAR TO ?)"
 				}
 				// Build a regex for the id.
-				arg := base.NormalizeHMSCompID(id) + "([[:alpha:]][[:alnum:]]*)?"
+				arg := xnametypes.NormalizeHMSCompID(id) + "([[:alpha:]][[:alnum:]]*)?"
 				args = append(args, arg)
 			}
 		} else {
@@ -1323,7 +1326,7 @@ func getHWInvByLocQuery(f_opts ...HWInvLocFiltFunc) (sq.SelectBuilder, error) {
 				if f.Parents {
 					childId := id
 					for {
-						childId = base.GetHMSCompParent(childId)
+						childId = xnametypes.GetHMSCompParent(childId)
 						if len(childId) > 0 {
 							// Put it in a map to ensure uniqueness
 							parentIDs[childId] = true
@@ -1340,7 +1343,7 @@ func getHWInvByLocQuery(f_opts ...HWInvLocFiltFunc) (sq.SelectBuilder, error) {
 					}
 					parentIDs = make(map[string]bool)
 				}
-				args = append(args, base.NormalizeHMSCompID(id))
+				args = append(args, xnametypes.NormalizeHMSCompID(id))
 			}
 			filterQuery, args, _ = sq.Eq{idCol: args}.ToSql()
 		}
@@ -1350,7 +1353,7 @@ func getHWInvByLocQuery(f_opts ...HWInvLocFiltFunc) (sq.SelectBuilder, error) {
 	if len(f.Type) > 0 && !(f.Parents && f.Children) {
 		targs := []string{}
 		for _, t := range f.Type {
-			normType := base.VerifyNormalizeType(t)
+			normType := xnametypes.VerifyNormalizeType(t)
 			if normType == "" {
 				return query, ErrHMSDSArgBadType
 			}

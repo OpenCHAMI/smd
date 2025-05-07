@@ -1,6 +1,6 @@
 // MIT License
 //
-// (C) Copyright [2018-2023] Hewlett Packard Enterprise Development LP
+// (C) Copyright [2018-2024] Hewlett Packard Enterprise Development LP
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
@@ -34,7 +34,8 @@ import (
 	"strings"
 	"time"
 
-	base "github.com/Cray-HPE/hms-base"
+	base "github.com/Cray-HPE/hms-base/v2"
+	"github.com/Cray-HPE/hms-xname/xnametypes"
 	rf "github.com/OpenCHAMI/smd/v2/pkg/redfish"
 	"github.com/OpenCHAMI/smd/v2/pkg/sm"
 
@@ -688,7 +689,7 @@ func (d *hmsdbPg) UpdateCompStates(
 	affectedIDs := []string{}
 	if numIds == 1 {
 		// Normalize the input as it comes from the user.
-		idArray := []string{base.NormalizeHMSCompID(ids[0])}
+		idArray := []string{xnametypes.NormalizeHMSCompID(ids[0])}
 
 		// Let the Update itself verify the starting states.
 		cnt, err := t.UpdateCompStatesTx(idArray, state, nflag, force, false, pi)
@@ -935,7 +936,7 @@ func (d *hmsdbPg) BulkUpdateCompRole(ids []string, role, subRole string) ([]stri
 	}
 	// Allow SubRole to be empty
 	if subRole != "" {
-		subRole = base.VerifyNormalizeRole(subRole)
+		subRole = base.VerifyNormalizeSubRole(subRole)
 		if subRole == "" {
 			return []string{}, ErrHMSDSArgNoMatch
 		}
@@ -951,8 +952,8 @@ func (d *hmsdbPg) BulkUpdateCompRole(ids []string, role, subRole string) ([]stri
 		affectedIDs, err = t.GetComponentIDsTx(IDs(ids), Role("!"+role),
 			From("BulkUpdateCompRole"))
 	} else {
-		affectedIDs, err = t.GetComponentIDsTx(IDs(ids), Role("!"+role),
-			SubRole("!"+subRole), From("BulkUpdateCompRole"))
+		affectedIDs, err = t.GetComponentIDsTx(IDs(ids), NotRoleOrSubRole(role, subRole),
+			From("BulkUpdateCompRole"))
 	}
 	if err != nil {
 		t.Rollback()
@@ -1382,7 +1383,7 @@ func (d *hmsdbPg) GetHWInvByLocFilter(f_opts ...HWInvLocFiltFunc) ([]*sm.HWInvBy
 		idCol := hwInvAlias + "." + hwInvIdCol
 		idArgs := []string{}
 		for _, id := range f.ID {
-			idArgs = append(idArgs, base.NormalizeHMSCompID(id))
+			idArgs = append(idArgs, xnametypes.NormalizeHMSCompID(id))
 		}
 		query = query.Where(sq.Eq{idCol: idArgs})
 	}
@@ -1390,7 +1391,7 @@ func (d *hmsdbPg) GetHWInvByLocFilter(f_opts ...HWInvLocFiltFunc) ([]*sm.HWInvBy
 		typeCol := hwInvAlias + "." + hwInvTypeCol
 		tArgs := []string{}
 		for _, t := range f.Type {
-			normType := base.VerifyNormalizeType(t)
+			normType := xnametypes.VerifyNormalizeType(t)
 			if normType == "" {
 				return nil, ErrHMSDSArgBadType
 			}
@@ -1528,7 +1529,7 @@ func (d *hmsdbPg) GetHWInvByFRUFilter(f_opts ...HWInvLocFiltFunc) ([]*sm.HWInvBy
 		typeCol := hwInvFruAlias + "." + hwInvFruTblTypeCol
 		tArgs := []string{}
 		for _, t := range f.Type {
-			normType := base.VerifyNormalizeType(t)
+			normType := xnametypes.VerifyNormalizeType(t)
 			if normType == "" {
 				return nil, ErrHMSDSArgBadType
 			}
@@ -3420,7 +3421,7 @@ func (d *hmsdbPg) UpdateAllForRFEndpoint(
 		nodeList := make([]string, 0, 1)
 		for _, comp := range comps.Components {
 			compMap[comp.ID] = comp
-			if comp.Type == base.Node.String() {
+			if comp.Type == xnametypes.Node.String() {
 				nodeList = append(nodeList, comp.ID)
 			} else {
 				d.Log(LOG_INFO,

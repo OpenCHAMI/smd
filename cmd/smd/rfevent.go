@@ -1,6 +1,6 @@
 // MIT License
 //
-// (C) Copyright [2019-2023] Hewlett Packard Enterprise Development LP
+// (C) Copyright [2019-2024] Hewlett Packard Enterprise Development LP
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
@@ -28,10 +28,11 @@ import (
 	"strings"
 	"sync"
 
-	base "github.com/Cray-HPE/hms-base"
+	base "github.com/Cray-HPE/hms-base/v2"
 	"github.com/OpenCHAMI/smd/v2/internal/hmsds"
 	rf "github.com/OpenCHAMI/smd/v2/pkg/redfish"
 	"github.com/OpenCHAMI/smd/v2/pkg/sm"
+	"github.com/Cray-HPE/hms-xname/xnametypes"
 )
 
 var em = base.NewHMSError("sm.msgbus", "internal error")
@@ -106,8 +107,8 @@ func (s *SmD) doHandleRFEvent(eventRaw string) error {
 		} else if update == nil {
 			continue
 		}
-		s.Log(LOG_INFO, "CHANGING STATE: %s->%s: calling doCompUpdate(%s)",
-			pe.RfEndppointID, pe.MessageId, update.ComponentIDs)
+		s.Log(LOG_INFO, "CHANGING STATE: %s->%s: calling doCompUpdate(%s) CompUpdateType=%s",
+			pe.RfEndppointID, pe.MessageId, update.ComponentIDs, update.UpdateType)
 		err = s.doCompUpdate(update, "handleRFEvent")
 		if err != nil {
 			s.LogAlways("ERROR: %s->%s: calling doCompUpdate(%s): %s",
@@ -216,9 +217,9 @@ func EventContextDecode(
 	fields := strings.Split(context, ":")
 	for i, field := range fields {
 		setID := false
-		if i == 0 || (xnameID == "" && anyXName) {
-			normField := base.NormalizeHMSCompID(field)
-			if base.IsHMSTypeController(base.GetHMSType(normField)) {
+		if i == 0 || (xnameID == "" && anyXName == true) {
+			normField := xnametypes.NormalizeHMSCompID(field)
+			if xnametypes.IsHMSTypeController(xnametypes.GetHMSType(normField)) {
 				xnameID = normField
 				setID = true
 			}
@@ -306,6 +307,8 @@ var eventActionParserLookup = map[string]EventActionParser{
 	"powerstatuschange":                       AlertSystemPowerParser,
 	"serverpoweredon":                         AlertSystemPowerOnParser,
 	"serverpoweredoff":                        AlertSystemPowerOffParser,
+	"dcpoweron":                               FoxconnAlertSystemPowerOnParser,
+	"dcpoweroff":                              FoxconnAlertSystemPowerOffParser,
 }
 
 // Gets the EventActionParser function for the processed event or returns
@@ -404,14 +407,14 @@ func ResourcePowerStateChangedParser(s *SmD, pe *processedRFEvent) (*CompUpdate,
 	// We already know the target, but we might need to affect other
 	// components if it is a power off operation, depending on the
 	// type of component affected, e.g. slot, etc.
-	switch base.GetHMSType(pe.RfEndppointID) {
-	case base.ChassisBMC:
+	switch xnametypes.GetHMSType(pe.RfEndppointID) {
+	case xnametypes.ChassisBMC:
 		return powerStateCMM(s, pe, xname, op)
-	case base.NodeBMC:
+	case xnametypes.NodeBMC:
 		return powerStateNC(s, pe, xname, op)
-	case base.RouterBMC:
+	case xnametypes.RouterBMC:
 		return powerStateRC(s, pe, xname, op)
-	case base.CabinetPDUController:
+	case xnametypes.CabinetPDUController:
 		return powerStateCabPDUController(s, pe, xname, op)
 	default:
 		return nil, ErrSmMsgBadID
@@ -435,11 +438,11 @@ func powerStateCMM(s *SmD, pe *processedRFEvent,
 		// Should never happen.
 		return u, ErrSmMsgNoPowerState
 	}
-	switch base.GetHMSType(xname) {
-	case base.ComputeModule:
+	switch xnametypes.GetHMSType(xname) {
+	case xnametypes.ComputeModule:
 		ids := generateNcChildIDs(s, xname, op)
 		u.ComponentIDs = append(u.ComponentIDs, ids...)
-	case base.RouterModule:
+	case xnametypes.RouterModule:
 		ids := generateRcChildIDs(s, xname, op)
 		u.ComponentIDs = append(u.ComponentIDs, ids...)
 	}
@@ -450,7 +453,7 @@ func powerStateCMM(s *SmD, pe *processedRFEvent,
 	// cause a retry later.
 	if u.State == base.StateOn.String() {
 		for _, id := range u.ComponentIDs {
-			if base.IsHMSTypeController(base.GetHMSType(id)) {
+			if xnametypes.IsHMSTypeController(xnametypes.GetHMSType(id)) {
 				rep, err := s.db.GetRFEndpointByID(id)
 				if err != nil {
 					s.Log(LOG_INFO, "powerStateCMM(): Lookup failure on %s: %s", id, err)
@@ -476,7 +479,7 @@ func powerStateNC(s *SmD, pe *processedRFEvent,
 	case ResourceOn:
 		u.State = base.StateOn.String()
 		// Update hwinv for nodes
-		if base.GetHMSType(xname) == base.Node {
+		if xnametypes.GetHMSType(xname) == xnametypes.Node {
 			cep, ep, err := s.getCompEPInfo(xname)
 			if err == nil {
 				go s.doUpdateCompHWInv(cep, ep)
@@ -551,12 +554,12 @@ func generateNcChildIDs(s *SmD, xname string, op ResourceOp) []string {
 		if op == ResourceOn {
 			// Only turn the cards on, not the nodes, when slot comes up.
 			for _, childID := range children {
-				switch base.GetHMSType(childID) {
-				case base.NodeEnclosure:
+				switch xnametypes.GetHMSType(childID) {
+				case xnametypes.NodeEnclosure:
 					fallthrough
-				case base.NodeBMC:
+				case xnametypes.NodeBMC:
 					fallthrough
-				case base.NodeBMCNic:
+				case xnametypes.NodeBMCNic:
 					ids = append(ids, childID)
 				}
 			}
@@ -608,7 +611,7 @@ func AlertSystemPowerOnParser(s *SmD, pe *processedRFEvent) (*CompUpdate, error)
 		return nil, ErrSmMsgNoID
 	}
 	// Update hwinv for nodes
-	if base.GetHMSType(xname) == base.Node {
+	if xnametypes.GetHMSType(xname) == xnametypes.Node {
 		cep, ep, err := s.getCompEPInfo(xname)
 		if err == nil {
 			go s.doUpdateCompHWInv(cep, ep)
@@ -719,7 +722,7 @@ func AlertSystemPowerParser(s *SmD, pe *processedRFEvent) (*CompUpdate, error) {
 	switch op {
 	case ResourceOn:
 		u.State = base.StateOn.String()
-		if base.GetHMSType(xname) == base.Node {
+		if xnametypes.GetHMSType(xname) == xnametypes.Node {
 			go s.doUpdateCompHWInv(cep, ep)
 		}
 	case ResourceOff:
@@ -777,7 +780,7 @@ func (s *SmD) getCompEPInfo(xname string) (*sm.ComponentEndpoint, *rf.RedfishEP,
 		pw = rep.Password
 	}
 	// Minimally populate a redfish description struct
-	rfEPType := base.GetHMSType(cep.RfEndpointID)
+	rfEPType := xnametypes.GetHMSType(cep.RfEndpointID)
 	epDesc := rf.RedfishEPDescription{
 		ID:       cep.RfEndpointID,
 		Type:     rfEPType.String(),
@@ -834,7 +837,7 @@ func (s *SmD) doUpdateCompHWInv(cep *sm.ComponentEndpoint, ep *rf.RedfishEP) err
 		return ErrSmMsgNoEP
 	}
 	// Update the node info under the redfish endpoint
-	if base.GetHMSType(cep.ID) == base.Node {
+	if xnametypes.GetHMSType(cep.ID) == xnametypes.Node {
 		// Read from redfish
 		status := ep.GetSystems()
 		if status != rf.HTTPsGetOk {
@@ -848,7 +851,7 @@ func (s *SmD) doUpdateCompHWInv(cep *sm.ComponentEndpoint, ep *rf.RedfishEP) err
 				cep.ID, err)
 			return err
 		}
-		// Discover harware inventory from redfish data
+		// Discover hardware inventory from redfish data
 		hwlocs, err := s.DiscoverHWInvByLocArray(ep)
 		if err != nil {
 			if err == base.ErrHMSTypeInvalid || err == base.ErrHMSTypeUnsupported {
@@ -883,6 +886,93 @@ func (s *SmD) doUpdateCompHWInv(cep *sm.ComponentEndpoint, ep *rf.RedfishEP) err
 		}
 	}
 	return nil
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Foxconn Paradise OpenBmc firmware
+/////////////////////////////////////////////////////////////////////////////
+
+// doUpdateCompFoxconn - Update both the hwinv and the redfish system endpoint data.
+//
+//      For Foxconn Paradise hardware we want to do more than just call doUpdateCompHWInv().
+//      If the last discover was run with the node powered off, the PowerURL and
+//      PowerControl system information may not have been updated due to a BMC fw
+//      bug (see PRDIS-198).  doUpdateCompHWInv() would indeed update this system
+//      information correctly in the endpoint 'ep' since the node is now powered on, but
+//      it will not push it into the database.
+//
+func (s *SmD) doUpdateCompFoxconn(cep *sm.ComponentEndpoint, ep *rf.RedfishEP) error {
+	// First update the hardware inventory.  This also updates system info in the
+	// component endpoint from the ProcesorModule_0 chassis
+	err := s.doUpdateCompHWInv(cep, ep)
+	if err != nil {
+		return err
+	}
+
+	// Prep for writing to the database
+	sysceps := new(sm.ComponentEndpointArray)
+	for _, sysEP := range ep.Systems.OIDs {
+		syscep := s.DiscoverCompEndpointSystem(sysEP)
+		if syscep != nil {
+			sysceps.ComponentEndpoints = append(sysceps.ComponentEndpoints, syscep)
+		}
+	}
+
+	// Now push into the database
+	err = s.db.UpsertCompEndpoints(sysceps)
+	if err != nil {
+		s.Log(LOG_INFO, "doUpdateCompFoxconn(%s): Failed to update system component endpoints: %s",
+			cep.ID, err)
+	}
+
+	return nil
+}
+
+// EventActionParser - Alert, presumably from Foxconn Paradise BMC
+//
+//	The OriginOfXondition (pe.Origin) will likely not be set. Assume n0 in that case
+func FoxconnAlertSystemPowerOnParser(s *SmD, pe *processedRFEvent) (*CompUpdate, error) {
+	u := new(CompUpdate)
+	xname := fmt.Sprintf("%sn0", pe.RfEndppointID)
+	if pe.Origin != "" {
+		xname, err := s.getIDForURI(pe.RfEndppointID, pe.Origin)
+		if err != nil {
+			return nil, err
+		} else if xname == "" {
+			return nil, ErrSmMsgNoID
+		}
+	}
+	// Update hwinv for nodes
+	if xnametypes.GetHMSType(xname) == xnametypes.Node {
+		cep, ep, err := s.getCompEPInfo(xname)
+		if err == nil {
+			go s.doUpdateCompFoxconn(cep, ep)
+		}
+	}
+	u.ComponentIDs = append(u.ComponentIDs, xname)
+	u.UpdateType = StateDataUpdate.String()
+	u.State = base.StateOn.String()
+	return u, nil
+}
+
+// EventActionParser - Alert, presumably from Foxconn Paradise BMC
+//
+//	The OriginOfXondition (pe.Origin) will likely not be set. Assume n0 in that case
+func FoxconnAlertSystemPowerOffParser(s *SmD, pe *processedRFEvent) (*CompUpdate, error) {
+	u := new(CompUpdate)
+	xname := fmt.Sprintf("%sn0", pe.RfEndppointID)
+	if pe.Origin != "" {
+		xname, err := s.getIDForURI(pe.RfEndppointID, pe.Origin)
+		if err != nil {
+			return nil, err
+		} else if xname == "" {
+			return nil, ErrSmMsgNoID
+		}
+	}
+	u.ComponentIDs = append(u.ComponentIDs, xname)
+	u.UpdateType = StateDataUpdate.String()
+	u.State = base.StateOff.String()
+	return u, nil
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1193,7 +1283,7 @@ func (s *SmD) checkSyncCompEP(xname string, snum int) (found, didUpdate bool, er
 	var ids []string
 
 	for i := 0; i < CompEPSyncRetries; i++ {
-		if base.GetHMSType(xname) == base.CabinetPDUController {
+		if xnametypes.GetHMSType(xname) == xnametypes.CabinetPDUController {
 			// CabinentPDUControllers (xXmM) don't have ComponentEndpoint
 			// entries. See if we've discovered any children.
 			ids, err = s.db.GetCompEndpointIDs(hmsds.CE_RfEPs([]string{xname}))

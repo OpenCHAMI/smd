@@ -1,6 +1,6 @@
 // MIT License
 //
-// (C) Copyright [2019-2021] Hewlett Packard Enterprise Development LP
+// (C) Copyright [2019-2021,2024] Hewlett Packard Enterprise Development LP
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
@@ -664,12 +664,12 @@ type PowerSupplyLocationInfoRF struct {
 // TODO: How to version these (as HMS structures)
 type PowerSupplyFRUInfoRF struct {
 	//Manufacture Info
-	Manufacturer       string `json:"Manufacturer"`
-	SerialNumber       string `json:"SerialNumber"`
-	Model              string `json:"Model"`
-	PartNumber         string `json:"PartNumber"`
-	PowerCapacityWatts int    `json:"PowerCapacityWatts"`
-	PowerInputWatts    int    `json:"PowerInputWatts"`
-	PowerOutputWatts   int    `json:"PowerOutputWatts"`
-	PowerSupplyType    string `json:"PowerSupplyType"`
+	Manufacturer       string       `json:"Manufacturer"`
+	SerialNumber       string       `json:"SerialNumber"`
+	Model              string       `json:"Model"`
+	PartNumber         string       `json:"PartNumber"`
+	PowerCapacityWatts int          `json:"PowerCapacityWatts"`
+	PowerInputWatts    int          `json:"PowerInputWatts"`
+	PowerOutputWatts   interface{}  `json:"PowerOutputWatts"`
+	PowerSupplyType    string       `json:"PowerSupplyType"`
 }

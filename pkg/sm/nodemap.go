@@ -25,7 +25,9 @@ package sm
 import (
 	"encoding/json"
 	"fmt"
-	base "github.com/Cray-HPE/hms-base"
+
+	base "github.com/Cray-HPE/hms-base/v2"
+	"github.com/Cray-HPE/hms-xname/xnametypes"
 )
 
 // An entry mapping a node xname to a NID
@@ -47,8 +49,8 @@ type NodeMapArray struct {
 // used for query responses.
 func NewNodeMap(id, role, subRole string, nid int, nodeInfo *json.RawMessage) (*NodeMap, error) {
 	m := new(NodeMap)
-	idNorm := base.NormalizeHMSCompID(id)
-	if base.GetHMSType(idNorm) != base.Node {
+	idNorm := xnametypes.NormalizeHMSCompID(id)
+	if !(xnametypes.GetHMSType(idNorm) == xnametypes.Node || xnametypes.GetHMSType(idNorm) == xnametypes.VirtualNode) {
 		err := fmt.Errorf("xname ID '%s' is invalid or not a node", id)
 		return nil, err
 	}

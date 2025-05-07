@@ -1,6 +1,6 @@
 // MIT License
 //
-// (C) Copyright [2019-2023] Hewlett Packard Enterprise Development LP
+// (C) Copyright [2019-2024-2025] Hewlett Packard Enterprise Development LP
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
@@ -38,8 +38,9 @@ import (
 	"time"
 	"unicode"
 
-	base "github.com/Cray-HPE/hms-base"
+	base "github.com/Cray-HPE/hms-base/v2"
 	"github.com/Cray-HPE/hms-certs/pkg/hms_certs"
+	"github.com/Cray-HPE/hms-xname/xnametypes"
 )
 
 const PKG_VERSION = "0.2"
@@ -334,17 +335,17 @@ func NewRedfishEPDescription(rep *RawRedfishEP) (*RedfishEPDescription, error) {
 		err := fmt.Errorf("No xname ID found")
 		return nil, err
 	}
-	ep.ID = base.NormalizeHMSCompID(ep.ID)
+	ep.ID = xnametypes.NormalizeHMSCompID(ep.ID)
 
 	// Get type from ID (or hostname if ID not given).  It should be a
 	// valid controller type.
-	hmsType := base.GetHMSType(ep.ID)
-	if base.IsHMSTypeController(hmsType) ||
-	   hmsType == base.MgmtSwitch ||
-	   hmsType == base.MgmtHLSwitch ||
-	   hmsType == base.CDUMgmtSwitch {
+	hmsType := xnametypes.GetHMSType(ep.ID)
+	if xnametypes.IsHMSTypeController(hmsType) ||
+		hmsType == xnametypes.MgmtSwitch ||
+		hmsType == xnametypes.MgmtHLSwitch ||
+		hmsType == xnametypes.CDUMgmtSwitch {
 		ep.Type = hmsType.String()
-	} else if hmsType == base.HMSTypeInvalid {
+	} else if hmsType == xnametypes.HMSTypeInvalid {
 		// No type found.  Not a valid xname
 		err := fmt.Errorf("%s is not a valid locational xname ID", ep.ID)
 		return nil, err
@@ -642,15 +643,24 @@ func NewRedfishEps(epds *RedfishEPDescriptions) (*RedfishEPs, error) {
 // "/redfish/v1" part should presumably always be present in the rpath (as the
 // odata.id always includes this).
 //
+// There is an optional argument to provide the retry count.  If not given,
+// the default is 3.  This is the number of times to retry the GET if it fails.
+//
 // If no error results, result should be the raw body (i.e. Redfish JSON).
 // returned.
 // This is the starting point for decoding the JSON into a particular
 // structure (i.e. given the resource's schema, or into a generic
 // interface{} map.
-func (ep *RedfishEP) GETRelative(rpath string) (json.RawMessage, error) {
+func (ep *RedfishEP) GETRelative(rpath string, optionalArgs ...int) (json.RawMessage, error) {
 	var rsp *http.Response
 	var path string = "https://" + ep.FQDN + strings.Replace(rpath, "#", "%23", -1)
 	var body []byte
+
+	// Process optional timeout argument
+	retryCount := 3
+	if len(optionalArgs) > 0 {
+		retryCount = optionalArgs[0]
+	}
 
 	// In case we don't catch this...
 	if ep.FQDN == "" {
@@ -676,16 +686,16 @@ func (ep *RedfishEP) GETRelative(rpath string) (json.RawMessage, error) {
 	//       ep.client.SecureClient = InsecureClient
 
 	// Do retries on errors. They could be temporary interuptions in service.
-	retryCount := 3
 	sleepTime := 1
 	for retry := 0; retry <= retryCount; retry++ {
 		rsp, err = ep.client.Do(req)
 		if err != nil {
+			base.DrainAndCloseResponseBody(rsp)
 			if retry == retryCount {
-				errlog.Printf("GETRelative (%s) ERROR: %s", path, err)
+				errlog.Printf("GETRelative (%s) ERROR: %s, Failing after %d retries", path, err, retry)
 				return nil, err
 			} else {
-				errlog.Printf("GETRelative (%s) ERROR: %s, Retrying...", path, err)
+				errlog.Printf("GETRelative (%s) ERROR: %s, Retry %d after %d seconds...", path, err, retry + 1, sleepTime)
 				time.Sleep(time.Duration(sleepTime) * time.Second)
 				sleepTime += (retry + 1) * 10
 				continue
@@ -696,8 +706,9 @@ func (ep *RedfishEP) GETRelative(rpath string) (json.RawMessage, error) {
 
 	if rsp.Body != nil {
 		body, _ = ioutil.ReadAll(rsp.Body)
-		rsp.Body.Close()
 	}
+	base.DrainAndCloseResponseBody(rsp)
+
 	if rsp.StatusCode != http.StatusOK {
 		rerr := fmt.Errorf("%s", http.StatusText(rsp.StatusCode))
 		errlog.Printf("GETRelative (%s) Bad rsp: %s", path, rerr)
@@ -875,7 +886,7 @@ func (ep *RedfishEP) GetRootInfo() {
 		path = ep.OdataID + "/Chassis"
 	}
 	chassisJSON, err := ep.GETRelative(path)
-	if err != nil && !base.ControllerHasChassisStr(ep.Type) {
+	if err != nil && !xnametypes.ControllerHasChassisStr(ep.Type) {
 		// Don't expect any Chassis here, so if no collection, no problem.
 		// Just create an empty collection so we don't choke later.
 		ep.NumChassis = 0
@@ -1073,7 +1084,7 @@ func (ep *RedfishEP) GetSystems() string {
 
 	// This is the CMC special name. Skip discovering this node
 	// that shouldn't exist.
-	if base.GetHMSType(ep.ID) == base.NodeBMC &&
+	if xnametypes.GetHMSType(ep.ID) == xnametypes.NodeBMC &&
 		strings.HasSuffix(ep.ID, "b999") {
 		return HTTPsGetOk
 	}
@@ -1084,7 +1095,7 @@ func (ep *RedfishEP) GetSystems() string {
 		path = ep.OdataID + "/Systems"
 	}
 	systemsJSON, err := ep.GETRelative(path)
-	if err != nil && !base.ControllerHasSystemsStr(ep.Type) {
+	if err != nil && !xnametypes.ControllerHasSystemsStr(ep.Type) {
 		// Don't expect systems, so if the collection is missing, just
 		// mark there as being zero move on.
 		ep.NumSystems = 0
@@ -1142,12 +1153,12 @@ func (ep *RedfishEP) CheckPrePhase1() error {
 			ep.ID, ep.Hostname, ep.Domain)
 		return err
 	}
-	hmsType := base.GetHMSType(ep.ID)
-	if (!base.IsHMSTypeController(hmsType) &&
-	    hmsType != base.MgmtSwitch &&
-		hmsType != base.MgmtHLSwitch &&
-		hmsType != base.CDUMgmtSwitch) ||
-	    ep.Type != hmsType.String() {
+	hmsType := xnametypes.GetHMSType(ep.ID)
+	if (!xnametypes.IsHMSTypeController(hmsType) &&
+		hmsType != xnametypes.MgmtSwitch &&
+		hmsType != xnametypes.MgmtHLSwitch &&
+		hmsType != xnametypes.CDUMgmtSwitch) ||
+		ep.Type != hmsType.String() {
 		err := fmt.Errorf("bad xname ID ('%s') or Type ('%s') for %s\n",
 			ep.ID, ep.Type, ep.FQDN)
 		return err
@@ -1192,7 +1203,7 @@ func (ep *RedfishEP) CheckPrePhase1() error {
 // Need to know real (not raw ordinal) and HMS type first.
 // Post phase 1 discovery.
 func (ep *RedfishEP) getChassisHMSID(c *EpChassis, hmsType string, ordinal int) string {
-	hmsTypeStr := base.VerifyNormalizeType(hmsType)
+	hmsTypeStr := xnametypes.VerifyNormalizeType(hmsType)
 	if hmsTypeStr == "" {
 		// This is an error or a skipped type.
 		return ""
@@ -1201,9 +1212,9 @@ func (ep *RedfishEP) getChassisHMSID(c *EpChassis, hmsType string, ordinal int) 
 		// Invalid ordinal or initial -1 value.
 		return ""
 	}
-	if hmsTypeStr == base.MgmtSwitch.String() ||
-	   hmsTypeStr == base.MgmtHLSwitch.String() ||
-	   hmsTypeStr == base.CDUMgmtSwitch.String() {
+	if hmsTypeStr == xnametypes.MgmtSwitch.String() ||
+		hmsTypeStr == xnametypes.MgmtHLSwitch.String() ||
+		hmsTypeStr == xnametypes.CDUMgmtSwitch.String() {
 		return ep.ID
 	}
 	// If the RedfishEndpoint ID is valid, there will be a b in the xname.
@@ -1212,32 +1223,32 @@ func (ep *RedfishEP) getChassisHMSID(c *EpChassis, hmsType string, ordinal int) 
 		// Bad RFEndpoint xname - not a BMC - may match other component
 		return ""
 	}
-	if hmsTypeStr == base.HSNBoard.String() {
+	if hmsTypeStr == xnametypes.HSNBoard.String() {
 		// If RouterBMC is x0c0r0b[0-9], enclosure is  x0c0r0e[0-9]
 		return epIDSplit[0] + "e" + epIDSplit[1]
 	}
-	if hmsTypeStr == base.NodeEnclosure.String() {
+	if hmsTypeStr == xnametypes.NodeEnclosure.String() {
 		// If NodeBMC is x0c0s0b[0-9]+, enclosure is  x0c0s0e[0-9]+
 		return epIDSplit[0] + "e" + epIDSplit[1]
 	}
-	if hmsTypeStr == base.Chassis.String() {
+	if hmsTypeStr == xnametypes.Chassis.String() {
 		// Top-level Chassis for x0c0b0 is x0c0
 		return epIDSplit[0]
 	}
-	if hmsTypeStr == base.ComputeModule.String() {
-		if ep.Type == base.ChassisBMC.String() {
+	if hmsTypeStr == xnametypes.ComputeModule.String() {
+		if ep.Type == xnametypes.ChassisBMC.String() {
 			// Chassis + s + ordinal
 			return epIDSplit[0] + "s" + strconv.FormatInt(int64(ordinal), 10)
 		}
 		// Shouldn't happen.  This should be the only possibility for now.
 		return ""
 	}
-	if hmsTypeStr == base.RouterModule.String() {
-		if ep.Type == base.ChassisBMC.String() {
+	if hmsTypeStr == xnametypes.RouterModule.String() {
+		if ep.Type == xnametypes.ChassisBMC.String() {
 			// Chassis + r + ordinal
 			return epIDSplit[0] + "r" + strconv.FormatInt(int64(ordinal), 10)
 		}
-		if ep.Type == base.RouterBMC.String() {
+		if ep.Type == xnametypes.RouterBMC.String() {
 			// Already have Chassis +r in the path, remove bmc portion
 			return epIDSplit[0]
 		}
@@ -1255,64 +1266,74 @@ func (ep *RedfishEP) getChassisHMSID(c *EpChassis, hmsType string, ordinal int) 
 func (ep *RedfishEP) getChassisHMSType(c *EpChassis) string {
 	switch c.RedfishSubtype {
 	case RFSubtypeEnclosure:
-		if ep.Type == base.ChassisBMC.String() &&
+		if ep.Type == xnametypes.ChassisBMC.String() &&
 			IsManufacturer(c.ChassisRF.Manufacturer, CrayMfr) != 0 {
 			// ChassisBMC and is not non-Cray, must be the Chassis itself
 			// by convention.
-			return base.Chassis.String()
+			return xnametypes.Chassis.String()
 		}
-		if ep.Type == base.RouterBMC.String() {
+		if ep.Type == xnametypes.RouterBMC.String() {
 			// RouterBMC, must be the Chassis itself (Router card or TOR
 			// enclosure) by convention.  We only have slingshot at the
 			// moment so no need to guess.
-			return base.HSNBoard.String()
+			return xnametypes.HSNBoard.String()
 		}
 		// NodeEnclosures may be RackMount, Enclosure.
 		fallthrough
 	case RFSubtypeRackMount:
+		if isFoxconnChassis(c) {
+			// Foxconn Paradise has a bunch of RackMount chassis we can ignore
+			return xnametypes.HMSTypeInvalid.String()
+		}
 		if ep.NumSystems > 0 {
 			// Does the endpoint contain nodes?
 			// For now assume NodeEnclosure.
-			return base.NodeEnclosure.String()
+			return xnametypes.NodeEnclosure.String()
 		} else {
-			return base.HMSTypeInvalid.String()
+			return xnametypes.HMSTypeInvalid.String()
 		}
 	case RFSubtypeStandAlone:
 		if IsManufacturer(c.ChassisRF.Manufacturer, GigabyteMfr) != 0 &&
 			ep.NumSystems > 0 {
 			// Is gigabyte ChassisBMC and has nodes, it is the node enclosure.
-			return base.NodeEnclosure.String()
+			return xnametypes.NodeEnclosure.String()
 		} else {
-			return base.HMSTypeInvalid.String()
+			return xnametypes.HMSTypeInvalid.String()
 		}
 	case RFSubtypeBlade:
-		if ep.Type == base.ChassisBMC.String() {
+		if ep.Type == xnametypes.ChassisBMC.String() {
 			// If is not non-Cray and Chassis BMC, but be compute or router
 			// blade.
 			// TODO: When there is something more reliable than the name of
 			// the blade to use, use that instead.
 			if IsManufacturer(c.ChassisRF.Manufacturer, CrayMfr) != 0 {
 				if strings.HasPrefix(strings.ToLower(c.ChassisRF.Id), "blade") {
-					return base.ComputeModule.String()
+					return xnametypes.ComputeModule.String()
 				}
 				if strings.HasPrefix(strings.ToLower(c.ChassisRF.Id), "perif") {
-					return base.RouterModule.String()
+					return xnametypes.RouterModule.String()
 				}
 			}
 		}
-		return base.HMSTypeInvalid.String()
+		return xnametypes.HMSTypeInvalid.String()
 	case RFSubtypeDrawer:
-		if ep.Type == base.MgmtSwitch.String() ||
-		   ep.Type == base.MgmtHLSwitch.String() ||
-		   ep.Type == base.CDUMgmtSwitch.String() {
+		if ep.Type == xnametypes.MgmtSwitch.String() ||
+			ep.Type == xnametypes.MgmtHLSwitch.String() ||
+			ep.Type == xnametypes.CDUMgmtSwitch.String() {
 			return ep.Type
 		}
-		return base.HMSTypeInvalid.String()
+		return xnametypes.HMSTypeInvalid.String()
+	case RFSubtypeZone:
+		if isFoxconnChassis(c) {
+			// Foxconn Paradise uses the Baseboard_0 chassis as the primary node enclosure
+			return xnametypes.NodeEnclosure.String()
+		}
+		return xnametypes.HMSTypeInvalid.String()
 	default:
 		// Other types are usually subcomponents we don't track and are
 		// often not represented very consistently by different manufacturers.
 		errlog.Printf("getChassisHMSType default case: c.RedfishSubtype: %s", c.RedfishSubtype)
-		return base.HMSTypeInvalid.String()
+		return xnametypes.HMSTypeInvalid.String()
 	}
 }
 
@@ -1364,7 +1385,7 @@ func (ep *RedfishEP) getChassisOrdinal(c *EpChassis) int {
 // Given ordinal and type of a system, return the xname of a
 // ComputerSystem.
 func (ep *RedfishEP) getSystemHMSID(s *EpSystem, hmsType string, ordinal int) string {
-	hmsTypeStr := base.VerifyNormalizeType(hmsType)
+	hmsTypeStr := xnametypes.VerifyNormalizeType(hmsType)
 	if hmsTypeStr == "" {
 		// This is an error or a skipped type.
 		return ""
@@ -1374,7 +1395,7 @@ func (ep *RedfishEP) getSystemHMSID(s *EpSystem, hmsType string, ordinal int) st
 		errlog.Printf("BUG: Bad ordinal.")
 		return ""
 	}
-	if hmsTypeStr == base.Node.String() {
+	if hmsTypeStr == xnametypes.Node.String() {
 		// Only one type to support at the moment, node.
 		xnameID := ep.ID + "n" + strconv.Itoa(ordinal)
 		return xnameID
@@ -1398,7 +1419,7 @@ func (ep *RedfishEP) getSystemOrdinalAndType(s *EpSystem) (int, string) {
 
 		return -1, hmsType
 	} else {
-		hmsType = base.Node.String()
+		hmsType = xnametypes.Node.String()
 	}
 	// Count the lower ordered chassis that are the same type as m
 	for _, sys := range ep.Systems.OIDs {
@@ -1496,7 +1517,7 @@ func (ep *RedfishEP) getStorageCollectionOrdinal(sc *EpStorageCollection) int {
 // Need to know real (not raw ordinal) and HMS type first.
 // Post phase 1 discovery.
 func (ep *RedfishEP) getPowerSupplyHMSID(p *EpPowerSupply, hmsType string, ordinal int) string {
-	hmsTypeStr := base.VerifyNormalizeType(hmsType)
+	hmsTypeStr := xnametypes.VerifyNormalizeType(hmsType)
 	if hmsTypeStr == "" {
 		// This is an error or a skipped type.
 		return ""
@@ -1514,11 +1535,11 @@ func (ep *RedfishEP) getPowerSupplyHMSID(p *EpPowerSupply, hmsType string, ordin
 // Post phase 1 discovery.
 func (ep *RedfishEP) getPowerSupplyHMSType(p *EpPowerSupply) string {
 	parentChassisType := ep.getChassisHMSType(p.chassisRF)
-	if parentChassisType == base.NodeEnclosure.String() {
-		return base.NodeEnclosurePowerSupply.String()
+	if parentChassisType == xnametypes.NodeEnclosure.String() {
+		return xnametypes.NodeEnclosurePowerSupply.String()
 	}
-	if parentChassisType == base.Chassis.String() {
-		return base.CMMRectifier.String()
+	if parentChassisType == xnametypes.Chassis.String() {
+		return xnametypes.CMMRectifier.String()
 	}
 	return ""
 }
@@ -1552,7 +1573,7 @@ func (ep *RedfishEP) getPowerSupplyOrdinal(p *EpPowerSupply) int {
 // Need to know real (not raw ordinal) and HMS type first.
 // Post phase 1 discovery.
 func (ep *RedfishEP) getNodeAccelRiserHMSID(r *EpNodeAccelRiser, hmsType string, ordinal int) string {
-	hmsTypeStr := base.VerifyNormalizeType(hmsType)
+	hmsTypeStr := xnametypes.VerifyNormalizeType(hmsType)
 	if hmsTypeStr == "" {
 		// This is an error or a skipped type.
 		return ""
@@ -1569,7 +1590,7 @@ func (ep *RedfishEP) getNodeAccelRiserHMSID(r *EpNodeAccelRiser, hmsType string,
 // special here, namely, "skip it"/"not supported".
 // Post phase 1 discovery.
 func (ep *RedfishEP) getNodeAccelRiserHMSType(r *EpNodeAccelRiser) string {
-	return base.NodeAccelRiser.String()
+	return xnametypes.NodeAccelRiser.String()
 }
 
 // Determined based on discovered info and original list order that the
@@ -1601,7 +1622,7 @@ func (ep *RedfishEP) getNodeAccelRiserOrdinal(r *EpNodeAccelRiser) int {
 // Need to know real (not raw ordinal) and HMS type first.
 // Post phase 1 discovery.
 func (ep *RedfishEP) getNetworkAdapterHMSID(na *EpNetworkAdapter, hmsType string, ordinal int) string {
-	hmsTypeStr := base.VerifyNormalizeType(hmsType)
+	hmsTypeStr := xnametypes.VerifyNormalizeType(hmsType)
 	if hmsTypeStr == "" {
 		// This is an error or a skipped type.
 		return ""
@@ -1619,7 +1640,7 @@ func (ep *RedfishEP) getNetworkAdapterHMSID(na *EpNetworkAdapter, hmsType string
 // special here, namely, "skip it"/"not supported".
 // Post phase 1 discovery.
 func (ep *RedfishEP) getNetworkAdapterHMSType(na *EpNetworkAdapter) string {
-	return base.NodeHsnNic.String()
+	return xnametypes.NodeHsnNic.String()
 }
 
 // Determined based on discovered info and original list order that the
@@ -1769,7 +1790,7 @@ func getStandardFRUID(hmstype, id, manufacturer, partnumber, serialnumber string
 // the same as the parent RedfishEndpoint's xname ID.
 func (ep *RedfishEP) getManagerHMSID(m *EpManager, hmsType string, ordinal int) string {
 	// Note every hmsType and ordinal pair must get a unique xname ID
-	hmsTypeStr := base.VerifyNormalizeType(hmsType)
+	hmsTypeStr := xnametypes.VerifyNormalizeType(hmsType)
 	if hmsTypeStr == "" {
 		// This is an error or a skipped type.
 		return ""
@@ -1792,10 +1813,10 @@ func (ep *RedfishEP) getManagerHMSID(m *EpManager, hmsType string, ordinal int) 
 // particular Redfish endpoint xname and type.
 func (ep *RedfishEP) getManagerHMSType(m *EpManager) string {
 	// Don't discover Management switch BMCs.
-	if ep.Type == base.MgmtSwitch.String() ||
-	   ep.Type == base.MgmtHLSwitch.String() ||
-	   ep.Type == base.CDUMgmtSwitch.String() {
-		return base.HMSTypeInvalid.String()
+	if ep.Type == xnametypes.MgmtSwitch.String() ||
+		ep.Type == xnametypes.MgmtHLSwitch.String() ||
+		ep.Type == xnametypes.CDUMgmtSwitch.String() {
+		return xnametypes.HMSTypeInvalid.String()
 	}
 	// Just one?  That's this endpoint's type.
 	// example: RouterBMC
@@ -1808,21 +1829,21 @@ func (ep *RedfishEP) getManagerHMSType(m *EpManager) string {
 	}
 	if len(m.ManagedSystems) > 0 {
 		// Does it manage any systems (i.e. nodes)?   NodeBMC.
-		return base.NodeBMC.String()
+		return xnametypes.NodeBMC.String()
 	}
 	if m.ManagerRF.ManagerType == RFSubtypeEnclosureManager {
 		// Cassini NodeBMCs look like ChassisBMCs because they're missing the
 		// Links.ManagerForServers field. If the managerType is "EnclosureManager",
 		// check to see if there are any Systems at all.
 		if ep.NumSystems > 0 {
-			return base.NodeBMC.String()
+			return xnametypes.NodeBMC.String()
 		}
-		return base.ChassisBMC.String()
+		return xnametypes.ChassisBMC.String()
 	}
 	// TODO: Multiple managers.  We don't roll up managers
 	// so there should only be one per redfish endpoint.  If
 	// that ever changes we will need to do more work.
-	return base.HMSTypeInvalid.String()
+	return xnametypes.HMSTypeInvalid.String()
 }
 
 // Determines based on discovered info and original list order what the
@@ -1855,6 +1876,7 @@ const (
 	IntelMfr    = "Intel"
 	DellMfr     = "Dell"
 	GigabyteMfr = "Gigabyte"
+	FoxconnMfr  = "Foxconn"
 )
 
 // This should only return 1 if the RF manufacturer string (mfrCheckStr) is mfr
@@ -1887,6 +1909,10 @@ func IsManufacturer(mfrCheckStr, mfr string) int {
 				}
 			case GigabyteMfr:
 				if s == "gigabyte" {
+					return 1
+				}
+			case FoxconnMfr:
+				if s == "foxconn" {
 					return 1
 				}
 			}
@@ -1930,14 +1956,17 @@ func GetProcessorArch(p *EpProcessor) (procArch string) {
 	if rfArch == "" {
 		rfArch = p.ProcessorRF.InstructionSet
 	}
-	switch(rfArch) {
+	switch rfArch {
 	case "":
 		procArch = base.ArchUnknown.String()
-	case ProcessorArchX86:           fallthrough
+	case ProcessorArchX86:
+		fallthrough
 	case ProcessorInstructionSetX86_64:
 		procArch = base.ArchX86.String()
-	case ProcessorArchARM:              fallthrough
-	case ProcessorInstructionSetARMA32: fallthrough
+	case ProcessorArchARM:
+		fallthrough
+	case ProcessorInstructionSetARMA32:
+		fallthrough
 	case ProcessorInstructionSetARMA64:
 		procArch = base.ArchARM.String()
 	default:
@@ -1950,20 +1979,22 @@ func GetProcessorArch(p *EpProcessor) (procArch string) {
 // System architecture detection
 ////////////////////////////////////////////////////////////////////////////
 
-// These *ArchMaps are used for working around redfish on Cray EX hardware not
+// These *ArchMaps are used for working around redfish on hardware not
 // supplying the 'ProcessorArchitecture' or 'InstructionSet' fields for the
-// processors. They are used for matching known Cray EX hardware types to a
+// processors. They are used for matching known hardware types to a
 // processor architecture.
 //
-// These lists should not need to be maintained or expanded because future
-// Cray EX hardware should provide the needed processor fields.
+// These lists are needed for at least early bring-up of hardware as the Redfish
+// does not always provide the needed information in the early firmware.
 
 // Model matching strings for Cray EX hardware.
 var CrayEXModelArchMap = map[string]string{
-	"ex235": base.ArchX86.String(),
-	"ex420": base.ArchX86.String(),
-	"ex425": base.ArchX86.String(),
-	"ex254": base.ArchARM.String(),
+	"ex235":  base.ArchX86.String(), // Grizzly Peak (ex235n), Bard Peak (ex235a)
+	"ex420":  base.ArchX86.String(), // Castle (ex420)
+	"ex425":  base.ArchX86.String(), // Windom (ex425)
+	"ex254":  base.ArchARM.String(), // Blanca Peak (ex254n)
+	"ex255":  base.ArchX86.String(), // Parry Peak (ex255a)
+	"ex4252": base.ArchX86.String(), // Antero (ex4252)
 }
 
 // Drescription matching strings for Cray EX hardware
@@ -1975,25 +2006,30 @@ var CrayEXDescrArchMap = map[string]string{
 	"grizzlypknodecard": base.ArchX86.String(),
 	"antero":            base.ArchX86.String(),
 	"blancapeaknc":      base.ArchARM.String(),
+	"parrypeaknc":       base.ArchX86.String(),
 }
 
+var FoxconnModelArchMap = map[string]string{
+	"hpe cray supercomputing xd224": base.ArchARM.String(),	// Paradise (official)
+	"1a62wcb00-600-g": base.ArchARM.String(),				// Paradise (some systems slipped to field with this)
+}
 
 func GetSystemArch(s *EpSystem) string {
 	sysArch := base.ArchUnknown.String()
 	// Search the processor collection for the architecture.
 	for _, proc := range s.Processors.OIDs {
-		if proc.Type != base.Processor.String() {
+		if proc.Type != xnametypes.Processor.String() {
 			// Skip GPUs
 			continue
 		}
 		if sysArch == base.ArchUnknown.String() ||
-		   (sysArch == base.ArchOther.String() &&
-		    proc.Arch != base.ArchUnknown.String()) {
+			(sysArch == base.ArchOther.String() &&
+				proc.Arch != base.ArchUnknown.String()) {
 			// Try for the best identification (X86/ARM > Other > UNKNOWN).
 			sysArch = proc.Arch
 		}
 		if sysArch != base.ArchUnknown.String() &&
-		   sysArch != base.ArchOther.String() {
+			sysArch != base.ArchOther.String() {
 			// Found x86 or ARM
 			break
 		}
@@ -2003,21 +2039,32 @@ func GetSystemArch(s *EpSystem) string {
 	// is not supplying the 'ProcessorArchitecture' or 'InstructionSet' fields
 	// for the processors or the processor collection wasn't present. Try to
 	// determine the processor architecture based on the node's model.
-	if sysArch == base.ArchUnknown.String() &&
-	   IsManufacturer(s.SystemRF.Manufacturer, CrayMfr) == 1 {
-		if len(s.SystemRF.Model) > 0 {
-			rfModel := strings.ToLower(s.SystemRF.Model)
-			for matchStr, arch := range CrayEXModelArchMap {
-				if strings.Contains(rfModel, matchStr) {
-					return arch
+	if sysArch == base.ArchUnknown.String() {
+		if IsManufacturer(s.SystemRF.Manufacturer, CrayMfr) == 1 {
+			if len(s.SystemRF.Model) > 0 {
+				rfModel := strings.ToLower(s.SystemRF.Model)
+				for matchStr, arch := range CrayEXModelArchMap {
+					if strings.Contains(rfModel, matchStr) {
+						return arch
+					}
+				}
+			}
+			if len(s.SystemRF.Description) > 0 {
+				rfDescr := strings.ToLower(s.SystemRF.Description)
+				for matchStr, arch := range CrayEXDescrArchMap {
+					if strings.Contains(rfDescr, matchStr) {
+						return arch
+					}
 				}
 			}
 		}
-		if len(s.SystemRF.Description) > 0 {
-			rfDescr := strings.ToLower(s.SystemRF.Description)
-			for matchStr, arch := range CrayEXDescrArchMap {
-				if strings.Contains(rfDescr, matchStr) {
-					return arch
+		if IsManufacturer(s.SystemRF.Manufacturer, FoxconnMfr) == 1 {
+			if len(s.SystemRF.Model) > 0 {
+				rfModel := strings.ToLower(s.SystemRF.Model)
+				for matchStr, arch := range FoxconnModelArchMap {
+					if strings.Contains(rfModel, matchStr) {
+						return arch
+					}
 				}
 			}
 		}

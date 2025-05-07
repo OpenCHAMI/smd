@@ -1,6 +1,6 @@
 # MIT License
 #
-# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2021-2022,2025 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -41,7 +41,7 @@ LDFLAGS    := -ldflags "-X main.GitCommit=$(COMMIT) \
 	-X 'main.GoVersion=$(GO_VERSION)' \
 	-X 'main.BuildUser=$(BUILD_USER)'"
 
-all: image unittest ct snyk ct_image
+all: image image-pprof unittest ct snyk ct_image
 
 .PHONY : all image unittest snyk ct ct_image binaries coverage docker
 
@@ -62,29 +62,41 @@ ct_image:
 
 binaries: smd smd-init smd-loader native
 
-
-
 smd: cmd/smd/*.go
 	GOOS=linux GOARCH=amd64 go build -o smd -v -tags musl $(LDFLAGS) ./cmd/smd
 
 smd-init: cmd/smd-init/*.go
 	GOOS=linux GOARCH=amd64 go build -o smd-init -v -tags musl $(LDFLAGS) ./cmd/smd-init
 
+smd-loader: cmd/smd-loader/*.go
+	GOOS=linux GOARCH=amd64 go build -o smd-loader -v -tags musl $(LDFLAGS) ./cmd/smd-loader
+
+
 native:
 	go build -o smd-init-native -v -tags musl $(LDFLAGS) ./cmd/smd-init
 	go build -o smd-native -v -tags musl $(LDFLAGS) ./cmd/smd
 	go build -o smd-loader-native -v -tags musl $(LDFLAGS) ./cmd/smd-loader
 
-
-
-smd-loader: cmd/smd-loader/*.go
-	GOOS=linux GOARCH=amd64 go build -o smd-loader -v -tags musl $(LDFLAGS) ./cmd/smd-loader
-
 coverage:
 	go test -cover -v -tags musl ./cmd/* ./internal/* ./pkg/*
 
+binaries-pprof: pprof/smd pprof/smd-init pprof/smd-loader
+
+pprof/smd: cmd/smd/*.go
+	GOOS=linux GOARCH=amd64 go build -o pprof/smd -v -tags "musl pprof" $(LDFLAGS) ./cmd/smd
+
+pprof/smd-init: cmd/smd-init/*.go
+	GOOS=linux GOARCH=amd64 go build -o pprof/smd-init -v -tags "musl pprof" $(LDFLAGS) ./cmd/smd-init
+
+pprof/smd-loader: cmd/smd-loader/*.go
+	GOOS=linux GOARCH=amd64 go build -o pprof/smd-loader -v -tags "musl pprof" $(LDFLAGS) ./cmd/smd-loader
+
+image-pprof:
+	docker build ${NO_CACHE} --pull ${DOCKER_ARGS} --tag '${NAME}-pprof:${VERSION}' -f Dockerfile.pprof .
+
 clean:
 	rm -f smd smd-init smd-init-native smd-loader smd-loader-native smd-native
+	rm -rf pprof
 	go clean -testcache
 	go clean -cache
 	go clean -modcache

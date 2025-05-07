@@ -26,7 +26,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	base "github.com/Cray-HPE/hms-base"
+	base "github.com/Cray-HPE/hms-base/v2"
+	"github.com/Cray-HPE/hms-xname/xnametypes"
 )
 
 /////////////////////////////////////////////////////////////////////////////
@@ -187,7 +188,7 @@ func (na *EpNetworkAdapter) discoverLocalPhase2() {
 	na.FRUID = generatedFRUID
 
 	// Check if we have something valid to insert into the data store
-	if (base.GetHMSType(na.ID) == base.NodeHsnNic) && (na.Type == base.NodeHsnNic.String()) {
+	if (xnametypes.GetHMSType(na.ID) == xnametypes.NodeHsnNic) && (na.Type == xnametypes.NodeHsnNic.String()) {
 		errlog.Printf("NetworkAdapter discoverLocalPhase2: VALID xname ID ('%s') and Type ('%s') for: %s\n",
 			na.ID, na.Type, na.NetworkAdapterURL)
 	} else {

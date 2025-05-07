@@ -1,6 +1,6 @@
 // MIT License
 //
-// (C) Copyright [2019-2023] Hewlett Packard Enterprise Development LP
+// (C) Copyright [2019-2024] Hewlett Packard Enterprise Development LP
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
@@ -25,12 +25,14 @@ package rf
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
-	base "github.com/Cray-HPE/hms-base"
+	base "github.com/Cray-HPE/hms-base/v2"
+	"github.com/Cray-HPE/hms-xname/xnametypes"
 )
 
 /////////////////////////////////////////////////////////////////////////////
@@ -121,6 +123,7 @@ type PowerControl struct {
 	MemberId           string        `json:"MemberId,omitempty"`
 	Name               string        `json:"Name,omitempty"`
 	PowerCapacityWatts int           `json:"PowerCapacityWatts,omitempty"`
+	PowerConsumedWatts interface{}   `json:"PowerConsumedWatts,omitempty"`	// May come in an int or float, but need an int
 	OEM                *PwrCtlOEM    `json:"OEM,omitempty"`
 	RelatedItem        []*ResourceID `json:"RelatedItem,omitempty"`
 }
@@ -220,7 +223,7 @@ type EpChassisSet struct {
 // This should be the only way this struct is created.
 func NewEpChassis(epRF *RedfishEP, odataID ResourceID, rawOrdinal int) *EpChassis {
 	c := new(EpChassis)
-	c.Type = base.HMSTypeInvalid.String() // Must be updated later
+	c.Type = xnametypes.HMSTypeInvalid.String() // Must be updated later
 	c.OdataID = odataID.Oid
 	c.BaseOdataID = odataID.Basename()
 	c.RedfishType = ChassisType
@@ -258,6 +261,21 @@ func (c *EpChassis) discoverRemotePhase1() {
 		errlog.Printf("Error: RedfishEP == nil for Chassis odataID: %s\n",
 			c.OdataID)
 		c.LastStatus = EndpointInvalid
+		return
+	}
+	if  c.OdataID == "/redfish/v1/Chassis/ERoT_CPU_0" || c.OdataID == "/redfish/v1/Chassis/ERoT_CPU_1" {
+		// We skip these as a workaround for the problem described in PRDIS-189.  If
+		// we attempto to discover them we will get multiple timeouts before they
+		// become available.  We do not pull anything useful from them to begin with
+		// so there is no hard in skipping them.
+		//
+		// We determin to skip them based on their chassis name rather than checking
+		// the Manufacturer name as that is not yet available at this point during
+		// discovery.
+
+		c.LastStatus = RedfishSubtypeNoSupport
+		c.RedfishSubtype = RFSubtypeUnknown
+		errlog.Printf("Skipping Foxconn chassis %s", c.OdataID)
 		return
 	}
 	// Workaround - DST1372
@@ -318,11 +336,17 @@ func (c *EpChassis) discoverRemotePhase1() {
 	//
 	// Get link to Chassis' Power object
 	//
+	// Foxconn Paradise note: This block of code is only useful discovering
+	// power supplies.  On this platform, the Baseboard_0 chassis is the only
+	// chassis we need to look at to discover them.  The PSU0 and PSU1 chassis
+	// contain redundant data.  For power capping, we query the Power endpoint
+	// in the Processor_Module_0 chassis during the Systems discovery phase.
+	//
 
-	if c.ChassisRF.Power.Oid == "" {
-		//errlog.Printf("%s: No Power obj found.\n", topURL)
+	if c.ChassisRF.Power.Oid == "" || (isFoxconnChassis(c) && c.OdataID != "/redfish/v1/Chassis/Baseboard_0") {
 		c.PowerSupplies.Num = 0
 		c.PowerSupplies.OIDs = make(map[string]*EpPowerSupply)
+		errlog.Printf("Skipping power supply discovery for chassis %s", c.OdataID)
 	} else {
 		//create a new EpPower object using chassis and Power.OID
 		c.Power = NewEpPower(c, ResourceID{c.ChassisRF.Power.Oid})
@@ -394,7 +418,7 @@ func (c *EpChassis) discoverLocalPhase2() {
 	}
 	// There may be chassis types that are not supported.
 	c.Type = c.epRF.getChassisHMSType(c)
-	if c.Type == base.HMSTypeInvalid.String() {
+	if c.Type == xnametypes.HMSTypeInvalid.String() {
 		c.LastStatus = RedfishSubtypeNoSupport
 		return
 	}
@@ -414,11 +438,11 @@ func (c *EpChassis) discoverLocalPhase2() {
 	c.NetType = base.NetSling.String()
 
 	// Check if we have something valid to insert into the data store
-	hmsType := base.GetHMSType(c.ID)
-	if (!base.IsHMSTypeContainer(hmsType) &&
-	    hmsType != base.MgmtSwitch &&
-		hmsType != base.MgmtHLSwitch &&
-		hmsType != base.CDUMgmtSwitch) ||
+	hmsType := xnametypes.GetHMSType(c.ID)
+	if (!xnametypes.IsHMSTypeContainer(hmsType) &&
+	    hmsType != xnametypes.MgmtSwitch &&
+		hmsType != xnametypes.MgmtHLSwitch &&
+		hmsType != xnametypes.CDUMgmtSwitch) ||
 	    c.Type != hmsType.String() {
 		errlog.Printf("Error: Bad xname ID ('%s') or Type ('%s' != %s) for %s\n",
 			c.ID, c.Type, hmsType.String(), c.ChassisURL)
@@ -440,7 +464,7 @@ func (c *EpChassis) discoverLocalPhase2() {
 func (c *EpChassis) discoverComponentState() {
 	// HSNBoard here is a workaround, should never be legitmately absent.
 	if c.ChassisRF.Status.State != "Absent" ||
-		c.Type == base.HSNBoard.String() {
+		c.Type == xnametypes.HSNBoard.String() {
 
 		// Chassis status is too unpredictable and no clear what Ready
 		// means anyways since it's not a node or a controller.  So just
@@ -554,7 +578,7 @@ type EpManagers struct {
 // This should be the only way this struct is created.
 func NewEpManager(epRF *RedfishEP, odataID ResourceID, rawOrdinal int) *EpManager {
 	m := new(EpManager)
-	m.Type = base.HMSTypeInvalid.String() // Must be set properly later
+	m.Type = xnametypes.HMSTypeInvalid.String() // Must be set properly later
 	m.OdataID = odataID.Oid
 	m.BaseOdataID = odataID.Basename()
 	m.RedfishType = ManagerType
@@ -625,6 +649,25 @@ func (m *EpManager) discoverRemotePhase1() {
 	m.ManagedSystems = m.ManagerRF.Links.ManagerForServers
 	if m.ManagerRF.Actions != nil {
 		m.Actions = m.ManagerRF.Actions
+		mr := m.Actions.ManagerReset
+		if mr.RFActionInfo != "" {
+			actionInfoJSON, err := m.epRF.GETRelative(mr.RFActionInfo)
+			if err != nil || actionInfoJSON == nil {
+				m.LastStatus = HTTPsGetFailed
+				return
+			}
+			var actionInfo ResetActionInfo
+			err = json.Unmarshal(actionInfoJSON, &actionInfo)
+			if err != nil {
+				errlog.Printf("Failed to decode %s: %s\n", url, err)
+				m.LastStatus = EPResponseFailedDecode
+			}
+			for _, p := range actionInfo.RAParameters {
+				if p.Name == "ResetType" {
+					m.Actions.ManagerReset.AllowableValues = p.AllowableValues
+				}
+			}
+		}
 	}
 
 	// Get link to Manager's ethernet interfaces
@@ -710,7 +753,7 @@ func (m *EpManager) discoverLocalPhase2() {
 	}
 	m.Ordinal = m.epRF.getManagerOrdinal(m)
 	m.Type = m.epRF.getManagerHMSType(m)
-	if m.Type == base.HMSTypeInvalid.String() {
+	if m.Type == xnametypes.HMSTypeInvalid.String() {
 		m.LastStatus = RedfishSubtypeNoSupport
 		return
 	}
@@ -738,8 +781,8 @@ func (m *EpManager) discoverLocalPhase2() {
 	m.NetType = base.NetSling.String()
 
 	// Check if we have something valid to insert into the data store
-	hmsType := base.GetHMSType(m.ID)
-	if !base.IsHMSTypeController(hmsType) || m.Type != hmsType.String() {
+	hmsType := xnametypes.GetHMSType(m.ID)
+	if !xnametypes.IsHMSTypeController(hmsType) || m.Type != hmsType.String() {
 		errlog.Printf("Error: Bad xname ID ('%s') or Type ('%s') for %s\n",
 			m.ID, m.Type, m.ManagerURL)
 		m.LastStatus = VerificationFailed
@@ -975,7 +1018,7 @@ type EpSystems struct {
 // This should be the only way this struct is created.
 func NewEpSystem(epRF *RedfishEP, odataID ResourceID, rawOrdinal int) *EpSystem {
 	s := new(EpSystem)
-	s.Type = base.Node.String()
+	s.Type = xnametypes.Node.String()
 	s.OdataID = odataID.Oid
 	s.BaseOdataID = odataID.Basename()
 	s.RedfishType = ComputerSystemType
@@ -1141,19 +1184,78 @@ func (s *EpSystem) discoverRemotePhase1() {
 	// Some info (Power, NodeAccelRiser, HSN NIC, etc) is at the chassis level
 	// but we associate it with nodes (systems). There will be a chassis URL
 	// with our system's id if there is info to get.
+	maxPowerRetries := 3
+	isFoxconnPowerOnEventDiscovery := false
 	nodeChassis, ok := s.epRF.Chassis.OIDs[s.SystemRF.Id]
 	if !ok {
-		// Intel uses /Chassis/Rackmount/Baseboard instead of /Chassis/<sysid>.
-		// See if "Baseboard" exists.
-		nodeChassis, ok = s.epRF.Chassis.OIDs["Baseboard"]
+		if IsManufacturer(s.SystemRF.Manufacturer, FoxconnMfr) == 1 {
+			// Foxconn Paradise uses the ProcessorModule_0 chassis to find the 
+			// Power endpoint for power capping.
+			nodeChassis, ok = s.epRF.Chassis.OIDs["ProcessorModule_0"]
+			if !ok {
+				// Unlike other platforms, when node power is off earlier BMC fw versions for
+				// the Foxconn Paradise platform were observed to return a server error when
+				// trying to read the /Power endpoint.  In later versions of the BMC fw the
+				// /Power endpoint could be read but did not contain all of the power cap
+				// information necessary as the BMC fw requires the node to be powered on in
+				// order to populate the /Power endpoint with the correct data.  This created
+				// an issue because if the BMC is discovered with node power off, we weren't
+				// able to read the full data necessary for power capping.  Unlike other
+				// platforms, we thus need to read the /Power endpoint whenever the node is
+				// powered on because we don't have a way to tell if it was previously read
+				// correctly.
+				//
+				// If the ProcessorModule_0 chassis is not found, it means we haven't done a
+				// chassis discovery on it, which means we got here through the doCompUpdate()
+				// path after receiving a node power on event.  We thus must do the
+				// ProcessorModule_0 chassis discovery here so that we can read the /Power
+				// endpoint for the necessary power capping information since we know node
+				// power is now on.
+
+				errlog.Printf("Foxconn Paradise WARNING: Could not find ProcessorModule_0 chassis - rediscovering\n")
+
+				nodeChassis = NewEpChassis(s.epRF, ResourceID{Oid: "/redfish/v1/Chassis/ProcessorModule_0"}, 0)
+				nodeChassis.discoverRemotePhase1()
+
+				if nodeChassis.LastStatus == VerifyingData {
+					ok = true
+					// Since we only went through nodeChassis.discoverRemotePhase1() and never
+					// went through nodeChassis.discoverLocalPhase2() we fudge the status to
+					// DiscoverOK.  We don't need to call nodeChassis.discoverLocalPhase2()
+					// because we don't want to push any data from it to the db after a node on
+					// event.  We only care pushing the power cap related data to the db which
+					// is associated with the system, not the chassis.
+					nodeChassis.LastStatus = DiscoverOK
+
+					// Additionally, we will need to supply a higher retry count to
+					// GetRelative() when reading the /Power endpoint because a delay in its
+					// availability in the processorModule_0 chassis has previously been
+					// observed after a power on event and the default retry count of 3 was
+					// not sufficient.  We specify a retry count of 4 here which should be
+					// sufficient due to the exponential backoff delay in the GetRelative()
+					// function.
+					maxPowerRetries = 4
+					isFoxconnPowerOnEventDiscovery = true
+				} else {
+					ok = false
+					errlog.Printf("Foxconn Paradise ERROR: Could not rediscover ProcessorModule_0 chassis\n")
+				}
+			}
+		} else {
+			// Intel uses /Chassis/Rackmount/Baseboard instead of /Chassis/<sysid>.
+			// See if "Baseboard" exists.
+			nodeChassis, ok = s.epRF.Chassis.OIDs["Baseboard"]
+		}
 	}
 
 	if ok {
-
 		//
 		// Get PowerControl Info if it exists
 		//
-		if nodeChassis.ChassisRF.Controls.Oid != "" {
+		// Note: Foxconn Paradise boards have a Controls entry but it is used for
+		// something entirely different so skip it here for Foxconn
+		//
+		if (nodeChassis.ChassisRF.Controls.Oid != "") && (IsManufacturer(s.SystemRF.Manufacturer, FoxconnMfr) != 1) {
 			path = nodeChassis.ChassisRF.Controls.Oid
 			ctlURLJSON, err := s.epRF.GETRelative(path)
 			if err != nil || ctlURLJSON == nil {
@@ -1199,9 +1301,37 @@ func (s *EpSystem) discoverRemotePhase1() {
 			}
 		}
 		if nodeChassis.ChassisRF.Power.Oid != "" {
+			foxconnPowerRetryNum := 1
+			foxconnPowerRetryDelay := 10
+
+			FoxconnPowerRetry:
+
 			path = nodeChassis.ChassisRF.Power.Oid
-			pwrCtlURLJSON, err := s.epRF.GETRelative(path)
+			pwrCtlURLJSON, err := s.epRF.GETRelative(path, maxPowerRetries)
 			if err != nil || pwrCtlURLJSON == nil {
+				if IsManufacturer(s.SystemRF.Manufacturer, FoxconnMfr) == 1 {
+					// When the node power is off, the Power endpoint for the ProcessorModule_0
+					// has been observed with earlier versions of BMC fw to not available and
+					// thus the s.epRF.GetRelative() call will time out. We cannot treat this
+					// as a fatal error because we still need to discover the rest of the node.
+					// We'll lack the ability to power cap this node until it is rediscovered
+					// after it is powered on but at least it will have been discovered.
+					//
+					// When the node power is on, the Power endpoint for the ProcessorModule_0
+					// chassis is available and the s.epRF.GetRelative() call should succeed.
+					// If not, just log an error and continue.
+					//
+					// Yes, the goto is ugly but we went down this route so as to not have to
+					// completely reorganize the code to handle this special case.
+					if isFoxconnPowerOnEventDiscovery {
+						// Node power is on, so this is a real error
+						errlog.Printf("Foxconn Paradise ERROR: Timed out querying Power endpoint at %s when node power is %s\n", path, nodeChassis.ChassisRF.PowerState)
+					} else {
+						// Node power is off, so this is expected
+						errlog.Printf("Foxconn Paradise WARNING: Timed out querying Power endpoint at %s when node power is %s.  Will attempt to discover again after node power is on\n", path, nodeChassis.ChassisRF.PowerState)
+					}
+					goto FoxconnPowerTimedOut
+				}
 				s.LastStatus = HTTPsGetFailed
 				return
 			}
@@ -1218,6 +1348,46 @@ func (s *EpSystem) discoverRemotePhase1() {
 					return
 				}
 			}
+
+			// Convert PowerConsumedWatts to an int if not already (it's an interface{}
+			// type that can support ints and floats) - Needed for Foxconn Paradise,
+			// perhaps others in the future
+			for _, pwrCtl := range s.PowerInfo.PowerControl {
+				if pwrCtl.PowerConsumedWatts != nil {
+					switch v := pwrCtl.PowerConsumedWatts.(type) {
+					case float64:	// Convert to int
+						pwrCtl.PowerConsumedWatts = math.Round(v)
+					case int:		// noop - no conversion needed
+					default:		// unexpected type, set to zero
+						pwrCtl.PowerConsumedWatts = int(0)
+						errlog.Printf("ERROR: unexpected type/value '%T'/'%v' detected for PowerConsumedWatts, setting to 0\n", pwrCtl.PowerConsumedWatts, pwrCtl.PowerConsumedWatts)
+					}
+				}
+				if IsManufacturer(s.SystemRF.Manufacturer, FoxconnMfr) == 1 {
+					// Even though we've successfully read the /Power endpoint, we have
+					// observed that the Paradise BMC fw may not have populated it with
+					// all of the data that we depend on if the node was just powered on.
+					// There is sometimes a lag after we receive the node power on event,
+					// and when /Power is correctly populated.  We check for what we
+					// depend upon here, and retry the /Power read after a short delay if
+					// we find any data missing.  The delay/retry count were selected based
+					// upon emperical observation.  If all the retries fail, just log an
+					// error and continue.
+					if isFoxconnPowerOnEventDiscovery && (pwrCtl.PowerConsumedWatts == nil || pwrCtl.PowerCapacityWatts == 0) {
+						errlog.Printf("Foxconn Paradise WARNING: /Power endpoint not ready (%v, %d), retry %d in %d seconds\n", pwrCtl.PowerConsumedWatts, pwrCtl.PowerCapacityWatts, foxconnPowerRetryNum, foxconnPowerRetryDelay)
+						time.Sleep(time.Duration(foxconnPowerRetryDelay) * time.Second)
+						if foxconnPowerRetryNum >= maxPowerRetries {
+							errlog.Printf("Foxconn Paradise ERROR: Unable to read /Power endpoint after %d retries.  A manual discover with node power on is required to rediscover power cap data\n", foxconnPowerRetryNum)
+							goto FoxconnPowerTimedOut
+						} else {
+							foxconnPowerRetryNum++
+							foxconnPowerRetryDelay *= 2
+							goto FoxconnPowerRetry
+						}
+					}
+				}
+			}
+
 			if s.PowerInfo.OEM != nil && s.PowerInfo.OEM.HPE != nil && len(s.PowerInfo.PowerControl) > 0 {
 				oemPwr := PwrCtlOEM{HPE: &PwrCtlOEMHPE{
 					Status: "Empty",
@@ -1280,10 +1450,20 @@ func (s *EpSystem) discoverRemotePhase1() {
 			s.PowerCtl = s.PowerInfo.PowerControl
 		}
 
+		FoxconnPowerTimedOut:
+
 		//
 		// Get Chassis assembly (NodeAccelRiser) info if it exists
 		//
-		if nodeChassis.ChassisRF.Assembly.Oid == "" {
+		if IsManufacturer(s.SystemRF.Manufacturer, FoxconnMfr) == 1 {
+			// Assemblies are in Baseboard_0 for Foxconn Paradise
+			nodeChassis, ok = s.epRF.Chassis.OIDs["Baseboard_0"]
+			if !ok {
+				nodeChassis = nil
+			}
+		}
+
+		if nodeChassis == nil || nodeChassis.ChassisRF.Assembly.Oid == "" {
 			//errlog.Printf("%s: No assembly obj found.\n", topURL)
 			s.NodeAccelRisers.Num = 0
 			s.NodeAccelRisers.OIDs = make(map[string]*EpNodeAccelRiser)
@@ -1362,8 +1542,18 @@ func (s *EpSystem) discoverRemotePhase1() {
 			s.HpeDevices.Num = 0
 			s.HpeDevices.OIDs = make(map[string]*EpHpeDevice)
 
+			if IsManufacturer(s.SystemRF.Manufacturer, FoxconnMfr) == 1 {
+				// NetworkAdapters are in Baseboard_0 for Foxconn Paradise. nodeChassis
+				// should still be Baseboard_0 after discovering assemblies but let's
+				// play it safe in case of future code changes and set it again here
+				nodeChassis, ok = s.epRF.Chassis.OIDs["Baseboard_0"]
+				if !ok {
+					nodeChassis = nil
+				}
+			}
+
 			// Non-proliant iLO. Just get Chassis NetworkAdapter (HSN NIC) info if it exists
-			if nodeChassis.ChassisRF.NetworkAdapters.Oid == "" {
+			if nodeChassis == nil || nodeChassis.ChassisRF.NetworkAdapters.Oid == "" {
 				//errlog.Printf("%s: No assembly obj found.\n", topURL)
 				s.NetworkAdapters.Num = 0
 				s.NetworkAdapters.OIDs = make(map[string]*EpNetworkAdapter)
@@ -1404,10 +1594,17 @@ func (s *EpSystem) discoverRemotePhase1() {
 	//
 
 	if s.SystemRF.EthernetInterfaces.Oid == "" {
-		// TODO: Just try default path?
-		errlog.Printf("%s: No EthernetInterfaces found.\n", url)
 		s.ENetInterfaces.Num = 0
 		s.ENetInterfaces.OIDs = make(map[string]*EpEthInterface)
+
+		if IsManufacturer(s.SystemRF.Manufacturer, FoxconnMfr) == 1 &&
+			s.SystemRF.OEM != nil && s.SystemRF.OEM.InsydeNcsi != nil {
+			// Foxconn uses an entirely different hierarchy
+			discoverFoxconnENetInterfaces(s)
+		} else {
+			// TODO: Just try default path?
+			errlog.Printf("%s: No EthernetInterfaces found.\n", url)
+		}
 	} else {
 		path = s.SystemRF.EthernetInterfaces.Oid
 		url = s.epRF.FQDN + path
@@ -1661,7 +1858,7 @@ func (s *EpSystem) discoverLocalPhase2() {
 	s.discoverComponentState()
 
 	// Check if we have something valid to insert into the data store
-	if base.GetHMSType(s.ID) != base.Node || s.Type != base.Node.String() {
+	if xnametypes.GetHMSType(s.ID) != xnametypes.Node || s.Type != xnametypes.Node.String() {
 		errlog.Printf("Error: Bad xname ID ('%s') or Type ('%s') for %s\n",
 			s.ID, s.Type, s.SystemURL)
 		s.LastStatus = VerificationFailed
@@ -1920,7 +2117,7 @@ type EpEthInterfaces struct {
 func NewEpEthInterface(e *RedfishEP, pOID, pType string, odataID ResourceID, rawOrdinal int) *EpEthInterface {
 	ei := new(EpEthInterface)
 	ei.OdataID = odataID.Oid
-	ei.Type = base.HMSTypeInvalid.String() // Not used in inventory/state-tracking
+	ei.Type = xnametypes.HMSTypeInvalid.String() // Not used in inventory/state-tracking
 	ei.BaseOdataID = odataID.Basename()
 	ei.RedfishType = EthernetInterfaceType
 	ei.RfEndpointID = e.ID
@@ -2021,7 +2218,7 @@ type EpProcessors struct {
 func NewEpProcessor(s *EpSystem, odataID ResourceID, rawOrdinal int) *EpProcessor {
 	p := new(EpProcessor)
 	p.OdataID = odataID.Oid
-	p.Type = base.Processor.String()
+	p.Type = xnametypes.Processor.String()
 	p.BaseOdataID = odataID.Basename()
 	p.RedfishType = ProcessorType
 	p.RfEndpointID = s.epRF.ID
@@ -2135,7 +2332,7 @@ func (p *EpProcessor) discoverLocalPhase2() {
 	p.Ordinal = p.epRF.getProcessorOrdinal(p)
 	if strings.ToLower(p.RedfishSubtype) == "gpu" {
 		p.ID = p.sysRF.ID + "a" + strconv.Itoa(p.Ordinal)
-		p.Type = base.NodeAccel.String()
+		p.Type = xnametypes.NodeAccel.String()
 	} else {
 		p.ID = p.sysRF.ID + "p" + strconv.Itoa(p.Ordinal)
 	}
@@ -2161,7 +2358,7 @@ func (p *EpProcessor) discoverLocalPhase2() {
 		p.FRUID = generatedFRUID
 		
 		// Discover processor arch
-		if p.Type == base.Processor.String() {
+		if p.Type == xnametypes.Processor.String() {
 			p.Arch = GetProcessorArch(p)
 		}
 	} else {
@@ -2171,10 +2368,10 @@ func (p *EpProcessor) discoverLocalPhase2() {
 		p.Flag = base.FlagOK.String()
 	}
 	// Check if we have something valid to insert into the data store
-	if (base.GetHMSType(p.ID) != base.Processor ||
-		p.Type != base.Processor.String()) &&
-		(base.GetHMSType(p.ID) != base.NodeAccel ||
-			p.Type != base.NodeAccel.String()) {
+	if (xnametypes.GetHMSType(p.ID) != xnametypes.Processor ||
+		p.Type != xnametypes.Processor.String()) &&
+		(xnametypes.GetHMSType(p.ID) != xnametypes.NodeAccel ||
+			p.Type != xnametypes.NodeAccel.String()) {
 		errlog.Printf("Error: Bad xname ID ('%s') or Type ('%s') for: %s\n",
 			p.ID, p.Type, p.ProcessorURL)
 		p.LastStatus = VerificationFailed
@@ -2228,7 +2425,7 @@ type EpMemoryMods struct {
 func NewEpMemory(s *EpSystem, odataID ResourceID, rawOrdinal int) *EpMemory {
 	m := new(EpMemory)
 	m.OdataID = odataID.Oid
-	m.Type = base.Memory.String()
+	m.Type = xnametypes.Memory.String()
 	m.BaseOdataID = odataID.Basename()
 	m.RedfishType = MemoryType
 	m.RfEndpointID = s.epRF.ID
@@ -2363,7 +2560,7 @@ func (m *EpMemory) discoverLocalPhase2() {
 		m.Flag = base.FlagOK.String()
 	}
 	// Check if we have something valid to insert into the data store
-	if base.GetHMSType(m.ID) != base.Memory || m.Type != base.Memory.String() {
+	if xnametypes.GetHMSType(m.ID) != xnametypes.Memory || m.Type != xnametypes.Memory.String() {
 		errlog.Printf("Error: Bad xname ID ('%s') or Type ('%s') for %s\n",
 			m.ID, m.Type, m.MemoryURL)
 		m.LastStatus = VerificationFailed

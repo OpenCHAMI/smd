@@ -26,7 +26,8 @@ package sm
 
 import (
 	"regexp"
-	base "github.com/Cray-HPE/hms-base"
+	base "github.com/Cray-HPE/hms-base/v2"
+	"github.com/Cray-HPE/hms-xname/xnametypes"
 	"strings"
 )
 
@@ -97,7 +98,7 @@ func (ms *Members) Verify() error {
 	}
 	ms.verified = true
 	for _, id := range ms.IDs {
-		if ok := base.IsHMSCompIDValid(id); ok == false {
+		if ok := xnametypes.IsHMSCompIDValid(id); ok == false {
 			return base.ErrHMSTypeInvalid
 		}
 	}
@@ -111,7 +112,7 @@ func (ms *Members) Normalize() {
 	}
 	ms.normalized = true
 	for i, id := range ms.IDs {
-		ms.IDs[i] = base.NormalizeHMSCompID(id)
+		ms.IDs[i] = xnametypes.NormalizeHMSCompID(id)
 	}
 }
 
@@ -278,7 +279,7 @@ func (p *Partition) Verify() error {
 	}
 	p.verified = true
 
-	if base.GetHMSType(p.Name) != base.Partition {
+	if xnametypes.GetHMSType(p.Name) != xnametypes.Partition {
 		return ErrPartBadName
 	}
 	for _, f := range p.Tags {

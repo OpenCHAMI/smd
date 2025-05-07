@@ -28,7 +28,8 @@ package sm
 import (
 	"strings"
 
-	base "github.com/Cray-HPE/hms-base"
+	base "github.com/Cray-HPE/hms-base/v2"
+	"github.com/Cray-HPE/hms-xname/xnametypes"
 )
 
 //
@@ -75,11 +76,11 @@ func NewCompEthInterface(desc, macAddr, ipAddr, compID string) (*CompEthInterfac
 	}
 	cei.IPAddr = ipAddr
 	if compID != "" {
-		cei.CompID = base.VerifyNormalizeCompID(compID)
+		cei.CompID = xnametypes.VerifyNormalizeCompID(compID)
 		if cei.CompID == "" {
 			return nil, ErrCompEthInterfaceBadCompID
 		}
-		cei.Type = base.GetHMSTypeString(cei.CompID)
+		cei.Type = xnametypes.GetHMSTypeString(cei.CompID)
 	}
 	return cei, nil
 }
@@ -150,11 +151,11 @@ func NewCompEthInterfaceV2(desc, macAddr, compID string, ipAddrs []IPAddressMapp
 		}
 	}
 	if compID != "" {
-		cei.CompID = base.VerifyNormalizeCompID(compID)
+		cei.CompID = xnametypes.VerifyNormalizeCompID(compID)
 		if cei.CompID == "" {
 			return nil, ErrCompEthInterfaceBadCompID
 		}
-		cei.Type = base.GetHMSTypeString(cei.CompID)
+		cei.Type = xnametypes.GetHMSTypeString(cei.CompID)
 	}
 	return cei, nil
 }

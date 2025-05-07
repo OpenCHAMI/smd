@@ -27,7 +27,7 @@ import (
 	"fmt"
 	"net/http"
 
-	base "github.com/Cray-HPE/hms-base"
+	base "github.com/Cray-HPE/hms-base/v2"
 	"github.com/OpenCHAMI/smd/v2/pkg/sm"
 )
 

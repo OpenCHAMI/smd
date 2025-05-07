@@ -26,7 +26,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	base "github.com/Cray-HPE/hms-base"
+	base "github.com/Cray-HPE/hms-base/v2"
+	"github.com/Cray-HPE/hms-xname/xnametypes"
 )
 
 /////////////////////////////////////////////////////////////////////////////
@@ -276,7 +277,7 @@ func (r *EpNodeAccelRiser) discoverLocalPhase2() {
 		r.Flag = base.FlagOK.String()
 	}
 	// Check if we have something valid to insert into the data store
-	if (base.GetHMSType(r.ID) == base.NodeAccelRiser) && (r.Type == base.NodeAccelRiser.String()) {
+	if (xnametypes.GetHMSType(r.ID) == xnametypes.NodeAccelRiser) && (r.Type == xnametypes.NodeAccelRiser.String()) {
 		errlog.Printf("NodeAccelRiser discoverLocalPhase2: VALID xname ID ('%s') and Type ('%s') for: %s\n",
 			r.ID, r.Type, r.NodeAccelRiserURL)
 	} else {

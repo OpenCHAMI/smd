@@ -1,6 +1,6 @@
 # MIT License
 #
-# (C) Copyright [2019-2023] Hewlett Packard Enterprise Development LP
+# (C) Copyright [2019-2025] Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -73,7 +73,7 @@ stages:
                       ID:
                         type: str
                         required: True
-                        pattern: "x[0-9]+[cm][0-9]+.*"
+                        pattern: "(x[0-9]+[cm][0-9]+.*)|(d[0-9]+w[0-9]+)"
                       Type:
                         type: str
                         required: True
@@ -123,6 +123,7 @@ stages:
                           - "RackMount"
                           - "RackPDU"
                           - "StandAlone"
+                          - "Zone"
                       MACAddr:
                         type: str
                         required: False
@@ -139,14 +140,14 @@ stages:
                       RedfishEndpointID:
                         type: str
                         required: True
-                        pattern: "x[0-9]+[cm][0-9]+.*"
+                        pattern: "(x[0-9]+[cm][0-9]+.*)|(d[0-9]+w[0-9]+)"
                       Enabled:
                         type: bool
                         required: True
                       RedfishURL:
                         type: str
                         required: True
-                        pattern: "x[0-9]+[cm][0-9]+.*/redfish/v1/.*"
+                        pattern: "((x[0-9]+[cm][0-9]+)|(d[0-9]+w[0-9]+(-rts[:]?[0-9]*)?)).*/redfish/v1/.*"
                       ComponentEndpointType:
                         type: str
                         required: True
@@ -170,7 +171,7 @@ stages:
                       RedfishEndpointFQDN:
                         type: str
                         required: True
-                        pattern: "x[0-9]+[cm][0-9]+.*"
+                        pattern: "(x[0-9]+[cm][0-9]+.*)|(d[0-9]+w[0-9]+.*)"
                       RedfishManagerInfo:
                         type: map
                         required: False
@@ -199,7 +200,9 @@ stages:
                                       min: 1
                                     pattern: "[0-9]+|\
 bond[0-9]+|\
-usb[0-9]+"
+usb[0-9]+|\
+eth[0-9]+|\
+ncsi[0-9]+"
                                   "@odata.id":
                                     type: str
                                     required: False
@@ -273,7 +276,8 @@ usb[0-9]+"
 [0-9]+|\
 HPCNet[0-9]+|\
 ManagementEthernet|\
-DE[0-9A-Za-z]+"
+D[0-9A-Za-z]+|\
+ncsi[0-9]+-p[0-9]+-c[0-9]+(-primary_eth)?"
                                   "@odata.id":
                                     type: str
                                     required: False

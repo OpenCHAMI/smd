@@ -1,6 +1,6 @@
 # MIT License
 #
-# (C) Copyright [2022] Hewlett Packard Enterprise Development LP
+# (C) Copyright [2022-2023] Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -24,43 +24,67 @@
 # Author: Mitch Schooler
 # Service: Hardware State Manager
 
-# HMS test metrics test cases: 36
+# HMS test metrics test cases: 60
 # POST /Defaults/NodeMaps Missing ID API response code
 # POST /Defaults/NodeMaps Missing ID API response body
-# POST /Defaults/NodeMaps Missing NID API response code
-# POST /Defaults/NodeMaps Missing NID API response body
-# POST /Defaults/NodeMaps Conflicting NID API response code
-# POST /Defaults/NodeMaps Conflicting NID API response body
-# POST /Defaults/NodeMaps Invalid Role API response code
-# POST /Defaults/NodeMaps Invalid Role API response body
-# POST /Defaults/NodeMaps Invalid SubRole API response code
-# POST /Defaults/NodeMaps Invalid SubRole API response body
-# GET /Defaults/NodeMaps/{xname} Non Existent Node API response code
-# GET /Defaults/NodeMaps/{xname} Non Existent Node API response body
+# POST /Defaults/NodeMaps Missing NID API response code for Node
+# POST /Defaults/NodeMaps Missing NID API response body for Node
+# POST /Defaults/NodeMaps Missing NID API response code for VirtualNode
+# POST /Defaults/NodeMaps Missing NID API response body for VirtualNode
+# POST /Defaults/NodeMaps Conflicting NID API response code for Node
+# POST /Defaults/NodeMaps Conflicting NID API response body for Node
+# POST /Defaults/NodeMaps Conflicting NID API response code for VirtualNode
+# POST /Defaults/NodeMaps Conflicting NID API response body for VirtualNode
+# POST /Defaults/NodeMaps Invalid Role API response code for Node
+# POST /Defaults/NodeMaps Invalid Role API response body for Node
+# POST /Defaults/NodeMaps Invalid Role API response code for VirtualNode
+# POST /Defaults/NodeMaps Invalid Role API response body for VirtualNode
+# POST /Defaults/NodeMaps Invalid SubRole API response code for Node
+# POST /Defaults/NodeMaps Invalid SubRole API response body for Node
+# POST /Defaults/NodeMaps Invalid SubRole API response code for VirtualNode
+# POST /Defaults/NodeMaps Invalid SubRole API response body for VirtualNode
+# GET /Defaults/NodeMaps/{xname} Non Existent Node API response code for Node
+# GET /Defaults/NodeMaps/{xname} Non Existent Node API response body for Node
+# GET /Defaults/NodeMaps/{xname} Non Existent Node API response code for VirtualNode
+# GET /Defaults/NodeMaps/{xname} Non Existent Node API response body for VirtualNode
 # GET /Defaults/NodeMaps/{xname} NodeBMC API response code
 # GET /Defaults/NodeMaps/{xname} NodeBMC Node API response body
 # GET /Defaults/NodeMaps/{xname} Invalid Xname API response code
 # GET /Defaults/NodeMaps/{xname} Invalid Xname API response body
 # DELETE /Defaults/NodeMaps/{xname} Non Existent Node API response code
 # DELETE /Defaults/NodeMaps/{xname} Non Existent Node API response body
+# DELETE /Defaults/NodeMaps/{xname} Non Existent VirtualNode API response code
+# DELETE /Defaults/NodeMaps/{xname} Non Existent VirtualNode API response body
 # DELETE /Defaults/NodeMaps/{xname} NodeBMC API response code
 # DELETE /Defaults/NodeMaps/{xname} NodeBMC API response body
 # DELETE /Defaults/NodeMaps/{xname} Invalid Xname API response code
 # DELETE /Defaults/NodeMaps/{xname} Invalid Xname API response body
 # PUT /Defaults/NodeMaps/{xname} Invalid Xname API response code
 # PUT /Defaults/NodeMaps/{xname} Invalid Xname API response body
-# PUT /Defaults/NodeMaps/{xname} Missing NID API response code
-# PUT /Defaults/NodeMaps/{xname} Missing NID API response body
-# PUT /Defaults/NodeMaps/{xname} Invalid Role API response code
-# PUT /Defaults/NodeMaps/{xname} Invalid Role API response body
-# PUT /Defaults/NodeMaps/{xname} Invalid SubRole API response code
-# PUT /Defaults/NodeMaps/{xname} Invalid SubRole API response body
-# POST /Defaults/NodeMaps Node API response code
-# POST /Defaults/NodeMaps Node API response body
-# PUT /Defaults/NodeMaps/{xname} Conflicting NID API response code
-# PUT /Defaults/NodeMaps/{xname} Conflicting NID API response body
-# DELETE /Defaults/NodeMaps/{xname} Existing Node API response code
-# DELETE /Defaults/NodeMaps/{xname} Existing Node API response body
+# PUT /Defaults/NodeMaps/{xname} Missing NID API response code for Node
+# PUT /Defaults/NodeMaps/{xname} Missing NID API response body for Node
+# PUT /Defaults/NodeMaps/{xname} Missing NID API response code for VirtualNode
+# PUT /Defaults/NodeMaps/{xname} Missing NID API response body for VirtualNode
+# PUT /Defaults/NodeMaps/{xname} Invalid Role API response code for Node
+# PUT /Defaults/NodeMaps/{xname} Invalid Role API response body for Node
+# PUT /Defaults/NodeMaps/{xname} Invalid Role API response code for VirtualNode
+# PUT /Defaults/NodeMaps/{xname} Invalid Role API response body for VirtualNode
+# PUT /Defaults/NodeMaps/{xname} Invalid SubRole API response code for Node
+# PUT /Defaults/NodeMaps/{xname} Invalid SubRole API response body for Node
+# PUT /Defaults/NodeMaps/{xname} Invalid SubRole API response code for VirtualNode
+# PUT /Defaults/NodeMaps/{xname} Invalid SubRole API response body for VirtualNode
+# POST /Defaults/NodeMaps Node API response code for Node
+# POST /Defaults/NodeMaps Node API response body for Node
+# PUT /Defaults/NodeMaps/{xname} Conflicting NID API response code for Node
+# PUT /Defaults/NodeMaps/{xname} Conflicting NID API response body for Node
+# DELETE /Defaults/NodeMaps/{xname} Existing Node API response code for Node
+# DELETE /Defaults/NodeMaps/{xname} Existing Node API response body for Node
+# POST /Defaults/NodeMaps Node API response code for VirtualNode
+# POST /Defaults/NodeMaps Node API response body for VirtualNode
+# PUT /Defaults/NodeMaps/{xname} Conflicting NID API response code for VirtualNode
+# PUT /Defaults/NodeMaps/{xname} Conflicting NID API response body for VirtualNode
+# DELETE /Defaults/NodeMaps/{xname} Existing Node API response code for VirtualNode
+# DELETE /Defaults/NodeMaps/{xname} Existing Node API response body for VirtualNode
 ---
 test_name: hsmAPIdefaultsNodeMapsNegative
 
@@ -103,9 +127,9 @@ stages:
                 enum:
                   - 400
 
-  # POST /Defaults/NodeMaps Missing NID API response code
-  # POST /Defaults/NodeMaps Missing NID API response body
-  - name: hsmAPIdefaultsNodeMapsPOSTmissingNID - Attempt to create a NodeMap with a payload that is missing its NID using POST.
+  # POST /Defaults/NodeMaps Missing NID API response code for Node
+  # POST /Defaults/NodeMaps Missing NID API response body for Node
+  - name: hsmAPIdefaultsNodeMapsPOSTmissingNID - Attempt to create a NodeMap for a Node with a payload that is missing its NID using POST.
     request:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps"
       method: POST
@@ -141,9 +165,47 @@ stages:
                 enum:
                   - 400
 
-  # POST /Defaults/NodeMaps Conflicting NID API response code
-  # POST /Defaults/NodeMaps Conflicting NID API response body
-  - name: hsmAPIdefaultsNodeMapsPOSTconflictingNID - Attempt to create multiple NodeMaps that both use the same NID using POST.
+  # POST /Defaults/NodeMaps Missing NID API response code for VirtualNode
+  # POST /Defaults/NodeMaps Missing NID API response body for VirtualNode
+  - name: hsmAPIdefaultsNodeMapsPOSTmissingNID - Attempt to create a NodeMap for a VirtualNode with a payload that is missing its NID using POST.
+    request:
+      url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps"
+      method: POST
+      verify: !bool "{verify}"
+      json: {"NodeMaps":[{"ID":"x9999c7s9b9n9v0","Role":"Compute","SubRole":"Worker"}]}
+    response:
+      status_code: 400
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: map
+            required: True
+            mapping:
+              type:
+                type: str
+                required: True
+                enum:
+                  - "about:blank"
+              title:
+                type: str
+                required: True
+                enum:
+                  - "Bad Request"
+              detail:
+                type: str
+                required: True
+                enum:
+                  - "couldn't validate map data at idx 0: NID '0' is out of range"
+              status:
+                type: int
+                required: True
+                enum:
+                  - 400
+
+  # POST /Defaults/NodeMaps Conflicting NID API response code for Node
+  # POST /Defaults/NodeMaps Conflicting NID API response body for Node
+  - name: hsmAPIdefaultsNodeMapsPOSTconflictingNID - Attempt to create multiple NodeMaps for Nodes that both use the same NID using POST.
     request:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps"
       method: POST
@@ -179,9 +241,47 @@ stages:
                 enum:
                   - 409
 
-  # POST /Defaults/NodeMaps Invalid Role API response code
-  # POST /Defaults/NodeMaps Invalid Role API response body
-  - name: hsmAPIdefaultsNodeMapsPOSTinvalidRole - Attempt to create a NodeMap with an invalid Role using POST.
+  # POST /Defaults/NodeMaps Conflicting NID API response code for VirtualNode
+  # POST /Defaults/NodeMaps Conflicting NID API response body for VirtualNode
+  - name: hsmAPIdefaultsNodeMapsPOSTconflictingNID - Attempt to create multiple NodeMaps for VirtualNodes that both use the same NID using POST.
+    request:
+      url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps"
+      method: POST
+      verify: !bool "{verify}"
+      json: {"NodeMaps":[{"ID":"x9999c7s9b9n9v0","NID":9999999999,"Role":"Compute","SubRole":"Worker"},{"ID":"x9999c7s9b9n8v0","NID":9999999999,"Role":"Compute","SubRole":"Worker"}]}
+    response:
+      status_code: 409
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: map
+            required: True
+            mapping:
+              type:
+                type: str
+                required: True
+                enum:
+                  - "about:blank"
+              title:
+                type: str
+                required: True
+                enum:
+                  - "Conflict"
+              detail:
+                type: str
+                required: True
+                enum:
+                  - "operation would conflict with an existing xname ID that has the same NID."
+              status:
+                type: int
+                required: True
+                enum:
+                  - 409
+
+  # POST /Defaults/NodeMaps Invalid Role API response code for Node
+  # POST /Defaults/NodeMaps Invalid Role API response body for Node
+  - name: hsmAPIdefaultsNodeMapsPOSTinvalidRole - Attempt to create a NodeMap for a Node with an invalid Role using POST.
     request:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps"
       method: POST
@@ -217,9 +317,47 @@ stages:
                 enum:
                   - 400
 
-  # POST /Defaults/NodeMaps Invalid SubRole API response code
-  # POST /Defaults/NodeMaps Invalid SubRole API response body
-  - name: hsmAPIdefaultsNodeMapsPOSTinvalidSubRole - Attempt to create a NodeMap with an invalid SubRole using POST.
+  # POST /Defaults/NodeMaps Invalid Role API response code for VirtualNode
+  # POST /Defaults/NodeMaps Invalid Role API response body for VirtualNode
+  - name: hsmAPIdefaultsNodeMapsPOSTinvalidRole - Attempt to create a NodeMap for a VirtualNode with an invalid Role using POST.
+    request:
+      url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps"
+      method: POST
+      verify: !bool "{verify}"
+      json: {"NodeMaps":[{"ID":"x9999c7s9b9n9v0","NID":9999999999,"Role":"FAKE","SubRole":"Worker"}]}
+    response:
+      status_code: 400
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: map
+            required: True
+            mapping:
+              type:
+                type: str
+                required: True
+                enum:
+                  - "about:blank"
+              title:
+                type: str
+                required: True
+                enum:
+                  - "Bad Request"
+              detail:
+                type: str
+                required: True
+                enum:
+                  - "couldn't validate map data at idx 0: Role 'FAKE' is not valid."
+              status:
+                type: int
+                required: True
+                enum:
+                  - 400
+
+  # POST /Defaults/NodeMaps Invalid SubRole API response code for Node
+  # POST /Defaults/NodeMaps Invalid SubRole API response body for Node
+  - name: hsmAPIdefaultsNodeMapsPOSTinvalidSubRole - Attempt to create a NodeMap for a Node with an invalid SubRole using POST.
     request:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps"
       method: POST
@@ -255,9 +393,84 @@ stages:
                 enum:
                   - 400
 
-  # GET /Defaults/NodeMaps/{xname} Non Existent Node API response code
-  # GET /Defaults/NodeMaps/{xname} Non Existent Node API response body
+  # POST /Defaults/NodeMaps Invalid SubRole API response code for VirtualNode
+  # POST /Defaults/NodeMaps Invalid SubRole API response body for VirtualNode
+  - name: hsmAPIdefaultsNodeMapsPOSTinvalidSubRole - Attempt to create a NodeMap for a VirtualNode with an invalid SubRole using POST.
+    request:
+      url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps"
+      method: POST
+      verify: !bool "{verify}"
+      json: {"NodeMaps":[{"ID":"x9999c7s9b9n9v0","NID":9999999999,"Role":"Compute","SubRole":"FAKE"}]}
+    response:
+      status_code: 400
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: map
+            required: True
+            mapping:
+              type:
+                type: str
+                required: True
+                enum:
+                  - "about:blank"
+              title:
+                type: str
+                required: True
+                enum:
+                  - "Bad Request"
+              detail:
+                type: str
+                required: True
+                enum:
+                  - "couldn't validate map data at idx 0: SubRole 'FAKE' is not valid."
+              status:
+                type: int
+                required: True
+                enum:
+                  - 400
+
+  # GET /Defaults/NodeMaps/{xname} Non Existent Node API response code for Node
+  # GET /Defaults/NodeMaps/{xname} Non Existent Node API response body for Node
   - name: hsmAPIdefaultsNodeMapsXnameGETnonExistentNode - Attempt to retrieve a NodeMap for a Node that doesn't exist using GET.
+    request:
+      url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b8n9"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 404
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: map
+            required: True
+            mapping:
+              type:
+                type: str
+                required: True
+                enum:
+                  - "about:blank"
+              title:
+                type: str
+                required: True
+                enum:
+                  - "Not Found"
+              detail:
+                type: str
+                required: True
+                enum:
+                  - "no such xname."
+              status:
+                type: int
+                required: True
+                enum:
+                  - 404
+
+  # GET /Defaults/NodeMaps/{xname} Non Existent Node API response code for VirtualNode
+  # GET /Defaults/NodeMaps/{xname} Non Existent Node API response body for VirtualNode
+  - name: hsmAPIdefaultsNodeMapsXnameGETnonExistentNode - Attempt to retrieve a NodeMap for a VirtualNode that doesn't exist using GET.
     request:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b8n9"
       method: GET
@@ -404,6 +617,43 @@ stages:
                 enum:
                   - 404
 
+  # DELETE /Defaults/NodeMaps/{xname} Non Existent VirtualNode API response code
+  # DELETE /Defaults/NodeMaps/{xname} Non Existent VirtualNode API response body
+  - name: hsmAPIdefaultsNodeMapsXnameDELETEnonExistentNode - Attempt to remove a NodeMap for a VirtualNode that doesn't exist using DELETE.
+    request:
+      url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b8n9v0"
+      method: DELETE
+      verify: !bool "{verify}"
+    response:
+      status_code: 404
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: map
+            required: True
+            mapping:
+              type:
+                type: str
+                required: True
+                enum:
+                  - "about:blank"
+              title:
+                type: str
+                required: True
+                enum:
+                  - "Not Found"
+              detail:
+                type: str
+                required: True
+                enum:
+                  - "no such xname."
+              status:
+                type: int
+                required: True
+                enum:
+                  - 404
+
   # DELETE /Defaults/NodeMaps/{xname} NodeBMC API response code
   # DELETE /Defaults/NodeMaps/{xname} NodeBMC API response body
   - name: hsmAPIdefaultsNodeMapsXnameDELETEnodeBMC - Attempt to remove a NodeMap for a NodeBMC which is invalid using DELETE.
@@ -516,8 +766,8 @@ stages:
                 enum:
                   - 400
 
-  # PUT /Defaults/NodeMaps/{xname} Missing NID API response code
-  # PUT /Defaults/NodeMaps/{xname} Missing NID API response body
+  # PUT /Defaults/NodeMaps/{xname} Missing NID API response code for Node
+  # PUT /Defaults/NodeMaps/{xname} Missing NID API response body for Node
   - name: hsmAPIdefaultsNodeMapsXnamePUTmissingNID - Attempt to create a NodeMap for a Node with a payload that is missing its NID using PUT.
     request:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b7n9"
@@ -554,9 +804,47 @@ stages:
                 enum:
                   - 400
 
-  # PUT /Defaults/NodeMaps/{xname} Invalid Role API response code
-  # PUT /Defaults/NodeMaps/{xname} Invalid Role API response body
-  - name: hsmAPIdefaultsNodeMapsXnamePUTinvalidRole - Attempt to create a NodeMap with an invalid Role using PUT.
+  # PUT /Defaults/NodeMaps/{xname} Missing NID API response code for VirtualNode
+  # PUT /Defaults/NodeMaps/{xname} Missing NID API response body for VirtualNode
+  - name: hsmAPIdefaultsNodeMapsXnamePUTmissingNID - Attempt to create a NodeMap for a VirtualNode with a payload that is missing its NID using PUT.
+    request:
+      url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b7n9v0"
+      method: PUT
+      verify: !bool "{verify}"
+      json: {"Role":"Storage","SubRole":"Storage"}
+    response:
+      status_code: 400
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: map
+            required: True
+            mapping:
+              type:
+                type: str
+                required: True
+                enum:
+                  - "about:blank"
+              title:
+                type: str
+                required: True
+                enum:
+                  - "Bad Request"
+              detail:
+                type: str
+                required: True
+                enum:
+                  - "couldn't validate endpoint data: NID '0' is out of range"
+              status:
+                type: int
+                required: True
+                enum:
+                  - 400
+
+  # PUT /Defaults/NodeMaps/{xname} Invalid Role API response code for Node
+  # PUT /Defaults/NodeMaps/{xname} Invalid Role API response body for Node
+  - name: hsmAPIdefaultsNodeMapsXnamePUTinvalidRole - Attempt to create a NodeMap for a Node with an invalid Role using PUT.
     request:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n9"
       method: PUT
@@ -592,9 +880,47 @@ stages:
                 enum:
                   - 400
 
-  # PUT /Defaults/NodeMaps/{xname} Invalid SubRole API response code
-  # PUT /Defaults/NodeMaps/{xname} Invalid SubRole API response body
-  - name: hsmAPIdefaultsNodeMapsXnamePUTinvalidSubRole - Attempt to create a NodeMap with an invalid SubRole using PUT.
+  # PUT /Defaults/NodeMaps/{xname} Invalid Role API response code for VirtualNode
+  # PUT /Defaults/NodeMaps/{xname} Invalid Role API response body for VirtualNode
+  - name: hsmAPIdefaultsNodeMapsXnamePUTinvalidRole - Attempt to create a NodeMap for a VirtualNode with an invalid Role using PUT.
+    request:
+      url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n9v0"
+      method: PUT
+      verify: !bool "{verify}"
+      json: {"NID":9999999999,"Role":"FAKE","SubRole":"Worker"}
+    response:
+      status_code: 400
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: map
+            required: True
+            mapping:
+              type:
+                type: str
+                required: True
+                enum:
+                  - "about:blank"
+              title:
+                type: str
+                required: True
+                enum:
+                  - "Bad Request"
+              detail:
+                type: str
+                required: True
+                enum:
+                  - "couldn't validate endpoint data: Role 'FAKE' is not valid."
+              status:
+                type: int
+                required: True
+                enum:
+                  - 400
+
+  # PUT /Defaults/NodeMaps/{xname} Invalid SubRole API response code for Node
+  # PUT /Defaults/NodeMaps/{xname} Invalid SubRole API response body for Node
+  - name: hsmAPIdefaultsNodeMapsXnamePUTinvalidSubRole - Attempt to create a NodeMap for a Node with an invalid SubRole using PUT.
     request:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n9"
       method: PUT
@@ -630,9 +956,47 @@ stages:
                 enum:
                   - 400
 
-  # POST /Defaults/NodeMaps Node API response code
-  # POST /Defaults/NodeMaps Node API response body
-  - name: hsmAPIdefaultsNodeMapsPOSTnode - Create a NodeMap for the following conflicting NID test case using POST.
+  # PUT /Defaults/NodeMaps/{xname} Invalid SubRole API response code for VirtualNode
+  # PUT /Defaults/NodeMaps/{xname} Invalid SubRole API response body for VirtualNode
+  - name: hsmAPIdefaultsNodeMapsXnamePUTinvalidSubRole - Attempt to create a NodeMap for a VirtualNode with an invalid SubRole using PUT.
+    request:
+      url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n9v0"
+      method: PUT
+      verify: !bool "{verify}"
+      json: {"NID":9999999999,"Role":"Service","SubRole":"FAKE"}
+    response:
+      status_code: 400
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: map
+            required: True
+            mapping:
+              type:
+                type: str
+                required: True
+                enum:
+                  - "about:blank"
+              title:
+                type: str
+                required: True
+                enum:
+                  - "Bad Request"
+              detail:
+                type: str
+                required: True
+                enum:
+                  - "couldn't validate endpoint data: SubRole 'FAKE' is not valid."
+              status:
+                type: int
+                required: True
+                enum:
+                  - 400
+
+  # POST /Defaults/NodeMaps Node API response code for Node
+  # POST /Defaults/NodeMaps Node API response body for Node
+  - name: hsmAPIdefaultsNodeMapsPOSTnode - Create a NodeMap for a Node for the following conflicting NID test case using POST.
     request:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps"
       method: POST
@@ -658,9 +1022,9 @@ stages:
                 enum:
                   - "Created or modified 1 entries"
 
-  # PUT /Defaults/NodeMaps/{xname} Conflicting NID API response code
-  # PUT /Defaults/NodeMaps/{xname} Conflicting NID API response body
-  - name: hsmAPIdefaultsNodeMapsXnamePUTconflictingNID - Attempt to create a NodeMap with a NID that conflicts with an existing NodeMap using PUT.
+  # PUT /Defaults/NodeMaps/{xname} Conflicting NID API response code for Node
+  # PUT /Defaults/NodeMaps/{xname} Conflicting NID API response body for Node
+  - name: hsmAPIdefaultsNodeMapsXnamePUTconflictingNID - Attempt to create a NodeMap for a Node with a NID that conflicts with an existing NodeMap using PUT.
     request:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n8"
       method: PUT
@@ -696,11 +1060,104 @@ stages:
                 enum:
                   - 409
 
-  # DELETE /Defaults/NodeMaps/{xname} Node API response code
-  # DELETE /Defaults/NodeMaps/{xname} Node API response body
+  # DELETE /Defaults/NodeMaps/{xname} Existing Node API response code for Node
+  # DELETE /Defaults/NodeMaps/{xname} Existing Node API response body for Node
   - name: hsmAPIdefaultsNodeMapsXnameDELETEnode - Remove the NodeMap for the previous conflicting NID test case using DELETE.
     request:
       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n9"
+      method: DELETE
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: map
+            required: True
+            mapping:
+              code:
+                type: int
+                required: True
+                enum:
+                  - 0
+              message:
+                type: str
+                required: True
+                enum:
+                  - "deleted 1 entry"
+
+  # POST /Defaults/NodeMaps Node API response code for VirtualNode
+  # POST /Defaults/NodeMaps Node API response body for VirtualNode
+  - name: hsmAPIdefaultsNodeMapsPOSTnode - Create a NodeMap for a VirtualNode for the following conflicting NID test case using POST.
+    request:
+      url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps"
+      method: POST
+      verify: !bool "{verify}"
+      json: {"NodeMaps":[{"ID":"x9999c7s9b9n9v0","NID":9999999999,"Role":"Compute","SubRole":"Worker"}]}
+    response:
+      status_code: 200
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: map
+            required: True
+            mapping:
+              code:
+                type: int
+                required: True
+                enum:
+                  - 0
+              message:
+                type: str
+                required: True
+                enum:
+                  - "Created or modified 1 entries"
+
+  # PUT /Defaults/NodeMaps/{xname} Conflicting NID API response code for VirtualNode
+  # PUT /Defaults/NodeMaps/{xname} Conflicting NID API response body for VirtualNode
+  - name: hsmAPIdefaultsNodeMapsXnamePUTconflictingNID - Attempt to create a VirtualNode for a Node with a NID that conflicts with an existing NodeMap using PUT.
+    request:
+      url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n8v0"
+      method: PUT
+      verify: !bool "{verify}"
+      json: {"NID":9999999999,"Role":"Compute","SubRole":"Worker"}
+    response:
+      status_code: 409
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: map
+            required: True
+            mapping:
+              type:
+                type: str
+                required: True
+                enum:
+                  - "about:blank"
+              title:
+                type: str
+                required: True
+                enum:
+                  - "Conflict"
+              detail:
+                type: str
+                required: True
+                enum:
+                  - "operation would conflict with an existing resource that has the same NID"
+              status:
+                type: int
+                required: True
+                enum:
+                  - 409
+
+  # DELETE /Defaults/NodeMaps/{xname} Existing Node API response code for VirtualNode
+  # DELETE /Defaults/NodeMaps/{xname} Existing Node API response body for VirtualNode
+  - name: hsmAPIdefaultsNodeMapsXnameDELETEnode - Remove the NodeMap for the previous VirtualNode with conflicting NID test case using DELETE.
+    request:
+      url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/x9999c7s9b9n9v0"
       method: DELETE
       verify: !bool "{verify}"
     response:

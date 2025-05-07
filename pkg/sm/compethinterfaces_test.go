@@ -26,7 +26,7 @@ import (
 	"reflect"
 	"testing"
 
-	base "github.com/Cray-HPE/hms-base"
+	"github.com/Cray-HPE/hms-xname/xnametypes"
 )
 
 //
@@ -52,7 +52,7 @@ func TestNewCompEthInterface(t *testing.T) {
 			MACAddr: "a4:bf:01:38:ee:65",
 			IPAddr:  "10.254.2.14",
 			CompID:  "x3000c0s26b0",
-			Type:    base.NodeBMC.String(),
+			Type:    xnametypes.NodeBMC.String(),
 		},
 		expectedErr: nil,
 	}, { // Test 1 - Minimal info
@@ -109,7 +109,7 @@ func TestNewCompEthInterfaceV2(t *testing.T) {
 				{IPAddr: "10.254.2.14"},
 			},
 			CompID: "x3000c0s26b0",
-			Type:   base.NodeBMC.String(),
+			Type:   xnametypes.NodeBMC.String(),
 		},
 		expectedErr: nil,
 	}, { // Test 1 - Minimal info
@@ -167,7 +167,7 @@ func TestCompEthInterfaceV2ToV1(t *testing.T) {
 			MACAddr: "a4:bf:01:38:ee:65",
 			IPAddr:  "10.254.2.14",
 			CompID:  "x3000c0s26b0",
-			Type:    base.NodeBMC.String(),
+			Type:    xnametypes.NodeBMC.String(),
 		},
 	}, { // Test 1 - Minimal info
 		macAddr: "a4:bf:01:38:ee:65",
@@ -189,7 +189,7 @@ func TestCompEthInterfaceV2ToV1(t *testing.T) {
 			MACAddr: "a4:bf:01:38:ee:65",
 			IPAddr:  "10.254.2.14",
 			CompID:  "x3000c0s26b0",
-			Type:    base.NodeBMC.String(),
+			Type:    xnametypes.NodeBMC.String(),
 		},
 	}}
 	for i, test := range tests {

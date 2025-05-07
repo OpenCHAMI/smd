@@ -29,7 +29,8 @@ import (
 	"strconv"
 	"strings"
 
-	base "github.com/Cray-HPE/hms-base"
+	base "github.com/Cray-HPE/hms-base/v2"
+	"github.com/Cray-HPE/hms-xname/xnametypes"
 )
 
 /////////////////////////////////////////////////////////////////////////////
@@ -194,7 +195,7 @@ func (d *EpHpeDevice) discoverLocalPhase2() {
 	   !strings.Contains(strings.ToLower(d.DeviceRF.Name), "switch") &&
 	   !strings.Contains(strings.ToLower(d.DeviceRF.Location), "baseboard") {
 		d.ID = d.systemRF.ID + "a" + strconv.Itoa(d.Ordinal)
-		d.Type = base.NodeAccel.String()
+		d.Type = xnametypes.NodeAccel.String()
 	} else if strings.Contains(strings.ToLower(d.RedfishSubtype), "nic") &&
 	          (strings.Contains(strings.ToLower(d.DeviceRF.Manufacturer), "mellanox") ||
 	           strings.Contains(strings.ToLower(d.DeviceRF.Manufacturer), "hpe") ||
@@ -204,10 +205,10 @@ func (d *EpHpeDevice) discoverLocalPhase2() {
 		// implementations so we check for both just incase this changes
 		// in the future.
 		d.ID = d.systemRF.ID + "h" + strconv.Itoa(d.Ordinal)
-		d.Type = base.NodeHsnNic.String()
+		d.Type = xnametypes.NodeHsnNic.String()
 	} else {
 		// What to do with non-GPUs, trash for now?
-		d.Type = base.HMSTypeInvalid.String()
+		d.Type = xnametypes.HMSTypeInvalid.String()
 		d.LastStatus = RedfishSubtypeNoSupport
 		return
 	}
@@ -228,8 +229,8 @@ func (d *EpHpeDevice) discoverLocalPhase2() {
 		d.Flag = base.FlagOK.String()
 	}
 	// Check if we have something valid to insert into the data store
-	if (base.GetHMSType(d.ID) != base.NodeAccel || d.Type != base.NodeAccel.String()) &&
-	   (base.GetHMSType(d.ID) != base.NodeHsnNic || d.Type != base.NodeHsnNic.String()) {
+	if (xnametypes.GetHMSType(d.ID) != xnametypes.NodeAccel || d.Type != xnametypes.NodeAccel.String()) &&
+	   (xnametypes.GetHMSType(d.ID) != xnametypes.NodeHsnNic || d.Type != xnametypes.NodeHsnNic.String()) {
 		errlog.Printf("Error: Bad xname ID ('%s') or Type ('%s') for: %s\n", d.ID, d.Type, d.DeviceURL)
 		d.LastStatus = VerificationFailed
 		return
@@ -256,9 +257,9 @@ func (ep *RedfishEP) getHpeDeviceOrdinal(d *EpHpeDevice) int {
 					// Cassini shows as HPE instead of BEI in Proliant iLO redfish
 					// implementations so we check for both just incase this changes
 					// in the future. 
-					if strings.Contains(strings.ToLower(d.DeviceRF.Manufacturer), "mellanox") ||
-					   strings.Contains(strings.ToLower(d.DeviceRF.Manufacturer), "hpe") ||
-					   strings.Contains(strings.ToLower(d.DeviceRF.Manufacturer), "bei") {
+					if strings.Contains(strings.ToLower(device.DeviceRF.Manufacturer), "mellanox") ||
+					   strings.Contains(strings.ToLower(device.DeviceRF.Manufacturer), "hpe") ||
+					   strings.Contains(strings.ToLower(device.DeviceRF.Manufacturer), "bei") {
 						dsOIDs = append(dsOIDs, oid)
 					}
 				} else {

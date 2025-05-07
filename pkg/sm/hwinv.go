@@ -27,7 +27,8 @@ import (
 	"regexp"
 	"strconv"
 
-	base "github.com/Cray-HPE/hms-base"
+	base "github.com/Cray-HPE/hms-base/v2"
+	"github.com/Cray-HPE/hms-xname/xnametypes"
 	rf "github.com/OpenCHAMI/smd/v2/pkg/redfish"
 )
 
@@ -159,143 +160,143 @@ func NewSystemHWInventory(hwlocs []*HWInvByLoc, xName, format string) (*SystemHW
 	}
 	var err error
 	for _, hwloc := range hwlocs {
-		switch base.ToHMSType(hwloc.Type) {
+		switch xnametypes.ToHMSType(hwloc.Type) {
 		// HWInv based on Redfish "Chassis" Type.
-		case base.Cabinet:
+		case xnametypes.Cabinet:
 			if hwinv.Cabinets == nil {
 				arr := make([]*HWInvByLoc, 0, 1)
 				hwinv.Cabinets = &arr
 			}
 			*hwinv.Cabinets = append(*hwinv.Cabinets, hwloc)
-		case base.Chassis:
+		case xnametypes.Chassis:
 			if hwinv.Chassis == nil {
 				arr := make([]*HWInvByLoc, 0, 1)
 				hwinv.Chassis = &arr
 			}
 			*hwinv.Chassis = append(*hwinv.Chassis, hwloc)
-		case base.ComputeModule:
+		case xnametypes.ComputeModule:
 			if hwinv.ComputeModules == nil {
 				arr := make([]*HWInvByLoc, 0, 1)
 				hwinv.ComputeModules = &arr
 			}
 			*hwinv.ComputeModules = append(*hwinv.ComputeModules, hwloc)
-		case base.RouterModule:
+		case xnametypes.RouterModule:
 			if hwinv.RouterModules == nil {
 				arr := make([]*HWInvByLoc, 0, 1)
 				hwinv.RouterModules = &arr
 			}
 			*hwinv.RouterModules = append(*hwinv.RouterModules, hwloc)
-		case base.NodeEnclosure:
+		case xnametypes.NodeEnclosure:
 			if hwinv.NodeEnclosures == nil {
 				arr := make([]*HWInvByLoc, 0, 1)
 				hwinv.NodeEnclosures = &arr
 			}
 			*hwinv.NodeEnclosures = append(*hwinv.NodeEnclosures, hwloc)
-		case base.HSNBoard:
+		case xnametypes.HSNBoard:
 			if hwinv.HSNBoards == nil {
 				arr := make([]*HWInvByLoc, 0, 1)
 				hwinv.HSNBoards = &arr
 			}
 			*hwinv.HSNBoards = append(*hwinv.HSNBoards, hwloc)
-		case base.MgmtSwitch:
+		case xnametypes.MgmtSwitch:
 			if hwinv.MgmtSwitches == nil {
 				arr := make([]*HWInvByLoc, 0, 1)
 				hwinv.MgmtSwitches = &arr
 			}
 			*hwinv.MgmtSwitches = append(*hwinv.MgmtSwitches, hwloc)
-		case base.MgmtHLSwitch:
+		case xnametypes.MgmtHLSwitch:
 			if hwinv.MgmtHLSwitches == nil {
 				arr := make([]*HWInvByLoc, 0, 1)
 				hwinv.MgmtHLSwitches = &arr
 			}
 			*hwinv.MgmtHLSwitches = append(*hwinv.MgmtHLSwitches, hwloc)
-		case base.CDUMgmtSwitch:
+		case xnametypes.CDUMgmtSwitch:
 			if hwinv.CDUMgmtSwitches == nil {
 				arr := make([]*HWInvByLoc, 0, 1)
 				hwinv.CDUMgmtSwitches = &arr
 			}
 			*hwinv.CDUMgmtSwitches = append(*hwinv.CDUMgmtSwitches, hwloc)
-		case base.Node:
+		case xnametypes.Node:
 			if hwinv.Nodes == nil {
 				arr := make([]*HWInvByLoc, 0, 1)
 				hwinv.Nodes = &arr
 			}
 			*hwinv.Nodes = append(*hwinv.Nodes, hwloc)
-		case base.NodeAccel:
+		case xnametypes.NodeAccel:
 			if hwinv.NodeAccels == nil {
 				arr := make([]*HWInvByLoc, 0, 1)
 				hwinv.NodeAccels = &arr
 			}
 			*hwinv.NodeAccels = append(*hwinv.NodeAccels, hwloc)
-		case base.Processor:
+		case xnametypes.Processor:
 			if hwinv.Processors == nil {
 				arr := make([]*HWInvByLoc, 0, 1)
 				hwinv.Processors = &arr
 			}
 			*hwinv.Processors = append(*hwinv.Processors, hwloc)
-		case base.Memory:
+		case xnametypes.Memory:
 			if hwinv.Memory == nil {
 				arr := make([]*HWInvByLoc, 0, 1)
 				hwinv.Memory = &arr
 			}
 			*hwinv.Memory = append(*hwinv.Memory, hwloc)
-		case base.Drive:
+		case xnametypes.Drive:
 			if hwinv.Drives == nil {
 				arr := make([]*HWInvByLoc, 0, 1)
 				hwinv.Drives = &arr
 			}
 			*hwinv.Drives = append(*hwinv.Drives, hwloc)
-		case base.NodeHsnNic:
+		case xnametypes.NodeHsnNic:
 			if hwinv.NodeHsnNICs == nil {
 				arr := make([]*HWInvByLoc, 0, 1)
 				hwinv.NodeHsnNICs = &arr
 			}
 			*hwinv.NodeHsnNICs = append(*hwinv.NodeHsnNICs, hwloc)
-		case base.CabinetPDU:
+		case xnametypes.CabinetPDU:
 			if hwinv.CabinetPDUs == nil {
 				arr := make([]*HWInvByLoc, 0, 1)
 				hwinv.CabinetPDUs = &arr
 			}
 			*hwinv.CabinetPDUs = append(*hwinv.CabinetPDUs, hwloc)
-		case base.CabinetPDUOutlet:
+		case xnametypes.CabinetPDUOutlet:
 			fallthrough
-		case base.CabinetPDUPowerConnector:
+		case xnametypes.CabinetPDUPowerConnector:
 			if hwinv.CabinetPDUOutlets == nil {
 				arr := make([]*HWInvByLoc, 0, 1)
 				hwinv.CabinetPDUOutlets = &arr
 			}
 			*hwinv.CabinetPDUOutlets = append(*hwinv.CabinetPDUOutlets, hwloc)
-		case base.CMMRectifier:
+		case xnametypes.CMMRectifier:
 			if hwinv.CMMRectifiers == nil {
 				arr := make([]*HWInvByLoc, 0, 1)
 				hwinv.CMMRectifiers = &arr
 			}
 			*hwinv.CMMRectifiers = append(*hwinv.CMMRectifiers, hwloc)
-		case base.NodeEnclosurePowerSupply:
+		case xnametypes.NodeEnclosurePowerSupply:
 			if hwinv.NodeEnclosurePowerSupplies == nil {
 				arr := make([]*HWInvByLoc, 0, 1)
 				hwinv.NodeEnclosurePowerSupplies = &arr
 			}
 			*hwinv.NodeEnclosurePowerSupplies = append(*hwinv.NodeEnclosurePowerSupplies, hwloc)
-		case base.NodeAccelRiser:
+		case xnametypes.NodeAccelRiser:
 			if hwinv.NodeAccelRisers == nil {
 				arr := make([]*HWInvByLoc, 0, 1)
 				hwinv.NodeAccelRisers = &arr
 			}
 			*hwinv.NodeAccelRisers = append(*hwinv.NodeAccelRisers, hwloc)
-		case base.NodeBMC:
+		case xnametypes.NodeBMC:
 			if hwinv.NodeBMCs == nil {
 				arr := make([]*HWInvByLoc, 0, 1)
 				hwinv.NodeBMCs = &arr
 			}
 			*hwinv.NodeBMCs = append(*hwinv.NodeBMCs, hwloc)
-		case base.RouterBMC:
+		case xnametypes.RouterBMC:
 			if hwinv.RouterBMCs == nil {
 				arr := make([]*HWInvByLoc, 0, 1)
 				hwinv.RouterBMCs = &arr
 			}
 			*hwinv.RouterBMCs = append(*hwinv.RouterBMCs, hwloc)
-		case base.HMSTypeInvalid:
+		case xnametypes.HMSTypeInvalid:
 			err = base.ErrHMSTypeInvalid
 		// Not supported for this type.
 		default:
@@ -341,7 +342,7 @@ func NewSystemHWInventory(hwlocs []*HWInvByLoc, xName, format string) (*SystemHW
 		// Processors are children of Node
 		if procArray != nil {
 			for _, p := range *procArray {
-				parentID := base.GetHMSCompParent(p.ID)
+				parentID := xnametypes.GetHMSCompParent(p.ID)
 				parent, ok := nmap[parentID]
 				if !ok {
 					errlog.Printf("ERROR: Could not find node key %s for %s",
@@ -364,7 +365,7 @@ func NewSystemHWInventory(hwlocs []*HWInvByLoc, xName, format string) (*SystemHW
 		// NodeAccels (GPUs) are children of Node
 		if nodeAccelArray != nil {
 			for _, na := range *nodeAccelArray {
-				parentID := base.GetHMSCompParent(na.ID)
+				parentID := xnametypes.GetHMSCompParent(na.ID)
 				parent, ok := nmap[parentID]
 				if !ok {
 					errlog.Printf("ERROR: Could not find node key %s for %s",
@@ -387,7 +388,7 @@ func NewSystemHWInventory(hwlocs []*HWInvByLoc, xName, format string) (*SystemHW
 		// Memory modules are children of Node
 		if memArray != nil {
 			for _, m := range *memArray {
-				parentID := base.GetHMSCompParent(m.ID)
+				parentID := xnametypes.GetHMSCompParent(m.ID)
 				parent, ok := nmap[parentID]
 				if !ok {
 					errlog.Printf("ERROR: Could not find node key %s for %s",
@@ -412,8 +413,8 @@ func NewSystemHWInventory(hwlocs []*HWInvByLoc, xName, format string) (*SystemHW
 		if driveArray != nil {
 			for _, d := range *driveArray {
 				parentID := d.ID
-				for base.GetHMSType(parentID) != base.Node {
-					parentID = base.GetHMSCompParent(parentID)
+				for xnametypes.GetHMSType(parentID) != xnametypes.Node {
+					parentID = xnametypes.GetHMSCompParent(parentID)
 				}
 				parent, ok := nmap[parentID]
 				if !ok {
@@ -438,7 +439,7 @@ func NewSystemHWInventory(hwlocs []*HWInvByLoc, xName, format string) (*SystemHW
 		// HSN NICs are children of Nodes
 		if hsnNicArray != nil {
 			for _, n := range *hsnNicArray {
-				parentID := base.GetHMSCompParent(n.ID)
+				parentID := xnametypes.GetHMSCompParent(n.ID)
 				parent, ok := nmap[parentID]
 				if !ok {
 					errlog.Printf("ERROR: Could not find node key %s for %s",
@@ -462,7 +463,7 @@ func NewSystemHWInventory(hwlocs []*HWInvByLoc, xName, format string) (*SystemHW
 		// NodeAccelRisers are children of Nodes
 		if nodeAccelRiserArray != nil {
 			for _, n := range *nodeAccelRiserArray {
-				parentID := base.GetHMSCompParent(n.ID)
+				parentID := xnametypes.GetHMSCompParent(n.ID)
 				parent, ok := nmap[parentID]
 				if !ok {
 					errlog.Printf("ERROR: Could not find node key %s for %s",
@@ -504,7 +505,7 @@ func NewSystemHWInventory(hwlocs []*HWInvByLoc, xName, format string) (*SystemHW
 		// CabinetPDUOutlets are children of CabinetPDUs
 		if cabPDUArray != nil {
 			for _, out := range *cabPDUArray {
-				parentID := base.GetHMSCompParent(out.ID)
+				parentID := xnametypes.GetHMSCompParent(out.ID)
 				parent, ok := pdumap[parentID]
 				if !ok {
 					errlog.Printf("ERROR: Could not find pdu key %s for %s",
@@ -543,9 +544,9 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 	re := regexp.MustCompile(`[0-9]+$`)
 
 	for _, hwloc := range hwlocs {
-		hwloc.ID = base.NormalizeHMSCompID(hwloc.ID)
-		hmsType := base.GetHMSType(hwloc.ID)
-		if hmsType == base.HMSTypeInvalid {
+		hwloc.ID = xnametypes.NormalizeHMSCompID(hwloc.ID)
+		hmsType := xnametypes.GetHMSType(hwloc.ID)
+		if hmsType == xnametypes.HMSTypeInvalid {
 			return hls, ErrHWLocInvalid //TODO: Define error
 		}
 		hwloc.Type = hmsType.String()
@@ -557,7 +558,7 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 		}
 		hwloc.PopulatedFRU.Type = hwloc.Type
 		switch hmsType {
-		case base.Cabinet:
+		case xnametypes.Cabinet:
 			if hwloc.HMSCabinetLocationInfo == nil {
 				return hls, ErrHWInvMissingLoc
 			}
@@ -577,7 +578,7 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 				errlog.Printf("FRUID Error: %s\n", err.Error())
 				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
-		case base.Chassis:
+		case xnametypes.Chassis:
 			if hwloc.HMSChassisLocationInfo == nil {
 				return hls, ErrHWInvMissingLoc
 			}
@@ -597,7 +598,7 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 				errlog.Printf("FRUID Error: %s\n", err.Error())
 				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
-		case base.ComputeModule:
+		case xnametypes.ComputeModule:
 			if hwloc.HMSComputeModuleLocationInfo == nil {
 				return hls, ErrHWInvMissingLoc
 			}
@@ -617,7 +618,7 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 				errlog.Printf("FRUID Error: %s\n", err.Error())
 				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
-		case base.RouterModule:
+		case xnametypes.RouterModule:
 			if hwloc.HMSRouterModuleLocationInfo == nil {
 				return hls, ErrHWInvMissingLoc
 			}
@@ -637,7 +638,7 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 				errlog.Printf("FRUID Error: %s\n", err.Error())
 				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
-		case base.NodeEnclosure:
+		case xnametypes.NodeEnclosure:
 			if hwloc.HMSNodeEnclosureLocationInfo == nil {
 				return hls, ErrHWInvMissingLoc
 			}
@@ -657,7 +658,7 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 				errlog.Printf("FRUID Error: %s\n", err.Error())
 				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
-		case base.HSNBoard:
+		case xnametypes.HSNBoard:
 			if hwloc.HMSHSNBoardLocationInfo == nil {
 				return hls, ErrHWInvMissingLoc
 			}
@@ -677,7 +678,7 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 				errlog.Printf("FRUID Error: %s\n", err.Error())
 				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
-		case base.MgmtSwitch:
+		case xnametypes.MgmtSwitch:
 			if hwloc.HMSMgmtSwitchLocationInfo == nil {
 				return hls, ErrHWInvMissingLoc
 			}
@@ -697,7 +698,7 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 				errlog.Printf("FRUID Error: %s\n", err.Error())
 				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
-		case base.MgmtHLSwitch:
+		case xnametypes.MgmtHLSwitch:
 			if hwloc.HMSMgmtHLSwitchLocationInfo == nil {
 				return hls, ErrHWInvMissingLoc
 			}
@@ -717,7 +718,7 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 				errlog.Printf("FRUID Error: %s\n", err.Error())
 				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
-		case base.CDUMgmtSwitch:
+		case xnametypes.CDUMgmtSwitch:
 			if hwloc.HMSCDUMgmtSwitchLocationInfo == nil {
 				return hls, ErrHWInvMissingLoc
 			}
@@ -737,7 +738,7 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 				errlog.Printf("FRUID Error: %s\n", err.Error())
 				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
-		case base.Node:
+		case xnametypes.Node:
 			if hwloc.HMSNodeLocationInfo == nil {
 				return hls, ErrHWInvMissingLoc
 			}
@@ -757,7 +758,7 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 				errlog.Printf("FRUID Error: %s\n", err.Error())
 				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
-		case base.NodeAccel:
+		case xnametypes.NodeAccel:
 			if hwloc.HMSNodeAccelLocationInfo == nil {
 				return hls, ErrHWInvMissingLoc
 			}
@@ -777,7 +778,7 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 				errlog.Printf("FRUID Error: %s\n", err.Error())
 				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
-		case base.Processor:
+		case xnametypes.Processor:
 			if hwloc.HMSProcessorLocationInfo == nil {
 				return hls, ErrHWInvMissingLoc
 			}
@@ -797,7 +798,7 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 				errlog.Printf("FRUID Error: %s\n", err.Error())
 				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
-		case base.Memory:
+		case xnametypes.Memory:
 			if hwloc.HMSMemoryLocationInfo == nil {
 				return hls, ErrHWInvMissingLoc
 			}
@@ -817,7 +818,7 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 				errlog.Printf("FRUID Error: %s\n", err.Error())
 				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
-		case base.Drive:
+		case xnametypes.Drive:
 			if hwloc.HMSDriveLocationInfo == nil {
 				return hls, ErrHWInvMissingLoc
 			}
@@ -837,7 +838,7 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 				errlog.Printf("FRUID Error: %s\n", err.Error())
 				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
-		case base.NodeHsnNic:
+		case xnametypes.NodeHsnNic:
 			if hwloc.HMSHSNNICLocationInfo == nil {
 				return hls, ErrHWInvMissingLoc
 			}
@@ -851,7 +852,7 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 				errlog.Printf("FRUID Error: %s\n", err.Error())
 				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
-		case base.CabinetPDU:
+		case xnametypes.CabinetPDU:
 			if hwloc.HMSPDULocationInfo == nil {
 				return hls, ErrHWInvMissingLoc
 			}
@@ -871,9 +872,9 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 				errlog.Printf("FRUID Error: %s\n", err.Error())
 				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
-		case base.CabinetPDUOutlet:
+		case xnametypes.CabinetPDUOutlet:
 			fallthrough
-		case base.CabinetPDUPowerConnector:
+		case xnametypes.CabinetPDUPowerConnector:
 			if hwloc.HMSOutletLocationInfo == nil {
 				return hls, ErrHWInvMissingLoc
 			}
@@ -887,7 +888,7 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 			if hwloc.PopulatedFRU.FRUID == "" {
 				hwloc.PopulatedFRU.FRUID = "FRUIDfor" + hwloc.ID
 			}
-		case base.CMMRectifier:
+		case xnametypes.CMMRectifier:
 			if hwloc.HMSCMMRectifierLocationInfo == nil {
 				return hls, ErrHWInvMissingLoc
 			}
@@ -910,7 +911,7 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 				errlog.Printf("FRUID Error: %s\n", err.Error())
 				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
-		case base.NodeEnclosurePowerSupply:
+		case xnametypes.NodeEnclosurePowerSupply:
 			if hwloc.HMSNodeEnclosurePowerSupplyLocationInfo == nil {
 				return hls, ErrHWInvMissingLoc
 			}
@@ -933,7 +934,7 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 				errlog.Printf("FRUID Error: %s\n", err.Error())
 				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
-		case base.NodeAccelRiser:
+		case xnametypes.NodeAccelRiser:
 			if hwloc.HMSNodeAccelRiserLocationInfo == nil {
 				return hls, ErrHWInvMissingLoc
 			}
@@ -957,7 +958,7 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 				errlog.Printf("FRUID Error: %s\n", err.Error())
 				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
-		case base.NodeBMC:
+		case xnametypes.NodeBMC:
 			if hwloc.HMSNodeBMCLocationInfo == nil {
 				return hls, ErrHWInvMissingLoc
 			}
@@ -977,7 +978,7 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 				errlog.Printf("FRUID Error: %s\n", err.Error())
 				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
-		case base.RouterBMC:
+		case xnametypes.RouterBMC:
 			if hwloc.HMSRouterBMCLocationInfo == nil {
 				return hls, ErrHWInvMissingLoc
 			}
@@ -997,7 +998,7 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 				errlog.Printf("FRUID Error: %s\n", err.Error())
 				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
-		case base.HMSTypeInvalid:
+		case xnametypes.HMSTypeInvalid:
 			return hls, base.ErrHMSTypeInvalid
 		// Not supported for this type.
 		default:
@@ -1125,61 +1126,61 @@ func (hw *HWInvByLoc) DecodeLocationInfo(locInfoJSON []byte) error {
 		rfNodeAccelRiserLocationInfo           *rf.NodeAccelRiserLocationInfoRF
 	)
 
-	switch base.ToHMSType(hw.Type) {
+	switch xnametypes.ToHMSType(hw.Type) {
 	// HWInv based on Redfish "Chassis" Type.  Identical structs (for now).
-	case base.Cabinet:
+	case xnametypes.Cabinet:
 		fallthrough
-	case base.Chassis:
+	case xnametypes.Chassis:
 		fallthrough
-	case base.ComputeModule:
+	case xnametypes.ComputeModule:
 		fallthrough
-	case base.RouterModule:
+	case xnametypes.RouterModule:
 		fallthrough
-	case base.NodeEnclosure:
+	case xnametypes.NodeEnclosure:
 		fallthrough
-	case base.HSNBoard:
+	case xnametypes.HSNBoard:
 		fallthrough
-	case base.MgmtSwitch:
+	case xnametypes.MgmtSwitch:
 		fallthrough
-	case base.MgmtHLSwitch:
+	case xnametypes.MgmtHLSwitch:
 		fallthrough
-	case base.CDUMgmtSwitch:
+	case xnametypes.CDUMgmtSwitch:
 		rfChassisLocationInfo = new(rf.ChassisLocationInfoRF)
 		err = json.Unmarshal(locInfoJSON, rfChassisLocationInfo)
 		if err == nil {
 			// Assign struct to appropriate name for type.
-			switch base.ToHMSType(hw.Type) {
-			case base.Cabinet:
+			switch xnametypes.ToHMSType(hw.Type) {
+			case xnametypes.Cabinet:
 				hw.HMSCabinetLocationInfo = rfChassisLocationInfo
 				hw.HWInventoryByLocationType = HWInvByLocCabinet
-			case base.Chassis:
+			case xnametypes.Chassis:
 				hw.HMSChassisLocationInfo = rfChassisLocationInfo
 				hw.HWInventoryByLocationType = HWInvByLocChassis
-			case base.ComputeModule:
+			case xnametypes.ComputeModule:
 				hw.HMSComputeModuleLocationInfo = rfChassisLocationInfo
 				hw.HWInventoryByLocationType = HWInvByLocComputeModule
-			case base.RouterModule:
+			case xnametypes.RouterModule:
 				hw.HMSRouterModuleLocationInfo = rfChassisLocationInfo
 				hw.HWInventoryByLocationType = HWInvByLocRouterModule
-			case base.NodeEnclosure:
+			case xnametypes.NodeEnclosure:
 				hw.HMSNodeEnclosureLocationInfo = rfChassisLocationInfo
 				hw.HWInventoryByLocationType = HWInvByLocNodeEnclosure
-			case base.HSNBoard:
+			case xnametypes.HSNBoard:
 				hw.HMSHSNBoardLocationInfo = rfChassisLocationInfo
 				hw.HWInventoryByLocationType = HWInvByLocHSNBoard
-			case base.MgmtSwitch:
+			case xnametypes.MgmtSwitch:
 				hw.HMSMgmtSwitchLocationInfo = rfChassisLocationInfo
 				hw.HWInventoryByLocationType = HWInvByLocMgmtSwitch
-			case base.MgmtHLSwitch:
+			case xnametypes.MgmtHLSwitch:
 				hw.HMSMgmtHLSwitchLocationInfo = rfChassisLocationInfo
 				hw.HWInventoryByLocationType = HWInvByLocMgmtHLSwitch
-			case base.CDUMgmtSwitch:
+			case xnametypes.CDUMgmtSwitch:
 				hw.HMSCDUMgmtSwitchLocationInfo = rfChassisLocationInfo
 				hw.HWInventoryByLocationType = HWInvByLocCDUMgmtSwitch
 			}
 		}
 	// HWInv based on Redfish "System" Type.
-	case base.Node:
+	case xnametypes.Node:
 		rfSystemLocationInfo = new(rf.SystemLocationInfoRF)
 		err = json.Unmarshal(locInfoJSON, rfSystemLocationInfo)
 		if err == nil {
@@ -1187,7 +1188,7 @@ func (hw *HWInvByLoc) DecodeLocationInfo(locInfoJSON []byte) error {
 			hw.HWInventoryByLocationType = HWInvByLocNode
 		}
 	// HWInv based on "GPU" type
-	case base.NodeAccel:
+	case xnametypes.NodeAccel:
 		rfNodeAccelLocationInfo = new(rf.ProcessorLocationInfoRF)
 		err = json.Unmarshal(locInfoJSON, rfNodeAccelLocationInfo)
 		if err == nil {
@@ -1195,7 +1196,7 @@ func (hw *HWInvByLoc) DecodeLocationInfo(locInfoJSON []byte) error {
 			hw.HWInventoryByLocationType = HWInvByLocNodeAccel
 		}
 	// HWInv based on Redfish "Processor" Type.
-	case base.Processor:
+	case xnametypes.Processor:
 		rfProcessorLocationInfo = new(rf.ProcessorLocationInfoRF)
 		err = json.Unmarshal(locInfoJSON, rfProcessorLocationInfo)
 		if err == nil {
@@ -1203,7 +1204,7 @@ func (hw *HWInvByLoc) DecodeLocationInfo(locInfoJSON []byte) error {
 			hw.HWInventoryByLocationType = HWInvByLocProcessor
 		}
 	// HWInv based on Redfish "Memory" Type.
-	case base.Memory:
+	case xnametypes.Memory:
 		rfMemoryLocationInfo = new(rf.MemoryLocationInfoRF)
 		err = json.Unmarshal(locInfoJSON, rfMemoryLocationInfo)
 		if err == nil {
@@ -1211,7 +1212,7 @@ func (hw *HWInvByLoc) DecodeLocationInfo(locInfoJSON []byte) error {
 			hw.HWInventoryByLocationType = HWInvByLocMemory
 		}
 	// HWInv based on Redfish "Drive" Type.
-	case base.Drive:
+	case xnametypes.Drive:
 		rfDriveLocationInfo = new(rf.DriveLocationInfoRF)
 		err = json.Unmarshal(locInfoJSON, rfDriveLocationInfo)
 		if err == nil {
@@ -1219,7 +1220,7 @@ func (hw *HWInvByLoc) DecodeLocationInfo(locInfoJSON []byte) error {
 			hw.HWInventoryByLocationType = HWInvByLocDrive
 		}
 	// HWInv based on Redfish "HSN NIC" Type.
-	case base.NodeHsnNic:
+	case xnametypes.NodeHsnNic:
 		rfHSNNICLocationInfo = new(rf.NALocationInfoRF)
 		err = json.Unmarshal(locInfoJSON, rfHSNNICLocationInfo)
 		if err == nil {
@@ -1227,7 +1228,7 @@ func (hw *HWInvByLoc) DecodeLocationInfo(locInfoJSON []byte) error {
 			hw.HWInventoryByLocationType = HWInvByLocHSNNIC
 		}
 	// HWInv based on Redfish "PowerDistribution" (aka PDU) Type.
-	case base.CabinetPDU:
+	case xnametypes.CabinetPDU:
 		rfPDULocationInfo = new(rf.PowerDistributionLocationInfo)
 		err = json.Unmarshal(locInfoJSON, rfPDULocationInfo)
 		if err == nil {
@@ -1235,44 +1236,44 @@ func (hw *HWInvByLoc) DecodeLocationInfo(locInfoJSON []byte) error {
 			hw.HWInventoryByLocationType = HWInvByLocPDU
 		}
 	// HWInv based on Redfish "Outlet" (e.g. of a PDU) Type.
-	case base.CabinetPDUOutlet:
+	case xnametypes.CabinetPDUOutlet:
 		fallthrough
-	case base.CabinetPDUPowerConnector:
+	case xnametypes.CabinetPDUPowerConnector:
 		rfOutletLocationInfo = new(rf.OutletLocationInfo)
 		err = json.Unmarshal(locInfoJSON, rfOutletLocationInfo)
 		if err == nil {
 			hw.HMSOutletLocationInfo = rfOutletLocationInfo
 			hw.HWInventoryByLocationType = HWInvByLocOutlet
 		}
-	case base.CMMRectifier:
+	case xnametypes.CMMRectifier:
 		rfCMMRectifierLocationInfo = new(rf.PowerSupplyLocationInfoRF)
 		err = json.Unmarshal(locInfoJSON, rfCMMRectifierLocationInfo)
 		if err == nil {
 			hw.HMSCMMRectifierLocationInfo = rfCMMRectifierLocationInfo
 			hw.HWInventoryByLocationType = HWInvByLocCMMRectifier
 		}
-	case base.NodeEnclosurePowerSupply:
+	case xnametypes.NodeEnclosurePowerSupply:
 		rfNodeEnclosurePowerSupplyLocationInfo = new(rf.PowerSupplyLocationInfoRF)
 		err = json.Unmarshal(locInfoJSON, rfNodeEnclosurePowerSupplyLocationInfo)
 		if err == nil {
 			hw.HMSNodeEnclosurePowerSupplyLocationInfo = rfNodeEnclosurePowerSupplyLocationInfo
 			hw.HWInventoryByLocationType = HWInvByLocNodeEnclosurePowerSupply
 		}
-	case base.NodeAccelRiser:
+	case xnametypes.NodeAccelRiser:
 		rfNodeAccelRiserLocationInfo = new(rf.NodeAccelRiserLocationInfoRF)
 		err = json.Unmarshal(locInfoJSON, rfNodeAccelRiserLocationInfo)
 		if err == nil {
 			hw.HMSNodeAccelRiserLocationInfo = rfNodeAccelRiserLocationInfo
 			hw.HWInventoryByLocationType = HWInvByLocNodeAccelRiser
 		}
-	case base.NodeBMC:
+	case xnametypes.NodeBMC:
 		rfNodeBMCLocationInfo = new(rf.ManagerLocationInfoRF)
 		err = json.Unmarshal(locInfoJSON, rfNodeBMCLocationInfo)
 		if err == nil {
 			hw.HMSNodeBMCLocationInfo = rfNodeBMCLocationInfo
 			hw.HWInventoryByLocationType = HWInvByLocNodeBMC
 		}
-	case base.RouterBMC:
+	case xnametypes.RouterBMC:
 		rfRouterBMCLocationInfo = new(rf.ManagerLocationInfoRF)
 		err = json.Unmarshal(locInfoJSON, rfRouterBMCLocationInfo)
 		if err == nil {
@@ -1280,7 +1281,7 @@ func (hw *HWInvByLoc) DecodeLocationInfo(locInfoJSON []byte) error {
 			hw.HWInventoryByLocationType = HWInvByLocRouterBMC
 		}
 	// No match - not a valid HMSType, always an error
-	case base.HMSTypeInvalid:
+	case xnametypes.HMSTypeInvalid:
 		err = base.ErrHMSTypeInvalid
 	default:
 		err = base.ErrHMSTypeUnsupported
@@ -1301,64 +1302,64 @@ func (hw *HWInvByLoc) EncodeLocationInfo() ([]byte, error) {
 	var err error
 	var locInfoJSON []byte
 
-	switch base.ToHMSType(hw.Type) {
+	switch xnametypes.ToHMSType(hw.Type) {
 	// HWInv based on Redfish "Chassis" Type.
-	case base.Cabinet:
+	case xnametypes.Cabinet:
 		locInfoJSON, err = json.Marshal(hw.HMSCabinetLocationInfo)
-	case base.Chassis:
+	case xnametypes.Chassis:
 		locInfoJSON, err = json.Marshal(hw.HMSChassisLocationInfo)
-	case base.ComputeModule:
+	case xnametypes.ComputeModule:
 		locInfoJSON, err = json.Marshal(hw.HMSComputeModuleLocationInfo)
-	case base.RouterModule:
+	case xnametypes.RouterModule:
 		locInfoJSON, err = json.Marshal(hw.HMSRouterModuleLocationInfo)
-	case base.NodeEnclosure:
+	case xnametypes.NodeEnclosure:
 		locInfoJSON, err = json.Marshal(hw.HMSNodeEnclosureLocationInfo)
-	case base.HSNBoard:
+	case xnametypes.HSNBoard:
 		locInfoJSON, err = json.Marshal(hw.HMSHSNBoardLocationInfo)
-	case base.MgmtSwitch:
+	case xnametypes.MgmtSwitch:
 		locInfoJSON, err = json.Marshal(hw.HMSMgmtSwitchLocationInfo)
-	case base.MgmtHLSwitch:
+	case xnametypes.MgmtHLSwitch:
 		locInfoJSON, err = json.Marshal(hw.HMSMgmtHLSwitchLocationInfo)
-	case base.CDUMgmtSwitch:
+	case xnametypes.CDUMgmtSwitch:
 		locInfoJSON, err = json.Marshal(hw.HMSCDUMgmtSwitchLocationInfo)
 	// HWInv based on Redfish "System" Type.
-	case base.Node:
+	case xnametypes.Node:
 		locInfoJSON, err = json.Marshal(hw.HMSNodeLocationInfo)
 	// HWInv based on "GPU" type
-	case base.NodeAccel:
+	case xnametypes.NodeAccel:
 		locInfoJSON, err = json.Marshal(hw.HMSNodeAccelLocationInfo)
 	// HWInv based on Redfish "Processor" Type.
-	case base.Processor:
+	case xnametypes.Processor:
 		locInfoJSON, err = json.Marshal(hw.HMSProcessorLocationInfo)
 	// HWInv based on Redfish "Memory" Type.
-	case base.Memory:
+	case xnametypes.Memory:
 		locInfoJSON, err = json.Marshal(hw.HMSMemoryLocationInfo)
 	// HWInv based on Redfish "Drive" Type.
-	case base.Drive:
+	case xnametypes.Drive:
 		locInfoJSON, err = json.Marshal(hw.HMSDriveLocationInfo)
 	// HWInv based on Redfish "HSN NIC" Type.
-	case base.NodeHsnNic:
+	case xnametypes.NodeHsnNic:
 		locInfoJSON, err = json.Marshal(hw.HMSHSNNICLocationInfo)
 	// HWInv based on Redfish "PowerDistribution" (aka PDU) Type.
-	case base.CabinetPDU:
+	case xnametypes.CabinetPDU:
 		locInfoJSON, err = json.Marshal(hw.HMSPDULocationInfo)
 	// HWInv based on Redfish "Outlet" (e.g. of a PDU) Type.
-	case base.CabinetPDUOutlet:
+	case xnametypes.CabinetPDUOutlet:
 		fallthrough
-	case base.CabinetPDUPowerConnector:
+	case xnametypes.CabinetPDUPowerConnector:
 		locInfoJSON, err = json.Marshal(hw.HMSOutletLocationInfo)
-	case base.CMMRectifier:
+	case xnametypes.CMMRectifier:
 		locInfoJSON, err = json.Marshal(hw.HMSCMMRectifierLocationInfo)
-	case base.NodeEnclosurePowerSupply:
+	case xnametypes.NodeEnclosurePowerSupply:
 		locInfoJSON, err = json.Marshal(hw.HMSNodeEnclosurePowerSupplyLocationInfo)
-	case base.NodeAccelRiser:
+	case xnametypes.NodeAccelRiser:
 		locInfoJSON, err = json.Marshal(hw.HMSNodeAccelRiserLocationInfo)
-	case base.NodeBMC:
+	case xnametypes.NodeBMC:
 		locInfoJSON, err = json.Marshal(hw.HMSNodeBMCLocationInfo)
-	case base.RouterBMC:
+	case xnametypes.RouterBMC:
 		locInfoJSON, err = json.Marshal(hw.HMSRouterBMCLocationInfo)
 	// No match - not a valid HMS Type, always an error
-	case base.HMSTypeInvalid:
+	case xnametypes.HMSTypeInvalid:
 		err = base.ErrHMSTypeInvalid
 	// Not supported for this type.
 	default:
@@ -1477,61 +1478,61 @@ func (hf *HWInvByFRU) DecodeFRUInfo(fruInfoJSON []byte) error {
 		rfNodeAccelRiserFRUInfo           *rf.NodeAccelRiserFRUInfoRF
 	)
 
-	switch base.ToHMSType(hf.Type) {
+	switch xnametypes.ToHMSType(hf.Type) {
 	// HWInv based on Redfish "Chassis" Type.  Identical structs (for now).
-	case base.Cabinet:
+	case xnametypes.Cabinet:
 		fallthrough
-	case base.Chassis:
+	case xnametypes.Chassis:
 		fallthrough
-	case base.ComputeModule:
+	case xnametypes.ComputeModule:
 		fallthrough
-	case base.RouterModule:
+	case xnametypes.RouterModule:
 		fallthrough
-	case base.NodeEnclosure:
+	case xnametypes.NodeEnclosure:
 		fallthrough
-	case base.HSNBoard:
+	case xnametypes.HSNBoard:
 		fallthrough
-	case base.MgmtSwitch:
+	case xnametypes.MgmtSwitch:
 		fallthrough
-	case base.MgmtHLSwitch:
+	case xnametypes.MgmtHLSwitch:
 		fallthrough
-	case base.CDUMgmtSwitch:
+	case xnametypes.CDUMgmtSwitch:
 		rfChassisFRUInfo = new(rf.ChassisFRUInfoRF)
 		err = json.Unmarshal(fruInfoJSON, rfChassisFRUInfo)
 		if err == nil {
 			// Assign struct to appropriate name for type.
-			switch base.ToHMSType(hf.Type) {
-			case base.Cabinet:
+			switch xnametypes.ToHMSType(hf.Type) {
+			case xnametypes.Cabinet:
 				hf.HMSCabinetFRUInfo = rfChassisFRUInfo
 				hf.HWInventoryByFRUType = HWInvByFRUCabinet
-			case base.Chassis:
+			case xnametypes.Chassis:
 				hf.HMSChassisFRUInfo = rfChassisFRUInfo
 				hf.HWInventoryByFRUType = HWInvByFRUChassis
-			case base.ComputeModule:
+			case xnametypes.ComputeModule:
 				hf.HMSComputeModuleFRUInfo = rfChassisFRUInfo
 				hf.HWInventoryByFRUType = HWInvByFRUComputeModule
-			case base.RouterModule:
+			case xnametypes.RouterModule:
 				hf.HMSRouterModuleFRUInfo = rfChassisFRUInfo
 				hf.HWInventoryByFRUType = HWInvByFRURouterModule
-			case base.NodeEnclosure:
+			case xnametypes.NodeEnclosure:
 				hf.HMSNodeEnclosureFRUInfo = rfChassisFRUInfo
 				hf.HWInventoryByFRUType = HWInvByFRUNodeEnclosure
-			case base.HSNBoard:
+			case xnametypes.HSNBoard:
 				hf.HMSHSNBoardFRUInfo = rfChassisFRUInfo
 				hf.HWInventoryByFRUType = HWInvByFRUHSNBoard
-			case base.MgmtSwitch:
+			case xnametypes.MgmtSwitch:
 				hf.HMSMgmtSwitchFRUInfo = rfChassisFRUInfo
 				hf.HWInventoryByFRUType = HWInvByFRUMgmtSwitch
-			case base.MgmtHLSwitch:
+			case xnametypes.MgmtHLSwitch:
 				hf.HMSMgmtHLSwitchFRUInfo = rfChassisFRUInfo
 				hf.HWInventoryByFRUType = HWInvByFRUMgmtHLSwitch
-			case base.CDUMgmtSwitch:
+			case xnametypes.CDUMgmtSwitch:
 				hf.HMSCDUMgmtSwitchFRUInfo = rfChassisFRUInfo
 				hf.HWInventoryByFRUType = HWInvByFRUCDUMgmtSwitch
 			}
 		}
 	// HWInv based on Redfish "System" Type.
-	case base.Node:
+	case xnametypes.Node:
 		rfSystemFRUInfo = new(rf.SystemFRUInfoRF)
 		err = json.Unmarshal(fruInfoJSON, rfSystemFRUInfo)
 		if err == nil {
@@ -1539,7 +1540,7 @@ func (hf *HWInvByFRU) DecodeFRUInfo(fruInfoJSON []byte) error {
 			hf.HWInventoryByFRUType = HWInvByFRUNode
 		}
 	// HWInv based on "GPU" type
-	case base.NodeAccel:
+	case xnametypes.NodeAccel:
 		rfNodeAccelFRUInfo = new(rf.ProcessorFRUInfoRF)
 		err = json.Unmarshal(fruInfoJSON, rfNodeAccelFRUInfo)
 		if err == nil {
@@ -1547,7 +1548,7 @@ func (hf *HWInvByFRU) DecodeFRUInfo(fruInfoJSON []byte) error {
 			hf.HWInventoryByFRUType = HWInvByFRUNodeAccel
 		}
 	// HWInv based on Redfish "Processor" Type.
-	case base.Processor:
+	case xnametypes.Processor:
 		rfProcessorFRUInfo = new(rf.ProcessorFRUInfoRF)
 		err = json.Unmarshal(fruInfoJSON, rfProcessorFRUInfo)
 		if err == nil {
@@ -1555,7 +1556,7 @@ func (hf *HWInvByFRU) DecodeFRUInfo(fruInfoJSON []byte) error {
 			hf.HWInventoryByFRUType = HWInvByFRUProcessor
 		}
 	// HWInv based on Redfish "Memory" Type.
-	case base.Memory:
+	case xnametypes.Memory:
 		rfMemoryFRUInfo = new(rf.MemoryFRUInfoRF)
 		err = json.Unmarshal(fruInfoJSON, rfMemoryFRUInfo)
 		if err == nil {
@@ -1563,7 +1564,7 @@ func (hf *HWInvByFRU) DecodeFRUInfo(fruInfoJSON []byte) error {
 			hf.HWInventoryByFRUType = HWInvByFRUMemory
 		}
 	// HWInv based on Redfish "Drive" Type.
-	case base.Drive:
+	case xnametypes.Drive:
 		rfDriveFRUInfo = new(rf.DriveFRUInfoRF)
 		err = json.Unmarshal(fruInfoJSON, rfDriveFRUInfo)
 		if err == nil {
@@ -1571,7 +1572,7 @@ func (hf *HWInvByFRU) DecodeFRUInfo(fruInfoJSON []byte) error {
 			hf.HWInventoryByFRUType = HWInvByFRUDrive
 		}
 	// HWInv based on Redfish "Memory" Type.
-	case base.NodeHsnNic:
+	case xnametypes.NodeHsnNic:
 		rfHSNNICFRUInfo = new(rf.NAFRUInfoRF)
 		err = json.Unmarshal(fruInfoJSON, rfHSNNICFRUInfo)
 		if err == nil {
@@ -1579,7 +1580,7 @@ func (hf *HWInvByFRU) DecodeFRUInfo(fruInfoJSON []byte) error {
 			hf.HWInventoryByFRUType = HWInvByFRUHSNNIC
 		}
 	// HWInv based on Redfish "PowerDistribution" Type.
-	case base.CabinetPDU:
+	case xnametypes.CabinetPDU:
 		rfPDUFRUInfo = new(rf.PowerDistributionFRUInfo)
 		err = json.Unmarshal(fruInfoJSON, rfPDUFRUInfo)
 		if err == nil {
@@ -1587,9 +1588,9 @@ func (hf *HWInvByFRU) DecodeFRUInfo(fruInfoJSON []byte) error {
 			hf.HWInventoryByFRUType = HWInvByFRUPDU
 		}
 	// HWInv based on Redfish "Outlet" (e.g. of a PDU) Type.
-	case base.CabinetPDUOutlet:
+	case xnametypes.CabinetPDUOutlet:
 		fallthrough
-	case base.CabinetPDUPowerConnector:
+	case xnametypes.CabinetPDUPowerConnector:
 		rfOutletFRUInfo = new(rf.OutletFRUInfo)
 		err = json.Unmarshal(fruInfoJSON, rfOutletFRUInfo)
 		if err == nil {
@@ -1597,7 +1598,7 @@ func (hf *HWInvByFRU) DecodeFRUInfo(fruInfoJSON []byte) error {
 			hf.HWInventoryByFRUType = HWInvByFRUOutlet
 		}
 	// HWInv based on Redfish "PowerSupply" Type.
-	case base.CMMRectifier:
+	case xnametypes.CMMRectifier:
 		rfCMMRectifierFRUInfo = new(rf.PowerSupplyFRUInfoRF)
 		err = json.Unmarshal(fruInfoJSON, rfCMMRectifierFRUInfo)
 		if err == nil {
@@ -1605,7 +1606,7 @@ func (hf *HWInvByFRU) DecodeFRUInfo(fruInfoJSON []byte) error {
 			hf.HWInventoryByFRUType = HWInvByFRUCMMRectifier
 		}
 	// HWInv based on Redfish "PowerSupply" Type.
-	case base.NodeEnclosurePowerSupply:
+	case xnametypes.NodeEnclosurePowerSupply:
 		rfNodeEnclosurePowerSupplyFRUInfo = new(rf.PowerSupplyFRUInfoRF)
 		err = json.Unmarshal(fruInfoJSON, rfNodeEnclosurePowerSupplyFRUInfo)
 		if err == nil {
@@ -1613,7 +1614,7 @@ func (hf *HWInvByFRU) DecodeFRUInfo(fruInfoJSON []byte) error {
 			hf.HWInventoryByFRUType = HWInvByFRUNodeEnclosurePowerSupply
 		}
 	// HWInv based on Redfish "NodeAccelRiser" Type.
-	case base.NodeAccelRiser:
+	case xnametypes.NodeAccelRiser:
 		rfNodeAccelRiserFRUInfo = new(rf.NodeAccelRiserFRUInfoRF)
 		err = json.Unmarshal(fruInfoJSON, rfNodeAccelRiserFRUInfo)
 		if err == nil {
@@ -1621,7 +1622,7 @@ func (hf *HWInvByFRU) DecodeFRUInfo(fruInfoJSON []byte) error {
 			hf.HWInventoryByFRUType = HWInvByFRUNodeAccelRiser
 		}
 	// HWInv based on Redfish "Manager" Type.
-	case base.NodeBMC:
+	case xnametypes.NodeBMC:
 		rfNodeBMCFRUInfo = new(rf.ManagerFRUInfoRF)
 		err = json.Unmarshal(fruInfoJSON, rfNodeBMCFRUInfo)
 		if err == nil {
@@ -1629,7 +1630,7 @@ func (hf *HWInvByFRU) DecodeFRUInfo(fruInfoJSON []byte) error {
 			hf.HWInventoryByFRUType = HWInvByFRUNodeBMC
 		}
 	// HWInv based on Redfish "Manager" Type.
-	case base.RouterBMC:
+	case xnametypes.RouterBMC:
 		rfRouterBMCFRUInfo = new(rf.ManagerFRUInfoRF)
 		err = json.Unmarshal(fruInfoJSON, rfRouterBMCFRUInfo)
 		if err == nil {
@@ -1637,7 +1638,7 @@ func (hf *HWInvByFRU) DecodeFRUInfo(fruInfoJSON []byte) error {
 			hf.HWInventoryByFRUType = HWInvByFRURouterBMC
 		}
 	// No match - not a valid HMSType, always an error
-	case base.HMSTypeInvalid:
+	case xnametypes.HMSTypeInvalid:
 		err = base.ErrHMSTypeInvalid
 	default:
 		err = base.ErrHMSTypeUnsupported
@@ -1658,69 +1659,69 @@ func (hf *HWInvByFRU) EncodeFRUInfo() ([]byte, error) {
 	var err error
 	var fruInfoJSON []byte
 
-	switch base.ToHMSType(hf.Type) {
+	switch xnametypes.ToHMSType(hf.Type) {
 	// HWInv based on Redfish "Chassis" Type.
-	case base.Cabinet:
+	case xnametypes.Cabinet:
 		fruInfoJSON, err = json.Marshal(hf.HMSCabinetFRUInfo)
-	case base.Chassis:
+	case xnametypes.Chassis:
 		fruInfoJSON, err = json.Marshal(hf.HMSChassisFRUInfo)
-	case base.ComputeModule:
+	case xnametypes.ComputeModule:
 		fruInfoJSON, err = json.Marshal(hf.HMSComputeModuleFRUInfo)
-	case base.RouterModule:
+	case xnametypes.RouterModule:
 		fruInfoJSON, err = json.Marshal(hf.HMSRouterModuleFRUInfo)
-	case base.NodeEnclosure:
+	case xnametypes.NodeEnclosure:
 		fruInfoJSON, err = json.Marshal(hf.HMSNodeEnclosureFRUInfo)
-	case base.HSNBoard:
+	case xnametypes.HSNBoard:
 		fruInfoJSON, err = json.Marshal(hf.HMSHSNBoardFRUInfo)
-	case base.MgmtSwitch:
+	case xnametypes.MgmtSwitch:
 		fruInfoJSON, err = json.Marshal(hf.HMSMgmtSwitchFRUInfo)
-	case base.MgmtHLSwitch:
+	case xnametypes.MgmtHLSwitch:
 		fruInfoJSON, err = json.Marshal(hf.HMSMgmtHLSwitchFRUInfo)
-	case base.CDUMgmtSwitch:
+	case xnametypes.CDUMgmtSwitch:
 		fruInfoJSON, err = json.Marshal(hf.HMSCDUMgmtSwitchFRUInfo)
 	// HWInv based on Redfish "System" Type.
-	case base.Node:
+	case xnametypes.Node:
 		fruInfoJSON, err = json.Marshal(hf.HMSNodeFRUInfo)
 	// HWInv based on "GPU" type
-	case base.NodeAccel:
+	case xnametypes.NodeAccel:
 		fruInfoJSON, err = json.Marshal(hf.HMSNodeAccelFRUInfo)
 	// HWInv based on Redfish "Processor" Type.
-	case base.Processor:
+	case xnametypes.Processor:
 		fruInfoJSON, err = json.Marshal(hf.HMSProcessorFRUInfo)
 	// HWInv based on Redfish "Memory" Type.
-	case base.Memory:
+	case xnametypes.Memory:
 		fruInfoJSON, err = json.Marshal(hf.HMSMemoryFRUInfo)
 	// HWInv based on Redfish "Processor" Type.
-	case base.Drive:
+	case xnametypes.Drive:
 		fruInfoJSON, err = json.Marshal(hf.HMSDriveFRUInfo)
 	// HWInv based on Redfish "HSN NIC" Type.
-	case base.NodeHsnNic:
+	case xnametypes.NodeHsnNic:
 		fruInfoJSON, err = json.Marshal(hf.HMSHSNNICFRUInfo)
 	// HWInv based on Redfish "PowerDistribution" (aka PDU) Type.
-	case base.CabinetPDU:
+	case xnametypes.CabinetPDU:
 		fruInfoJSON, err = json.Marshal(hf.HMSPDUFRUInfo)
 	// HWInv based on Redfish "Outlet" (e.g. of a PDU) Type.
-	case base.CabinetPDUOutlet:
+	case xnametypes.CabinetPDUOutlet:
 		fallthrough
-	case base.CabinetPDUPowerConnector:
+	case xnametypes.CabinetPDUPowerConnector:
 		fruInfoJSON, err = json.Marshal(hf.HMSOutletFRUInfo)
 	// HWInv based on Redfish "PowerSupply" Type.
-	case base.CMMRectifier:
+	case xnametypes.CMMRectifier:
 		fruInfoJSON, err = json.Marshal(hf.HMSCMMRectifierFRUInfo)
 	// HWInv based on Redfish "PowerSupply" Type.
-	case base.NodeEnclosurePowerSupply:
+	case xnametypes.NodeEnclosurePowerSupply:
 		fruInfoJSON, err = json.Marshal(hf.HMSNodeEnclosurePowerSupplyFRUInfo)
 	// HWInv based on Redfish "NodeAccelRiser" Type.
-	case base.NodeAccelRiser:
+	case xnametypes.NodeAccelRiser:
 		fruInfoJSON, err = json.Marshal(hf.HMSNodeAccelRiserFRUInfo)
 	// HWInv based on Redfish "Manager" Type.
-	case base.NodeBMC:
+	case xnametypes.NodeBMC:
 		fruInfoJSON, err = json.Marshal(hf.HMSNodeBMCFRUInfo)
 	// HWInv based on Redfish "Manager" Type.
-	case base.RouterBMC:
+	case xnametypes.RouterBMC:
 		fruInfoJSON, err = json.Marshal(hf.HMSRouterBMCFRUInfo)
 	// No match - not a valid HMS Type, always an error
-	case base.HMSTypeInvalid:
+	case xnametypes.HMSTypeInvalid:
 		err = base.ErrHMSTypeInvalid
 	// Not supported for this type.
 	default:

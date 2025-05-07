@@ -435,6 +435,8 @@ type ComputerSystem struct {
 	Storage            ResourceID `json:"Storage"`
 
 	Links ComputerSystemLinks `json:"Links"`
+
+	OEM	*ComputerSystemOEM `json:"Oem,omitempty"`
 }
 
 // Redfish ComputerSystem sub-struct - Actions
@@ -455,6 +457,11 @@ type ComputerSystemLinks struct {
 	Chassis   []ResourceID `json:"Chassis"`
 	ManagedBy []ResourceID `json:"ManagedBy"`
 	PoweredBy []ResourceID `json:"PoweredBy"`
+}
+
+// Redfish ComputerSystem sub-struct - OEM
+type ComputerSystemOEM struct {
+	InsydeNcsi *ComputerSystemOemInsyde `json:"InsydeNcsi,omitempty"`
 }
 
 // Redfish ProcessorSummary struct - Sub-struct of ComputerSystem

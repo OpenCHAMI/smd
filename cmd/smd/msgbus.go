@@ -28,11 +28,10 @@
 package main
 
 import (
+	base "github.com/Cray-HPE/hms-base/v2"
+	msgbus "github.com/Cray-HPE/hms-msgbus"
 	"strconv"
 	"strings"
-
-	base "github.com/Cray-HPE/hms-base"
-	msgbus "github.com/Cray-HPE/hms-msgbus"
 )
 
 const MSG_BUS_BUILD = true

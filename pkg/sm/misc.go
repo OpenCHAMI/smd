@@ -27,7 +27,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	base "github.com/Cray-HPE/hms-base"
+	"github.com/Cray-HPE/hms-xname/xnametypes"
 )
 
 ////////////////////////////////////////////////////////////////////////////
@@ -128,7 +128,7 @@ func NewStateRFPollJob(xname string, delay, poll, lifetime, keepAlive int) (*Job
 
 	// SRFP Job specific fields
 	data := new(SrfpJobData)
-	data.CompId = base.VerifyNormalizeCompID(xname)
+	data.CompId = xnametypes.VerifyNormalizeCompID(xname)
 	data.Delay = delay
 	data.Poll = poll
 	job.Data = data

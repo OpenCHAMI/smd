@@ -1,6 +1,6 @@
 // MIT License
 //
-// (C) Copyright [2019-2023] Hewlett Packard Enterprise Development LP
+// (C) Copyright [2019-2024] Hewlett Packard Enterprise Development LP
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
@@ -24,10 +24,10 @@ package hmsds
 
 import (
 	"fmt"
-	"strings"
-
-	base "github.com/Cray-HPE/hms-base"
+	base "github.com/Cray-HPE/hms-base/v2"
+	"github.com/Cray-HPE/hms-xname/xnametypes"
 	"github.com/OpenCHAMI/smd/v2/pkg/sm"
+	"strings"
 )
 
 // Matches generic query sources in external API, but with real table names,
@@ -567,7 +567,7 @@ func buildCompEPQuery(baseQuery string, f *CompEPFilter) (string, []interface{},
 	if err != nil {
 		return baseQuery, q.args, ErrHMSDSArgBadRedfishType
 	}
-	err = q.doQueryArg("type", f.Type, base.VerifyNormalizeType)
+	err = q.doQueryArg("type", f.Type, xnametypes.VerifyNormalizeType)
 	if err != nil {
 		return baseQuery, q.args, ErrHMSDSArgBadType
 	}
@@ -594,7 +594,7 @@ func buildRedfishEPQuery(baseQuery string, f *RedfishEPFilter) (string, []interf
 	if err := q.doQueryArg("uuid", f.UUID, nil); err != nil {
 		return baseQuery, q.args, ErrHMSDSArgBadArg
 	}
-	err := q.doQueryArg("type", f.Type, base.VerifyNormalizeType)
+	err := q.doQueryArg("type", f.Type, xnametypes.VerifyNormalizeType)
 	if err != nil {
 		return baseQuery, q.args, ErrHMSDSArgBadType
 	}
@@ -671,7 +671,7 @@ func (q *preparedQuery) setCompUpdateArgs(f *ComponentFilter) error {
 	if q == nil {
 		return ErrHMSDSArgNil
 	}
-	err := q.doUpdateArg("type", f.Type, nil, base.VerifyNormalizeType, false)
+	err := q.doUpdateArg("type", f.Type, nil, xnametypes.VerifyNormalizeType, false)
 	if err != nil {
 		return ErrHMSDSArgBadType
 	}
@@ -738,7 +738,7 @@ func (q *preparedQuery) setCompWhereQuery(f *ComponentFilter, cont bool) error {
 	if err != nil {
 		return ErrHMSDSArgBadID
 	}
-	err = q.doQueryArg("type", f.Type, base.VerifyNormalizeType)
+	err = q.doQueryArg("type", f.Type, xnametypes.VerifyNormalizeType)
 	if err != nil {
 		return ErrHMSDSArgBadType
 	}
@@ -769,10 +769,21 @@ func (q *preparedQuery) setCompWhereQuery(f *ComponentFilter, cont bool) error {
 	if err != nil {
 		return ErrHMSDSArgNoMatch
 	}
+	// Allow role OR subRole as a subclause without ORing the whole query
+	err = q.doQueryArgsWithOR(
+		"role", "subrole",
+		f.orRole, f.orSubRole,
+		base.VerifyNormalizeRole,
+		base.VerifyNormalizeSubRole)
+	if err != nil {
+		return ErrHMSDSArgBadRole
+	}
+	// Addtional roles to be added as normal AND options
 	err = q.doQueryArg("role", f.Role, base.VerifyNormalizeRole)
 	if err != nil {
 		return ErrHMSDSArgBadRole
 	}
+	// Ditto subrole
 	err = q.doQueryArg("subrole", f.SubRole, base.VerifyNormalizeSubRole)
 	if err != nil {
 		return ErrHMSDSArgBadSubRole
@@ -889,7 +900,7 @@ func buildBulkCompUpdateQuery(baseQuery string, ids []string) (string, []interfa
 		} else {
 			filterQuery += " WHERE (id = ?"
 		}
-		args = append(args, base.NormalizeHMSCompID(ids[i]))
+		args = append(args, xnametypes.NormalizeHMSCompID(ids[i]))
 	}
 	filterQuery += ");"
 	return filterQuery, args, nil
@@ -1300,7 +1311,7 @@ func nidStrTransform(checkStr string) string {
 // If xname is valid, returns normalized xname, otherwise returns empty
 // string.
 func validXNameFilter(xname string) string {
-	return base.VerifyNormalizeCompID(xname)
+	return xnametypes.VerifyNormalizeCompID(xname)
 }
 
 // If group or partion name is valid, return it normalized, else return

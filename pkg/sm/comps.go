@@ -24,7 +24,8 @@ package sm
 
 import (
 	"fmt"
-	base "github.com/Cray-HPE/hms-base"
+	base "github.com/Cray-HPE/hms-base/v2"
+	"github.com/Cray-HPE/hms-xname/xnametypes"
 )
 
 // The payload for a Components POST
@@ -45,12 +46,12 @@ func NewCompPost(comps []base.Component, force bool) (*ComponentsPost, error) {
 	cp := new(ComponentsPost)
 	for _, comp := range comps {
 		c := new(base.Component)
-		c.ID = base.VerifyNormalizeCompID(comp.ID)
+		c.ID = xnametypes.VerifyNormalizeCompID(comp.ID)
 		if len(c.ID) == 0 {
 			err := fmt.Errorf("xname ID '%s' is invalid", comp.ID)
 			return nil, err
 		}
-		c.Type = base.GetHMSTypeString(c.ID)
+		c.Type = xnametypes.GetHMSTypeString(c.ID)
 		c.State = base.VerifyNormalizeState(comp.State)
 		if len(c.State) == 0 {
 			err := fmt.Errorf("state '%s' is invalid", comp.State)
@@ -108,14 +109,14 @@ func NewCompPost(comps []base.Component, force bool) (*ComponentsPost, error) {
 
 func (cp *ComponentsPost) VerifyNormalize() error {
 	for _, comp := range cp.Components {
-		normID := base.VerifyNormalizeCompID(comp.ID)
+		normID := xnametypes.VerifyNormalizeCompID(comp.ID)
 		if len(normID) == 0 {
 			err := fmt.Errorf("xname ID '%s' is invalid", comp.ID)
 			return err
 		} else {
 			comp.ID = normID
 		}
-		comp.Type = base.GetHMSTypeString(comp.ID)
+		comp.Type = xnametypes.GetHMSTypeString(comp.ID)
 		normState := base.VerifyNormalizeState(comp.State)
 		if len(normState) == 0 {
 			err := fmt.Errorf("state '%s' is invalid", comp.State)
@@ -184,12 +185,12 @@ func (cp *ComponentsPost) VerifyNormalize() error {
 func NewCompPut(comp base.Component, force bool) (*ComponentPut, error) {
 	cp := new(ComponentPut)
 	c := &cp.Component
-	c.ID = base.VerifyNormalizeCompID(comp.ID)
+	c.ID = xnametypes.VerifyNormalizeCompID(comp.ID)
 	if len(c.ID) == 0 {
 		err := fmt.Errorf("xname ID '%s' is invalid", comp.ID)
 		return nil, err
 	}
-	c.Type = base.GetHMSTypeString(c.ID)
+	c.Type = xnametypes.GetHMSTypeString(c.ID)
 	c.State = base.VerifyNormalizeState(comp.State)
 	if len(c.State) == 0 {
 		err := fmt.Errorf("state '%s' is invalid", comp.State)
@@ -245,14 +246,14 @@ func NewCompPut(comp base.Component, force bool) (*ComponentPut, error) {
 
 func (cp *ComponentPut) VerifyNormalize() error {
 	c := &cp.Component
-	normID := base.VerifyNormalizeCompID(c.ID)
+	normID := xnametypes.VerifyNormalizeCompID(c.ID)
 	if len(normID) == 0 {
 		err := fmt.Errorf("xname ID '%s' is invalid", c.ID)
 		return err
 	} else {
 		c.ID = normID
 	}
-	c.Type = base.GetHMSTypeString(c.ID)
+	c.Type = xnametypes.GetHMSTypeString(c.ID)
 	normState := base.VerifyNormalizeState(c.State)
 	if len(normState) == 0 {
 		err := fmt.Errorf("state '%s' is invalid", c.State)

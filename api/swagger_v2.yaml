@@ -1423,6 +1423,7 @@ paths:
             - MgmtHLSwitch
             - CDUMgmtSwitch
             - Node
+            - VirtualNode
             - Processor
             - Drive
             - StorageGroup
@@ -11869,6 +11870,7 @@ definitions:
       - MgmtHLSwitch
       - CDUMgmtSwitch
       - Node
+      - VirtualNode
       - Processor
       - Drive
       - StorageGroup
@@ -12157,6 +12159,7 @@ parameters:
       - MgmtHLSwitch
       - CDUMgmtSwitch
       - Node
+      - VirtualNode
       - Processor
       - Drive
       - StorageGroup
@@ -12272,7 +12275,7 @@ parameters:
       - X86
       - ARM
       - Other
-      - Unknown
+      - UNKNOWN
   compClassParam:
     name: class
     in: query

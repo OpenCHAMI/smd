@@ -24,7 +24,7 @@ package sm
 
 import (
 	"fmt"
-	base "github.com/Cray-HPE/hms-base"
+	"github.com/Cray-HPE/hms-xname/xnametypes"
 )
 
 // An entry mapping an xname to a power supplies
@@ -36,7 +36,7 @@ type PowerMap struct {
 // This wraps basic PowerMap data with the structure used for query responses.
 func NewPowerMap(id string, poweredBy []string) (*PowerMap, error) {
 	m := new(PowerMap)
-	idNorm := base.VerifyNormalizeCompID(id)
+	idNorm := xnametypes.VerifyNormalizeCompID(id)
 	if idNorm == "" {
 		err := fmt.Errorf("xname ID '%s' is invalid", id)
 		return nil, err
@@ -44,7 +44,7 @@ func NewPowerMap(id string, poweredBy []string) (*PowerMap, error) {
 	m.ID = idNorm
 	if len(poweredBy) > 0 {
 		for _, pwrId := range poweredBy {
-			normPwrID := base.VerifyNormalizeCompID(pwrId)
+			normPwrID := xnametypes.VerifyNormalizeCompID(pwrId)
 			if normPwrID == "" {
 				err := fmt.Errorf("Power supply xname ID '%s' is invalid", pwrId)
 				return nil, err

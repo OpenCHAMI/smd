@@ -82,6 +82,7 @@ func RfDefaultClient() *hms_certs.HTTPClientPair {
 	var cerr error
 	if httpRFClient == nil {
 		uri := os.Getenv("SMD_CA_URI")
+		// TODO: Why CreateHTTPClientPair() instead of CreateRetryableHTTPClientPair()??
 		httpRFClient, cerr = hms_certs.CreateHTTPClientPair(uri, httpClientTimeout)
 		if cerr != nil {
 			errlog.Printf("Can't create TLS cert-enabled HTTP transport, reverting to less secure transport.")

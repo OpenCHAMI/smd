@@ -1,6 +1,6 @@
 // MIT License
 //
-// (C) Copyright [2019-2021] Hewlett Packard Enterprise Development LP
+// (C) Copyright [2019-2021,2024] Hewlett Packard Enterprise Development LP
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
@@ -529,4 +529,40 @@ var EventHPEiLOServerPoweredOff = `{
 	],
 	"Name": "Events"
 }
+`
+
+////////////////////////////////////////////////////////////////////////////
+// Event templates - Foxconn Paradise OpenBmc firmware
+////////////////////////////////////////////////////////////////////////////
+
+var EventFoxconnServerPoweredOn = `{
+	"@odata.type": "#Event.v1_7_0.Event",
+	"Context": "%XNAME%:whatever",
+	"Id": "2",
+	"Name": "Event Log",
+	"Events": [
+	  {
+		"EventTimeStamp": "2024-05-20T17:57:23+00:00",
+		"Message": "Host system DC power is on.",
+		"MessageId": "Alert.1.0.0.DCPowerOn",
+		"MessageSeverity": "Critical"
+	  }
+	]
+  }
+`
+
+var EventFoxconnServerPoweredOff = `{
+	"@odata.type": "#Event.v1_7_0.Event",
+	"Context": "%XNAME%:whatever",
+	"Id": "2",
+	"Name": "Event Log",
+	"Events": [
+	  {
+		"EventTimeStamp": "2024-05-20T17:57:23+00:00",
+		"Message": "Host system DC power is off.",
+		"MessageId": "Alert.1.0.0.DCPowerOff",
+		"MessageSeverity": "Critical"
+	  }
+	]
+  }
 `

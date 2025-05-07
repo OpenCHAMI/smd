@@ -1,6 +1,6 @@
 // MIT License
 //
-// (C) Copyright [2019-2022] Hewlett Packard Enterprise Development LP
+// (C) Copyright [2019-2022,2024-2025] Hewlett Packard Enterprise Development LP
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
@@ -26,13 +26,15 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/go-retryablehttp"
-	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	base "github.com/Cray-HPE/hms-base"
 	"time"
+
+	base "github.com/Cray-HPE/hms-base/v2"
+	"github.com/Cray-HPE/hms-xname/xnametypes"
+	"github.com/hashicorp/go-retryablehttp"
+	"github.com/sirupsen/logrus"
 )
 
 const DefaultSlsUrl string = "http://cray-sls/"
@@ -54,7 +56,7 @@ type NodeHardware struct {
 	Xname           string       `json:"Xname"`
 	Type            string       `json:"Type"`
 	Class           string       `json:"Class"`
-	TypeString      base.HMSType `json:"TypeString"`
+	TypeString      xnametypes.HMSType `json:"TypeString"`
 	ExtraProperties ComptypeNode `json:"ExtraProperties"`
 }
 
@@ -190,12 +192,12 @@ func (sls *SLS) doRequest(req *http.Request) ([]byte, error) {
 	newRequest.Header.Set("Content-Type", "application/json")
 
 	rsp, err := sls.Client.Do(newRequest)
+	defer base.DrainAndCloseResponseBody(rsp)
 	if err != nil {
 		return nil, err
 	}
 
 	// Read the response
-	defer rsp.Body.Close()
 	body, err := ioutil.ReadAll(rsp.Body)
 	if err != nil {
 		return nil, err

@@ -29,7 +29,8 @@ package sm
 import (
 	"strings"
 
-	base "github.com/Cray-HPE/hms-base"
+	base "github.com/Cray-HPE/hms-base/v2"
+	"github.com/Cray-HPE/hms-xname/xnametypes"
 )
 
 //////////////////////////////
@@ -198,7 +199,7 @@ func (cl *CompLockV2Filter) VerifyNormalize() error {
 }
 
 func (clk *CompLockV2Key) VerifyNormalize() error {
-	clk.ID = base.VerifyNormalizeCompID(clk.ID)
+	clk.ID = xnametypes.VerifyNormalizeCompID(clk.ID)
 	if clk.ID == "" {
 		return base.ErrHMSTypeInvalid
 	}

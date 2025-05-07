@@ -33,7 +33,8 @@ import (
 	"testing"
 	"time"
 
-	base "github.com/Cray-HPE/hms-base"
+	base "github.com/Cray-HPE/hms-base/v2"
+	"github.com/Cray-HPE/hms-xname/xnametypes"
 	rf "github.com/OpenCHAMI/smd/v2/pkg/redfish"
 	stest "github.com/OpenCHAMI/smd/v2/pkg/sharedtest"
 	"github.com/OpenCHAMI/smd/v2/pkg/sm"
@@ -587,7 +588,7 @@ func TestPgUpsertComponents(t *testing.T) {
 	}{{
 		comps: []*base.Component{&base.Component{
 			ID:    "x0c0s0b0n0",
-			Type:  base.Node.String(),
+			Type:  xnametypes.Node.String(),
 			State: base.StateEmpty.String(),
 			Flag:  base.FlagOK.String(),
 		}},
@@ -618,7 +619,7 @@ func TestPgUpsertComponents(t *testing.T) {
 	}, {
 		comps: []*base.Component{&base.Component{
 			ID:    "x0c0s0b0n0",
-			Type:  base.Node.String(),
+			Type:  xnametypes.Node.String(),
 			State: base.StateEmpty.String(),
 			Flag:  base.FlagOK.String(),
 		}},
@@ -638,7 +639,7 @@ func TestPgUpsertComponents(t *testing.T) {
 	}, {
 		comps: []*base.Component{&base.Component{
 			ID:    "x0c0s0b0n0",
-			Type:  base.Node.String(),
+			Type:  xnametypes.Node.String(),
 			State: base.StateEmpty.String(),
 			Flag:  base.FlagOK.String(),
 		}},
@@ -667,13 +668,13 @@ func TestPgUpsertComponents(t *testing.T) {
 		comps: []*base.Component{
 			&base.Component{
 				ID:    "x0c0s0b0n0",
-				Type:  base.Node.String(),
+				Type:  xnametypes.Node.String(),
 				State: base.StateEmpty.String(),
 				Flag:  base.FlagOK.String(),
 			},
 			&base.Component{
 				ID:    "x0c0s0b0n1",
-				Type:  base.Node.String(),
+				Type:  xnametypes.Node.String(),
 				State: base.StateEmpty.String(),
 				Flag:  base.FlagOK.String(),
 			},
@@ -716,7 +717,7 @@ func TestPgUpsertComponents(t *testing.T) {
 		comps: []*base.Component{
 			&base.Component{
 				ID:    "x0c0s0b0n0",
-				Type:  base.Node.String(),
+				Type:  xnametypes.Node.String(),
 				State: base.StateEmpty.String(),
 				Flag:  base.FlagOK.String(),
 			},
@@ -736,7 +737,7 @@ func TestPgUpsertComponents(t *testing.T) {
 		comps: []*base.Component{
 			&base.Component{
 				ID:    "x0c0s0b0n0",
-				Type:  base.Node.String(),
+				Type:  xnametypes.Node.String(),
 				State: base.StateEmpty.String(),
 				Flag:  base.FlagOK.String(),
 			},
@@ -1656,7 +1657,7 @@ func TestPgGetHWInvByLocQueryFilter(t *testing.T) {
 	preQuery2, preQuery2Args, _ := sq.Select(preQueryCols...).
 		From(hwInvLocTable + " " + hwInvLocAlias).
 		Where(sq.Expr("("+hwInvLocAlias+"."+hwInvLocIdCol+" SIMILAR TO ?)", node1.ID+"([[:alpha:]][[:alnum:]]*)?")).
-		Where(sq.Eq{hwInvLocAlias + "." + hwInvLocTypeCol: []string{base.Processor.String()}}).ToSql()
+		Where(sq.Eq{hwInvLocAlias + "." + hwInvLocTypeCol: []string{xnametypes.Processor.String()}}).ToSql()
 	preQuery2Args = append(preQuery2Args, ")([[:alpha:]][[:alnum:]]*)?")
 	query2, _, _ := sqq.Select(columns...).
 		From(hwInvTable+" "+hwInvAlias).
@@ -1673,7 +1674,7 @@ func TestPgGetHWInvByLocQueryFilter(t *testing.T) {
 
 	query4, _, _ := sqq.Select(columns...).
 		From(hwInvTable + " " + hwInvAlias).
-		Where(sq.Eq{hwInvAlias + "." + hwInvTypeCol: []string{base.Processor.String()}}).ToSql()
+		Where(sq.Eq{hwInvAlias + "." + hwInvTypeCol: []string{xnametypes.Processor.String()}}).ToSql()
 
 	tests := []struct {
 		f_opts          []HWInvLocFiltFunc
@@ -1695,13 +1696,13 @@ func TestPgGetHWInvByLocQueryFilter(t *testing.T) {
 		expectedHwLocs:  []*sm.HWInvByLoc{&node1, &proc1},
 		expectedErr:     nil,
 	}, {
-		f_opts: []HWInvLocFiltFunc{HWInvLoc_ID(node1.ID), HWInvLoc_Type(base.Processor.String()), HWInvLoc_Child},
+		f_opts: []HWInvLocFiltFunc{HWInvLoc_ID(node1.ID), HWInvLoc_Type(xnametypes.Processor.String()), HWInvLoc_Child},
 		dbRows: [][]driver.Value{
 			[]driver.Value{proc1.ID, proc1.Type, proc1.Ordinal, proc1.Status, proc1LocInfo, proc1.PopulatedFRU.FRUID, proc1.PopulatedFRU.Type, proc1.PopulatedFRU.Subtype, proc1FruInfo},
 		},
 		dbError:         nil,
 		expectedPrepare: regexp.QuoteMeta(query2),
-		expectedArgs:    []driver.Value{node1.ID + "([[:alpha:]][[:alnum:]]*)?", base.Processor.String(), ")([[:alpha:]][[:alnum:]]*)?"},
+		expectedArgs:    []driver.Value{node1.ID + "([[:alpha:]][[:alnum:]]*)?", xnametypes.Processor.String(), ")([[:alpha:]][[:alnum:]]*)?"},
 		expectedHwLocs:  []*sm.HWInvByLoc{&proc1},
 		expectedErr:     nil,
 	}, {
@@ -1724,11 +1725,11 @@ func TestPgGetHWInvByLocQueryFilter(t *testing.T) {
 		expectedHwLocs:  nil,
 		expectedErr:     ErrHMSDSArgBadRedfishType,
 	}, {
-		f_opts:          []HWInvLocFiltFunc{HWInvLoc_Type(base.Processor.String())},
+		f_opts:          []HWInvLocFiltFunc{HWInvLoc_Type(xnametypes.Processor.String())},
 		dbRows:          nil,
 		dbError:         sql.ErrNoRows,
 		expectedPrepare: regexp.QuoteMeta(query4),
-		expectedArgs:    []driver.Value{base.Processor.String()},
+		expectedArgs:    []driver.Value{xnametypes.Processor.String()},
 		expectedHwLocs:  nil,
 		expectedErr:     nil,
 	}}
@@ -1785,7 +1786,7 @@ func TestPgGetHWInvByLocFilter(t *testing.T) {
 	query2, _, _ := sqq.Select(columns...).
 		From(hwInvTable + " " + hwInvAlias).
 		Where(sq.Eq{hwInvAlias + "." + hwInvIdCol: []string{node1.ID}}).
-		Where(sq.Eq{hwInvAlias + "." + hwInvTypeCol: []string{base.Node.String()}}).
+		Where(sq.Eq{hwInvAlias + "." + hwInvTypeCol: []string{xnametypes.Node.String()}}).
 		Where(sq.Expr("("+hwInvAlias+"."+hwInvFruInfoCol+" ->> 'Manufacturer' ILIKE ?)", "%cray%")).
 		Where(sq.Eq{hwInvAlias + "." + hwInvFruInfoCol + " ->> 'PartNumber'": []string{node1.PopulatedFRU.HMSNodeFRUInfo.PartNumber}}).
 		Where(sq.Eq{hwInvAlias + "." + hwInvFruInfoCol + " ->> 'SerialNumber'": []string{node1.PopulatedFRU.HMSNodeFRUInfo.SerialNumber}}).
@@ -1806,7 +1807,7 @@ func TestPgGetHWInvByLocFilter(t *testing.T) {
 		},
 		dbError:         nil,
 		expectedPrepare: regexp.QuoteMeta(query2),
-		expectedArgs:    []driver.Value{node1.ID, base.Node.String(), "%cray%", node1.PopulatedFRU.HMSNodeFRUInfo.PartNumber, node1.PopulatedFRU.HMSNodeFRUInfo.SerialNumber, node1.PopulatedFRU.FRUID},
+		expectedArgs:    []driver.Value{node1.ID, xnametypes.Node.String(), "%cray%", node1.PopulatedFRU.HMSNodeFRUInfo.PartNumber, node1.PopulatedFRU.HMSNodeFRUInfo.SerialNumber, node1.PopulatedFRU.FRUID},
 		expectedHwLocs:  []*sm.HWInvByLoc{&node1},
 		expectedErr:     nil,
 	}, {
@@ -1878,7 +1879,7 @@ func TestPgGetHWInvByFRUFilter(t *testing.T) {
 
 	query2, _, _ := sqq.Select(columns...).
 		From(hwInvFruTable + " " + hwInvFruAlias).
-		Where(sq.Eq{hwInvFruAlias + "." + hwInvFruTblTypeCol: []string{base.Node.String()}}).
+		Where(sq.Eq{hwInvFruAlias + "." + hwInvFruTblTypeCol: []string{xnametypes.Node.String()}}).
 		Where(sq.Expr("("+hwInvFruAlias+"."+hwInvFruTblInfoCol+" ->> 'Manufacturer' ILIKE ?)", "%cray%")).
 		Where(sq.Eq{hwInvFruAlias + "." + hwInvFruTblInfoCol + " ->> 'PartNumber'": []string{node1.HMSNodeFRUInfo.PartNumber}}).
 		Where(sq.Eq{hwInvFruAlias + "." + hwInvFruTblInfoCol + " ->> 'SerialNumber'": []string{node1.HMSNodeFRUInfo.SerialNumber}}).
@@ -1886,7 +1887,7 @@ func TestPgGetHWInvByFRUFilter(t *testing.T) {
 
 	query3, _, _ := sqq.Select(columns...).
 		From(hwInvFruTable + " " + hwInvFruAlias).
-		Where(sq.Eq{hwInvFruAlias + "." + hwInvFruTblTypeCol: []string{base.Processor.String()}}).ToSql()
+		Where(sq.Eq{hwInvFruAlias + "." + hwInvFruTblTypeCol: []string{xnametypes.Processor.String()}}).ToSql()
 
 	tests := []struct {
 		f_opts          []HWInvLocFiltFunc
@@ -1914,7 +1915,7 @@ func TestPgGetHWInvByFRUFilter(t *testing.T) {
 		},
 		dbError:         nil,
 		expectedPrepare: regexp.QuoteMeta(query2),
-		expectedArgs:    []driver.Value{base.Node.String(), "%cray%", node1.HMSNodeFRUInfo.PartNumber, node1.HMSNodeFRUInfo.SerialNumber, node1.FRUID},
+		expectedArgs:    []driver.Value{xnametypes.Node.String(), "%cray%", node1.HMSNodeFRUInfo.PartNumber, node1.HMSNodeFRUInfo.SerialNumber, node1.FRUID},
 		expectedHwFrus:  []*sm.HWInvByFRU{&node1},
 		expectedErr:     nil,
 	}, {
@@ -1926,11 +1927,11 @@ func TestPgGetHWInvByFRUFilter(t *testing.T) {
 		expectedHwFrus:  nil,
 		expectedErr:     ErrHMSDSArgBadRedfishType,
 	}, {
-		f_opts:          []HWInvLocFiltFunc{HWInvLoc_Type(base.Processor.String())},
+		f_opts:          []HWInvLocFiltFunc{HWInvLoc_Type(xnametypes.Processor.String())},
 		dbRows:          nil,
 		dbError:         sql.ErrNoRows,
 		expectedPrepare: regexp.QuoteMeta(query3),
-		expectedArgs:    []driver.Value{base.Processor.String()},
+		expectedArgs:    []driver.Value{xnametypes.Processor.String()},
 		expectedHwFrus:  nil,
 		expectedErr:     nil,
 	}}
@@ -5135,7 +5136,7 @@ func TestPgDeleteGroupMember(t *testing.T) {
 	dgrp1Update, _, _ := sqq.Delete(compGroupMembersTable).
 		Where("group_id = ?", uuid1).
 		Where("component_id = ?",
-			base.NormalizeHMSCompID(dgrp1.Members.IDs[0])).ToSql()
+			xnametypes.NormalizeHMSCompID(dgrp1.Members.IDs[0])).ToSql()
 
 	dgrp2Query, _, _ := sqq.Select(compGroupsColsSMGroup...).
 		From(compGroupsTable).
@@ -5145,7 +5146,7 @@ func TestPgDeleteGroupMember(t *testing.T) {
 	dgrp2Update, _, _ := sqq.Delete(compGroupMembersTable).
 		Where("group_id = ?", uuid2).
 		Where("component_id = ?",
-			base.NormalizeHMSCompID(dgrp2.Members.IDs[0])).ToSql()
+			xnametypes.NormalizeHMSCompID(dgrp2.Members.IDs[0])).ToSql()
 
 	dgrp3Query, _, _ := sqq.Select(compGroupsColsSMGroup...).
 		From(compGroupsTable).
@@ -5155,7 +5156,7 @@ func TestPgDeleteGroupMember(t *testing.T) {
 	dgrp3Update, _, _ := sqq.Delete(compGroupMembersTable).
 		Where("group_id = ?", uuid3).
 		Where("component_id = ?",
-			base.NormalizeHMSCompID(dgrp3x.Members.IDs[0])).ToSql()
+			xnametypes.NormalizeHMSCompID(dgrp3x.Members.IDs[0])).ToSql()
 
 	dgrp4Query, _, _ := sqq.Select(compGroupsColsSMGroup...).
 		From(compGroupsTable).
@@ -5165,7 +5166,7 @@ func TestPgDeleteGroupMember(t *testing.T) {
 	dgrp4Update, _, _ := sqq.Delete(compGroupMembersTable).
 		Where("group_id = ?", uuid4).
 		Where("component_id = ?",
-			base.NormalizeHMSCompID(dgrp4x.Members.IDs[0])).ToSql()
+			xnametypes.NormalizeHMSCompID(dgrp4x.Members.IDs[0])).ToSql()
 
 	tests := []struct {
 		label                 string
@@ -5885,7 +5886,7 @@ func TestPgDeletePartitionMember(t *testing.T) {
 	dgrp5Update, _, _ := sqq.Delete(compGroupMembersTable).
 		Where("group_id = ?", uuid5).
 		Where("component_id = ?",
-			base.NormalizeHMSCompID(dgrp5p.Members.IDs[0])).ToSql()
+			xnametypes.NormalizeHMSCompID(dgrp5p.Members.IDs[0])).ToSql()
 
 	dgrp6Query, _, _ := sqq.Select(compGroupsColsSMPart...).
 		From(compGroupsTable).
@@ -5895,7 +5896,7 @@ func TestPgDeletePartitionMember(t *testing.T) {
 	dgrp6Update, _, _ := sqq.Delete(compGroupMembersTable).
 		Where("group_id = ?", uuid6).
 		Where("component_id = ?",
-			base.NormalizeHMSCompID(dgrp6p.Members.IDs[0])).ToSql()
+			xnametypes.NormalizeHMSCompID(dgrp6p.Members.IDs[0])).ToSql()
 
 	tests := []struct {
 		name                  string

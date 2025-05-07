@@ -1,6 +1,6 @@
 // MIT License
 //
-// (C) Copyright [2019-2021] Hewlett Packard Enterprise Development LP
+// (C) Copyright [2019-2021,2024-2025] Hewlett Packard Enterprise Development LP
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
@@ -28,13 +28,14 @@ package slsapi
 
 import (
 	"bytes"
-	"github.com/hashicorp/go-retryablehttp"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
 	"testing"
-	"github.com/Cray-HPE/hms-base"
+
+	base "github.com/Cray-HPE/hms-base/v2"
+	"github.com/hashicorp/go-retryablehttp"
 )
 
 var client *retryablehttp.Client
@@ -283,6 +284,8 @@ const testPayloadSLSAPI_comp_noData = `
 
 func NewRTFuncSLSAPI() RTFunc {
 	return func(req *http.Request) *http.Response {
+		defer base.DrainAndCloseRequestBody(req)
+
 		bad := true
 		if (len(req.Header) > 0) {
 			vals,ok := req.Header[base.USERAGENT]

@@ -24,7 +24,7 @@ package sm
 
 import (
 	"strings"
-	base "github.com/Cray-HPE/hms-base"
+	base "github.com/Cray-HPE/hms-base/v2"
 )
 
 var ErrHWHistEventTypeInvalid = base.NewHMSError("sm", "Invalid hardware inventory history event type")
