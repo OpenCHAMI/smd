@@ -24,3 +24,6 @@ dist/
 /smd-loader-native
 /smd-native
 /pprof
+
+# directory from the run-ct script
+/test-env
