@@ -24,3 +24,5 @@ dist/
 /smd-loader-native
 /smd-native
 
+# directory from the run-ct script
+/test-env
