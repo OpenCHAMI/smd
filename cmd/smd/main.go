@@ -552,7 +552,18 @@ func (s *SmD) GetHTTPClient() *retryablehttp.Client {
 var applyMigrations bool
 
 // Parse command line options.
-func (s *SmD) parseCmdLine(openchamiDefault, zeroLogDefault bool) {
+func (s *SmD) parseCmdLine(openchamiDefault, zeroLogDefault, disableDiscoveryDefault bool) {
+	envvar := "DISABLE_DISCOVERY"
+	if val := os.Getenv(envvar); val != "" {
+		b, err := strconv.ParseBool(val)
+		if err != nil {
+			fmt.Printf("Warning: Bad env %s - '%s'\n", envvar, val)
+		} else {
+			// This will be the value set to s.disableDiscovery if that flag was not passed on the command line.
+			disableDiscoveryDefault = b
+		}
+	}
+
 	flag.StringVar(&s.msgbusListen, "msg-host", "",
 		"Host:Port:Topic for message bus. Not used if unset")
 	flag.StringVar(&s.slsUrl, "sls-url", "",
@@ -579,7 +590,7 @@ func (s *SmD) parseCmdLine(openchamiDefault, zeroLogDefault bool) {
 	flag.StringVar(&s.dbOpts, "dbopts", "", "Database options string")
 	flag.StringVar(&s.jwksURL, "jwks-url", "", "Set the JWKS URL to fetch public key for validation")
 	flag.BoolVar(&applyMigrations, "migrate", false, "Apply all database migrations before starting")
-	flag.BoolVar(&s.disableDiscovery, "disable-discovery", false, "Disable discovery-related subroutines")
+	flag.BoolVar(&s.disableDiscovery, "disable-discovery", disableDiscoveryDefault, "Disable discovery-related subroutines")
 	flag.BoolVar(&s.openchami, "openchami", openchamiDefault, "Enabled OpenCHAMI features")
 	flag.BoolVar(&s.zerolog, "zerolog", zeroLogDefault, "Enabled zerolog")
 	help := flag.Bool("h", false, "Print help and exit")
@@ -591,7 +602,7 @@ func (s *SmD) parseCmdLine(openchamiDefault, zeroLogDefault bool) {
 		flag.Usage()
 		os.Exit(0)
 	}
-	envvar := "RF_MSG_HOST"
+	envvar = "RF_MSG_HOST"
 	if s.msgbusListen == "" {
 		if val := os.Getenv(envvar); val != "" {
 			s.msgbusListen = val
@@ -764,8 +775,9 @@ func main() {
 	flavor, moduleName := getSmdFlavor()
 	openchamiDefault := flavor == OpenCHAMI
 	zerologDefault := flavor == OpenCHAMI
-	fmt.Printf("SMD flavor: %s, moduleName: %s, MsgbusBuild: %t, RFEventMonitorBuild: %t, openChamiDefault: %t, zerologDefault: %t\n",
-		flavor, moduleName, MSG_BUS_BUILD, RF_EVENT_MONITOR_BUILD, openchamiDefault, zerologDefault)
+	disableDiscoveryDefault := flavor == OpenCHAMI
+	fmt.Printf("SMD flavor: %s, moduleName: %s, MsgbusBuild: %t, RFEventMonitorBuild: %t, openChamiDefault: %t, zerologDefault: %t, disableDiscoveryDefault: %t\n",
+		flavor, moduleName, MSG_BUS_BUILD, RF_EVENT_MONITOR_BUILD, openchamiDefault, zerologDefault, disableDiscoveryDefault)
 
 	var s SmD
 	var err error
@@ -793,7 +805,7 @@ func main() {
 	s.sysInfoBaseV2 = s.apiRootV2 + "/sysinfo"
 	s.powerMapBaseV2 = s.sysInfoBaseV2 + "/powermaps"
 
-	s.parseCmdLine(openchamiDefault, zerologDefault)
+	s.parseCmdLine(openchamiDefault, zerologDefault, disableDiscoveryDefault)
 
 	// Set up logging for State Manager
 	s.lg = log.New(os.Stdout, "", log.Lshortfile|log.LstdFlags|log.Lmicroseconds)
