@@ -41,12 +41,30 @@ func TestSmdFlavor(t *testing.T) {
 		if !RF_EVENT_MONITOR_BUILD {
 			t.Errorf("SmdFlavor exepected the rf event monitor to be enabled. flavor: %s, moduleName: %s", flavor, moduleName)
 		}
+		if DISABLE_DISCOVERY_DEFAULT {
+			t.Errorf("SmdFlavor exepected DISABLE_DISCOVERY_DEFAULT to be false. flavor: %s, moduleName: %s", flavor, moduleName)
+		}
+		if OPENCHAMI_DEFAULT {
+			t.Errorf("SmdFlavor exepected OPENCHAMI_DEFAULT to be false. flavor: %s, moduleName: %s", flavor, moduleName)
+		}
+		if ZEROLOG_DEFAULT {
+			t.Errorf("SmdFlavor exepected ZEROLOG_DEFAULT to be false. flavor: %s, moduleName: %s", flavor, moduleName)
+		}
 	} else if flavor == OpenCHAMI {
 		if MSG_BUS_BUILD {
 			t.Errorf("SmdFlavor exepected the msg bus to be disabled. flavor: %s, moduleName: %s", flavor, moduleName)
 		}
 		if RF_EVENT_MONITOR_BUILD {
 			t.Errorf("SmdFlavor exepected the rf event monitor to be disabled. flavor: %s, moduleName: %s", flavor, moduleName)
+		}
+		if !DISABLE_DISCOVERY_DEFAULT {
+			t.Errorf("SmdFlavor exepected DISABLE_DISCOVERY_DEFAULT to be true. flavor: %s, moduleName: %s", flavor, moduleName)
+		}
+		if !OPENCHAMI_DEFAULT {
+			t.Errorf("SmdFlavor exepected OPENCHAMI_DEFAULT to be true. flavor: %s, moduleName: %s", flavor, moduleName)
+		}
+		if !ZEROLOG_DEFAULT {
+			t.Errorf("SmdFlavor exepected ZEROLOG_DEFAULT to be true. flavor: %s, moduleName: %s", flavor, moduleName)
 		}
 	}
 }
