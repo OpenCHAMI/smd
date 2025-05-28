@@ -2686,9 +2686,20 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 		EthernetInterfaces []schemas.EthernetInterface `json:"ethernet_interfaces,omitempty"`
 	}
 
+	type SMDInventoryDetailWrapper struct {
+		schemas.InventoryDetail
+		OdataId       string                    `json:"@odata.id,omitempty"` // OData ID for the computer system
+		SystemName    string                    `json:"Name,omitempty"`      // Name of the computer system
+		SystemActions *rf.ComputerSystemActions `json:"Actions,omitempty"`   // Actions for the computer system
+
+		PowerURL string `json:"PowerURL,omitempty"`
+
+		FetchedPowerData []*rf.PowerControl `json:"PowerControl,omitempty"`
+	}
+
 	type Root struct {
 		redfish.RedfishEndpoint
-		Systems  []schemas.InventoryDetail
+		Systems  []SMDInventoryDetailWrapper
 		Managers []Manager
 	}
 	var (
@@ -2837,13 +2848,14 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 						RedfishSubtype: system.SystemType,     // TODO: need to get the RF subtype (SystemType)
 						UUID:           system.UUID,           // TODO: need to get the UUID (UUID)
 						RfEndpointID:   root.ID,
+						OdataID:        system.OdataId,
 					},
 					RfEndpointFQDN:        "",
 					URL:                   system.URI,
 					ComponentEndpointType: "ComponentEndpointComputerSystem",
 					Enabled:               enabled,
 					RedfishSystemInfo: &rf.ComponentSystemInfo{
-						Actions:    nil,
+						Actions:    system.SystemActions,
 						EthNICInfo: addEthernetInterfacesToNICInfo(system.EthernetInterfaces, enabled),
 					},
 				}
