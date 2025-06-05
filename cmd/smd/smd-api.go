@@ -2686,20 +2686,9 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 		EthernetInterfaces []schemas.EthernetInterface `json:"ethernet_interfaces,omitempty"`
 	}
 
-	type SMDInventoryDetailWrapper struct {
-		schemas.InventoryDetail
-		OdataId       string                    `json:"@odata.id,omitempty"` // OData ID for the computer system
-		SystemName    string                    `json:"Name,omitempty"`      // Name of the computer system
-		SystemActions *rf.ComputerSystemActions `json:"Actions,omitempty"`   // Actions for the computer system
-
-		PowerURL string `json:"PowerURL,omitempty"`
-
-		FetchedPowerData []*rf.PowerControl `json:"PowerControl,omitempty"`
-	}
-
 	type Root struct {
 		redfish.RedfishEndpoint
-		Systems  []SMDInventoryDetailWrapper
+		Systems  []schemas.InventoryDetail
 		Managers []Manager
 	}
 	var (
