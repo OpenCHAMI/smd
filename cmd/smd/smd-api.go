@@ -2552,25 +2552,29 @@ func (s *SmD) doRedfishEndpointsPost(w http.ResponseWriter, r *http.Request) {
 	// the "systems" and "managers" properties found in the request body
 	// in JSON format.
 	//
+	var payload map[string]any
+	if err := json.Unmarshal(body, &payload); err != nil {
+		// The request body should always be valid JSON at this point, but check just in case.
+		sendJsonError(w, http.StatusBadRequest, "failed to parse request body for parser routing")
+		return
+	}
 
-	if s.openchami {
-		// check for the data format sent via the schema version
-		schemaVersion := s.getSchemaVersion(w, body)
-		if schemaVersion <= 0 {
-			// parse data and populate component endpoints before inserting into db
-			err = s.parseRedfishEndpointData(w, eps, body)
-			if err != nil {
-				sendJsonError(w, http.StatusInternalServerError,
-					fmt.Sprintf("failed parsing post data: %v", err))
-				return
-			}
-		} else {
-			// parse data using the new inventory data format (will conform to schema)
-			err = s.parseRedfishEndpointDataV2(w, body, false)
-			if err != nil {
-				sendJsonError(w, http.StatusInternalServerError,
-					fmt.Sprintf("failed parsing post data (V2): %v", err))
-				return
+	if _, ok := payload["PDUInventory"]; ok {
+		s.lg.Printf("Payload contains PDUInventory key, routing to PDU parser.")
+		err = s.parsePDUData(w, body, false)
+		if err != nil {
+			sendJsonError(w, http.StatusInternalServerError,
+				fmt.Sprintf("failed parsing PDU data: %v", err))
+		}
+	} else {
+		if s.openchami {
+			s.lg.Printf("Payload does not contain PDUInventory key, routing to default V2 parser.")
+			if s.getSchemaVersion(w, body) > 0 { // Simplified from original
+				err = s.parseRedfishEndpointDataV2(w, body, false)
+				if err != nil {
+					sendJsonError(w, http.StatusInternalServerError,
+						fmt.Sprintf("failed parsing post data (V2): %v", err))
+				}
 			}
 		}
 	}
@@ -2849,6 +2853,7 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 				}
 			)
 
+			s.lg.Printf("DEBUG_XNAME_VALIDATION: V2 Parser is creating component with ID: '%s' and Type: '%s'", component.ID, component.Type)
 			// add the corresponding CompEthInterfaceV2 for each ComponentEndpoint created
 			createCompEthInterfacesV2(component, system.EthernetInterfaces)
 			knownCEs[system.UUID] = componentEndpoint.ComponentDescription.ID
@@ -2878,6 +2883,126 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 		}
 	}
 
+	return nil
+}
+
+type PDUInventoryPayload struct {
+	Model           string                `json:"Model"`
+	SerialNumber    string                `json:"SerialNumber"`
+	FirmwareVersion string                `json:"FirmwareVersion"`
+	Outlets         []PreDiscoveredOutlet `json:"Outlets"`
+}
+type PreDiscoveredOutlet struct {
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	State      string `json:"state"`
+	SocketType string `json:"socket_type"`
+}
+type PDURootPayload struct {
+	redfish.RedfishEndpoint
+	PDUInventory PDUInventoryPayload `json:"PDUInventory"`
+}
+
+type PowerControlAction struct {
+	Target          string   `json:"target"`
+	AllowableValues []string `json:"PowerState@Redfish.AllowableValues"`
+}
+
+type OutletActions struct {
+	PowerControl PowerControlAction `json:"#Outlet.PowerControl"`
+}
+
+type ComponentOutletInfo struct {
+	Name    string        `json:"Name"`
+	Actions OutletActions `json:"Actions"`
+}
+
+func (s *SmD) parsePDUData(w http.ResponseWriter, data []byte, forceUpdate bool) error {
+	s.lg.Printf("parsing request data using PDU parsing method...")
+
+	var root PDURootPayload
+	if err := json.Unmarshal(data, &root); err != nil {
+		sendJsonError(w, http.StatusInternalServerError, fmt.Sprintf("failed to unmarshal PDU data: %v", err))
+		return err
+	}
+
+	if len(root.PDUInventory.Outlets) == 0 {
+		s.lg.Printf("PDU data for %s contained no outlets, nothing to parse.", root.ID)
+		return nil
+	}
+
+	pduControllerComponent := &base.Component{
+		ID:      root.ID,
+		Type:    "CabinetPDUController",
+		State:   "On",
+		Enabled: &root.Enabled,
+	}
+
+	if _, err := s.db.UpsertComponents([]*base.Component{pduControllerComponent}, forceUpdate); err != nil {
+		err_str := fmt.Sprintf("failed to upsert PDU controller component for %s: %v", root.ID, err)
+		sendJsonError(w, http.StatusInternalServerError, err_str)
+		return fmt.Errorf(err_str)
+	}
+	s.lg.Printf("Successfully upserted parent PDU component: %s", root.ID)
+
+	componentsToUpsert := make([]*base.Component, 0)
+	endpointsToUpsert := make([]*sm.ComponentEndpoint, 0)
+	outletNum := 0
+
+	for _, outlet := range root.PDUInventory.Outlets {
+		smdID := fmt.Sprintf("%sn%d", root.ID, outletNum)
+		enabled := (outlet.State == "On")
+
+		component := &base.Component{
+			ID:      smdID,
+			Type:    "CabinetPDUPowerConnector",
+			State:   outlet.State,
+			Enabled: &enabled,
+		}
+		componentsToUpsert = append(componentsToUpsert, component)
+
+		pduBank := "B"
+		odataID := fmt.Sprintf("/redfish/v1/PowerEquipment/RackPDUs/%s/Outlets/%s", pduBank, outlet.ID)
+		redfishURL := fmt.Sprintf("https://%s%s", root.FQDN, odataID)
+
+		cep := &sm.ComponentEndpoint{
+			ComponentDescription: rf.ComponentDescription{
+				ID:             smdID,
+				Type:           "CabinetPDUPowerConnector",
+				RedfishType:    "Outlet",
+				RedfishSubtype: outlet.SocketType,
+				RfEndpointID:   root.ID,
+				OdataID:        odataID,
+			},
+			URL:                   redfishURL,
+			ComponentEndpointType: "ComponentEndpointOutlet",
+			Enabled:               enabled,
+		}
+		endpointsToUpsert = append(endpointsToUpsert, cep)
+		outletNum++
+	}
+
+	if len(componentsToUpsert) > 0 {
+		for i, comp := range componentsToUpsert {
+			s.lg.Printf("  - Component %d: ID='%s', Type='%s', State='%s', Enabled=%t",
+				i, comp.ID, comp.Type, comp.State, *comp.Enabled)
+		}
+		if _, err := s.db.UpsertComponents(componentsToUpsert, forceUpdate); err != nil {
+			err_str := fmt.Sprintf("failed to upsert PDU outlet components for %s: %v", root.ID, err)
+			sendJsonError(w, http.StatusInternalServerError, err_str)
+			return fmt.Errorf(err_str)
+		}
+	}
+
+	if len(endpointsToUpsert) > 0 {
+		for _, cep := range endpointsToUpsert {
+			if err := s.db.UpsertCompEndpoint(cep); err != nil {
+				s.lg.Printf("ERROR: failed to upsert component endpoint %s: %v", cep.ID, err)
+			}
+		}
+	}
+
+	s.lg.Printf("Successfully parsed and stored %d PDU outlets for endpoint %s", len(endpointsToUpsert), root.ID)
 	return nil
 }
 
