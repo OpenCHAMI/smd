@@ -512,7 +512,7 @@ func (d *hmsdbPg) InsertComponent(c *base.Component) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	rowsAffected, err := t.InsertComponentTx(c)
+	rowsAffected, err := t.InsertComponentTx(c, false)
 	if err != nil {
 		t.Rollback()
 		return 0, err
@@ -534,7 +534,7 @@ func (d *hmsdbPg) InsertComponents(comps *base.ComponentArray) ([]string, error)
 	if err != nil {
 		return []string{}, err
 	}
-	affectedIDs, err := t.InsertComponentsTx(comps.Components)
+	affectedIDs, err := t.InsertComponentsTx(comps.Components, false)
 	if err != nil {
 		t.Rollback()
 		return []string{}, err
@@ -549,7 +549,7 @@ func (d *hmsdbPg) InsertComponents(comps *base.ComponentArray) ([]string, error)
 // all-or-none transaction. If force=true, only the state, flag, subtype,
 // nettype, and arch will be overwritten for existing components. Otherwise,
 // this won't overwrite existing components.
-func (d *hmsdbPg) UpsertComponents(comps []*base.Component, force bool) (map[string]map[string]bool, error) {
+func (d *hmsdbPg) UpsertComponents(comps []*base.Component, force bool, skipValidation bool) (map[string]map[string]bool, error) {
 	affectedRowMap := make(map[string]map[string]bool, 0)
 	cmap := make(map[string]*base.Component, 0)
 	compList := make([]*base.Component, 0, 1)
@@ -619,7 +619,7 @@ func (d *hmsdbPg) UpsertComponents(comps []*base.Component, force bool) (map[str
 		compList = append(compList, comp)
 		affectedRowMap[comp.ID] = changeMap
 	}
-	compsAffected, err := t.InsertComponentsTx(compList)
+	compsAffected, err := t.InsertComponentsTx(compList, skipValidation)
 	if err != nil {
 		t.Rollback()
 		return nil, err
@@ -3467,7 +3467,7 @@ func (d *hmsdbPg) UpdateAllForRFEndpoint(
 				}
 			}
 		}
-		rowsAffected, err := t.InsertComponentsTx(comps.Components)
+		rowsAffected, err := t.InsertComponentsTx(comps.Components, false)
 		if err != nil {
 			t.Rollback()
 			return nil, err

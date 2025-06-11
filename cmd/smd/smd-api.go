@@ -512,7 +512,7 @@ func (s *SmD) doComponentsPost(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	changeMap, err := s.db.UpsertComponents(compsIn.Components, compsIn.Force)
+	changeMap, err := s.db.UpsertComponents(compsIn.Components, compsIn.Force, false)
 	if err != nil {
 		sendJsonDBError(w, "operation 'Post Components' failed: ", "", err)
 		s.LogAlways("failed: %s %s, Err: %s", r.RemoteAddr, string(body), err)
@@ -1053,7 +1053,7 @@ func (s *SmD) doComponentPut(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	changeMap, err := s.db.UpsertComponents([]*base.Component{component}, compIn.Force)
+	changeMap, err := s.db.UpsertComponents([]*base.Component{component}, compIn.Force, false)
 	if err != nil {
 		sendJsonDBError(w, "operation 'PUT' failed: ", "", err)
 		s.lg.Printf("failed: %s %s, Err: %s", r.RemoteAddr, string(body), err)
@@ -2795,7 +2795,7 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 				fmt.Sprintf("failed to insert %d component(s): %v", rowsAffected, err))
 			if forceUpdate {
 				// upsert here to keep allow returning error for duplicates when not forcing updates
-				_, err := s.db.UpsertComponents([]*base.Component{&component}, false)
+				_, err := s.db.UpsertComponents([]*base.Component{&component}, false, false)
 				if err != nil {
 					return fmt.Errorf("failed to update component: %w", err)
 				}
@@ -2865,7 +2865,7 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 					fmt.Sprintf("failed to insert %d component(s): %v", rowsAffected, err))
 
 				// upsert here to keep allow returning error for duplicates when not forcing updates
-				_, err := s.db.UpsertComponents([]*base.Component{&component}, false)
+				_, err := s.db.UpsertComponents([]*base.Component{&component}, false, false)
 				if err != nil {
 					return fmt.Errorf("failed to update component: %w", err)
 				}
@@ -2927,7 +2927,7 @@ func (s *SmD) parsePDUData(w http.ResponseWriter, data []byte, forceUpdate bool)
 		Enabled: &root.Enabled,
 	}
 
-	if _, err := s.db.UpsertComponents([]*base.Component{pduControllerComponent}, forceUpdate); err != nil {
+	if _, err := s.db.UpsertComponents([]*base.Component{pduControllerComponent}, forceUpdate, true); err != nil {
 		err_str := fmt.Sprintf("failed to upsert PDU controller component for %s: %v", root.ID, err)
 		sendJsonError(w, http.StatusInternalServerError, err_str)
 		return fmt.Errorf(err_str)
@@ -2977,7 +2977,7 @@ func (s *SmD) parsePDUData(w http.ResponseWriter, data []byte, forceUpdate bool)
 	}
 
 	if len(componentsToUpsert) > 0 {
-		if _, err := s.db.UpsertComponents(componentsToUpsert, forceUpdate); err != nil {
+		if _, err := s.db.UpsertComponents(componentsToUpsert, forceUpdate, true); err != nil {
 			err_str := fmt.Sprintf("failed to upsert PDU outlet components for %s: %v", root.ID, err)
 			sendJsonError(w, http.StatusInternalServerError, err_str)
 			return fmt.Errorf(err_str)

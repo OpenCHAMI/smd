@@ -213,7 +213,7 @@ type HMSDB interface {
 	// all-or-none transaction. If force=true, only the state, flag, subtype,
 	// nettype, and arch will be overwritten for existing components. Otherwise,
 	// this won't overwrite existing components.
-	UpsertComponents(comps []*base.Component, force bool) (map[string]map[string]bool, error)
+	UpsertComponents(comps []*base.Component, force bool, skipValidation bool) (map[string]map[string]bool, error)
 
 	// Update state and flag fields only in DB for the given IDs.  If
 	// len(ids) is > 1 a locking read will be done to ensure the list o
@@ -1025,11 +1025,11 @@ type HMSDBTx interface {
 
 	// Insert HMS Component into database, updating it if it exists.
 	// Returns the number of affected rows. < 0 means RowsAffected() is not supported.
-	InsertComponentTx(c *base.Component) (int64, error)
+	InsertComponentTx(c *base.Component, skipValidation bool) (int64, error)
 
 	// Insert HMS Components into the database, updating it if it exists.
 	// Returns the IDs of the affected components.
-	InsertComponentsTx(comps []*base.Component) ([]string, error)
+	InsertComponentsTx(comps []*base.Component, skipValidation bool) ([]string, error)
 
 	// Update state and flag fields only in DB for xname IDs 'ids'
 	// If force = true ignores any starting state restrictions and will always
