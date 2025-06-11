@@ -126,7 +126,7 @@ type ComponentEndpoint struct {
 	RedfishSystemInfo  *rf.ComponentSystemInfo  `json:"RedfishSystemInfo,omitempty"`
 	RedfishManagerInfo *rf.ComponentManagerInfo `json:"RedfishManagerInfo,omitempty"`
 	RedfishPDUInfo     *rf.ComponentPDUInfo     `json:"RedfishPDUInfo,omitempty"`
-	RedfishOutletInfo  *rf.ComponentOutletInfo  `json:"RedfishOutletInfo,omitempty"`
+	RedfishOutletInfo  any                      `json:"RedfishOutletInfo,omitempty"`
 }
 
 // Valid values for ComponentEndpointType discriminator field above.

@@ -2853,7 +2853,6 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 				}
 			)
 
-			s.lg.Printf("DEBUG_XNAME_VALIDATION: V2 Parser is creating component with ID: '%s' and Type: '%s'", component.ID, component.Type)
 			// add the corresponding CompEthInterfaceV2 for each ComponentEndpoint created
 			createCompEthInterfacesV2(component, system.EthernetInterfaces)
 			knownCEs[system.UUID] = componentEndpoint.ComponentDescription.ID
@@ -2903,18 +2902,8 @@ type PDURootPayload struct {
 	PDUInventory PDUInventoryPayload `json:"PDUInventory"`
 }
 
-type PowerControlAction struct {
-	Target          string   `json:"target"`
-	AllowableValues []string `json:"PowerState@Redfish.AllowableValues"`
-}
-
-type OutletActions struct {
-	PowerControl PowerControlAction `json:"#Outlet.PowerControl"`
-}
-
-type ComponentOutletInfo struct {
-	Name    string        `json:"Name"`
-	Actions OutletActions `json:"Actions"`
+type PDUOutletTarget struct {
+	Target string `json:"target"`
 }
 
 func (s *SmD) parsePDUData(w http.ResponseWriter, data []byte, forceUpdate bool) error {
@@ -2961,9 +2950,12 @@ func (s *SmD) parsePDUData(w http.ResponseWriter, data []byte, forceUpdate bool)
 		}
 		componentsToUpsert = append(componentsToUpsert, component)
 
-		pduBank := "B"
-		odataID := fmt.Sprintf("/redfish/v1/PowerEquipment/RackPDUs/%s/Outlets/%s", pduBank, outlet.ID)
-		redfishURL := fmt.Sprintf("https://%s%s", root.FQDN, odataID)
+		customPath := fmt.Sprintf("/jaws/monitor/outlets/%s", outlet.ID)
+		customURL := fmt.Sprintf("%s%s", root.FQDN, customPath)
+
+		outletInfo := &PDUOutletTarget{
+			Target: customPath,
+		}
 
 		cep := &sm.ComponentEndpoint{
 			ComponentDescription: rf.ComponentDescription{
@@ -2972,28 +2964,25 @@ func (s *SmD) parsePDUData(w http.ResponseWriter, data []byte, forceUpdate bool)
 				RedfishType:    "Outlet",
 				RedfishSubtype: outlet.SocketType,
 				RfEndpointID:   root.ID,
-				OdataID:        odataID,
+				OdataID:        customPath,
 			},
-			URL:                   redfishURL,
+			URL:                   customURL,
 			ComponentEndpointType: "ComponentEndpointOutlet",
 			Enabled:               enabled,
+			RedfishOutletInfo:     outletInfo,
 		}
+
 		endpointsToUpsert = append(endpointsToUpsert, cep)
 		outletNum++
 	}
 
 	if len(componentsToUpsert) > 0 {
-		for i, comp := range componentsToUpsert {
-			s.lg.Printf("  - Component %d: ID='%s', Type='%s', State='%s', Enabled=%t",
-				i, comp.ID, comp.Type, comp.State, *comp.Enabled)
-		}
 		if _, err := s.db.UpsertComponents(componentsToUpsert, forceUpdate); err != nil {
 			err_str := fmt.Sprintf("failed to upsert PDU outlet components for %s: %v", root.ID, err)
 			sendJsonError(w, http.StatusInternalServerError, err_str)
 			return fmt.Errorf(err_str)
 		}
 	}
-
 	if len(endpointsToUpsert) > 0 {
 		for _, cep := range endpointsToUpsert {
 			if err := s.db.UpsertCompEndpoint(cep); err != nil {
@@ -3001,7 +2990,6 @@ func (s *SmD) parsePDUData(w http.ResponseWriter, data []byte, forceUpdate bool)
 			}
 		}
 	}
-
 	s.lg.Printf("Successfully parsed and stored %d PDU outlets for endpoint %s", len(endpointsToUpsert), root.ID)
 	return nil
 }
