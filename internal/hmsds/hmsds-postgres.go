@@ -561,22 +561,21 @@ func (d *hmsdbPg) UpsertComponents(comps []*base.Component, force bool, skipVali
     for i, comp := range comps {
         ids[i] = comp.ID
     }
-
+    
+    // Lock components for update
     filterOpts := []CompFiltFunc{
         IDs(ids),
         From("UpsertComponents"),
     }
-
     if skipValidation {
         filterOpts = append(filterOpts, SkipValidation())
     }
-
     affectedComps, err := t.GetComponentsTx(filterOpts...)
+    
     if err != nil {
         t.Rollback()
         return nil, err
     }
-    
     for _, comp := range affectedComps {
         cmap[comp.ID] = comp
     }
