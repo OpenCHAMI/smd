@@ -550,105 +550,103 @@ func (d *hmsdbPg) InsertComponents(comps *base.ComponentArray) ([]string, error)
 // nettype, and arch will be overwritten for existing components. Otherwise,
 // this won't overwrite existing components.
 func (d *hmsdbPg) UpsertComponents(comps []*base.Component, force bool, skipValidation bool) (map[string]map[string]bool, error) {
-    affectedRowMap := make(map[string]map[string]bool, 0)
-    cmap := make(map[string]*base.Component, 0)
-    compList := make([]*base.Component, 0, 1)
-    t, err := d.Begin()
-    if err != nil {
-        return nil, err
-    }
-    ids := make([]string, len(comps))
-    for i, comp := range comps {
-        ids[i] = comp.ID
-    }
-    
-    // Lock components for update
-    filterOpts := []CompFiltFunc{
-        IDs(ids),
-        From("UpsertComponents"),
-    }
-    if skipValidation {
-        filterOpts = append(filterOpts, SkipValidation())
-    }
-    affectedComps, err := t.GetComponentsTx(filterOpts...)
-    
-    if err != nil {
-        t.Rollback()
-        return nil, err
-    }
-    for _, comp := range affectedComps {
-        cmap[comp.ID] = comp
-    }
-    for _, comp := range comps {
-        changeMap := make(map[string]bool, 0)
-        aComp, ok := cmap[comp.ID]
-        if ok {
-            if !force {
-                // Don't affect existing components
-                continue
-            } else {
-                otherChange := false
-                // Replace everything
-                if comp.State != aComp.State {
-                    changeMap["state"] = true
-                }
-                if comp.Flag != aComp.Flag {
-                    changeMap["flag"] = true
-                }
-                if len(comp.Subtype) != 0 && comp.Subtype != aComp.Subtype {
-                    otherChange = true
-                }
-                if len(comp.NetType) != 0 && comp.NetType != aComp.NetType {
-                    otherChange = true
-                }
-                if len(comp.Arch) != 0 && comp.Arch != aComp.Arch {
-                    otherChange = true
-                }
-                if len(comp.Class) != 0 && comp.Class != aComp.Class {
-                    otherChange = true
-                }
+	affectedRowMap := make(map[string]map[string]bool, 0)
+	cmap := make(map[string]*base.Component, 0)
+	compList := make([]*base.Component, 0, 1)
+	t, err := d.Begin()
+	if err != nil {
+		return nil, err
+	}
+	ids := make([]string, len(comps))
+	for i, comp := range comps {
+		ids[i] = comp.ID
+	}
+	// Lock components for update
+	filterOpts := []CompFiltFunc{
+		IDs(ids),
+		From("UpsertComponents"),
+	}
+	if skipValidation {
+		filterOpts = append(filterOpts, SkipValidation())
+	}
+	affectedComps, err := t.GetComponentsTx(filterOpts...)
+	if err != nil {
+		t.Rollback()
+		return nil, err
+	}
+	for _, comp := range affectedComps {
+		cmap[comp.ID] = comp
+	}
+	for _, comp := range comps {
+		changeMap := make(map[string]bool, 0)
+		aComp, ok := cmap[comp.ID]
+		if ok {
+			if !force {
+				// Don't affect existing components
+				continue
+			} else {
+				otherChange := false
+				// Replace everything
+				if comp.State != aComp.State {
+					changeMap["state"] = true
+				}
+				if comp.Flag != aComp.Flag {
+					changeMap["flag"] = true
+				}
+				if len(comp.Subtype) != 0 && comp.Subtype != aComp.Subtype {
+					otherChange = true
+				}
+				if len(comp.NetType) != 0 && comp.NetType != aComp.NetType {
+					otherChange = true
+				}
+				if len(comp.Arch) != 0 && comp.Arch != aComp.Arch {
+					otherChange = true
+				}
+				if len(comp.Class) != 0 && comp.Class != aComp.Class {
+					otherChange = true
+				}
 
-                // Move on if there are no changes
-                if len(changeMap) == 0 && !otherChange {
-                    continue
-                }
-            }
-        } else {
-            // We are creating a component here
-            changeMap["state"] = true
-            changeMap["flag"] = true
-            changeMap["enabled"] = true
-            if len(comp.SwStatus) != 0 {
-                changeMap["swStatus"] = true
-            }
-            changeMap["role"] = true
-            changeMap["subRole"] = true
-            changeMap["nid"] = true
-        }
-        compList = append(compList, comp)
-        affectedRowMap[comp.ID] = changeMap
-    }
-    compsAffected, err := t.InsertComponentsTx(compList, skipValidation)
-    if err != nil {
-        t.Rollback()
-        return nil, err
-    }
-    if err := t.Commit(); err != nil {
-        return nil, err
-    }
-    // Remove changes that didn't happen
-    if len(compsAffected) != len(compList) {
-        compsAffectedMap := make(map[string]string)
-        for _, comp := range compsAffected {
-            compsAffectedMap[comp] = comp
-        }
-        for _, comp := range compList {
-            if id, ok := compsAffectedMap[comp.ID]; !ok {
-                delete(affectedRowMap, id)
-            }
-        }
-    }
-    return affectedRowMap, nil
+				// Move on if there are no changes
+				if len(changeMap) == 0 && !otherChange {
+					continue
+				}
+			}
+		} else {
+			// We are creating a component here
+			changeMap["state"] = true
+			changeMap["flag"] = true
+			changeMap["enabled"] = true
+			if len(comp.SwStatus) != 0 {
+				changeMap["swStatus"] = true
+			}
+			changeMap["role"] = true
+			changeMap["subRole"] = true
+			changeMap["nid"] = true
+		}
+		compList = append(compList, comp)
+		affectedRowMap[comp.ID] = changeMap
+	}
+	compsAffected, err := t.InsertComponentsTx(compList, skipValidation)
+	if err != nil {
+		t.Rollback()
+		return nil, err
+	}
+	if err := t.Commit(); err != nil {
+		return nil, err
+	}
+	// Remove changes that didn't happen
+	if len(compsAffected) != len(compList) {
+		compsAffectedMap := make(map[string]string)
+		for _, comp := range compsAffected {
+			compsAffectedMap[comp] = comp
+		}
+		for _, comp := range compList {
+			if id, ok := compsAffectedMap[comp.ID]; !ok {
+				delete(affectedRowMap, id)
+			}
+		}
+	}
+	return affectedRowMap, nil
 }
 
 // Update state and flag fields only in DB for a list of components
