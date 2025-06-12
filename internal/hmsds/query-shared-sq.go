@@ -941,9 +941,11 @@ func makeComponentQuery(alias string, f *ComponentFilter, fltr FieldFilter) (
 	if f != nil {
 		// Check and normalize filter inputs, skipping if this has
 		// already been done.
-		if err := f.VerifyNormalize(); err != nil {
-			return query, err
-		}
+		if !f.skipValidation {
+            if err := f.VerifyNormalize(); err != nil {
+                return query, err
+            }
+        }
 	}
 	// Add the base query opts - Note the order doesn't have to match the
 	// sql statement.

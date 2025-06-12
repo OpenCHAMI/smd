@@ -3347,7 +3347,7 @@ func (t *hmsdbPgTx) GetCompEndpointsFilterTx(f *CompEPFilter) ([]*sm.ComponentEn
 
 // Insert ComponentEndpoint into database, updating it if it exists
 // (in transaction)
-func (t *hmsdbPgTx) UpsertCompEndpointTx(cep *sm.ComponentEndpoint) error {
+func (t *hmsdbPgTx) UpsertCompEndpointTx(cep *sm.ComponentEndpoint, skipValidation bool) error {
 	if cep == nil {
 		t.LogAlways("Error: UpsertCompEndpointTx(): Component was nil.")
 		return ErrHMSDSArgNil
@@ -3367,11 +3367,17 @@ func (t *hmsdbPgTx) UpsertCompEndpointTx(cep *sm.ComponentEndpoint) error {
 		t.LogAlways("UpsertCompEndpointTx: decode CompInfo: %s", err)
 	}
 	// Ensure endpoint name is normalized and valid
-	normID := base.VerifyNormalizeCompID(cep.ID)
-	if normID == "" {
-		t.LogAlways("UpsertCompEndpointTx(%s): %s", normID, ErrHMSDSArgBadID)
-		return ErrHMSDSArgBadID
-	}
+	var normID string
+    if skipValidation {
+        normID = cep.ID
+    } else {
+        // Original behavior for all other components
+        normID = base.VerifyNormalizeCompID(cep.ID)
+        if normID == "" {
+            t.LogAlways("UpsertCompEndpointTx(%s): %s", cep.ID, ErrHMSDSArgBadID)
+            return ErrHMSDSArgBadID
+        }
+    }
 	// Perform insert
 	res, err := stmt.ExecContext(t.ctx,
 		&normID,
