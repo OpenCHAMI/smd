@@ -3366,12 +3366,12 @@ func (t *hmsdbPgTx) UpsertCompEndpointTx(cep *sm.ComponentEndpoint, skipValidati
 		// This should never fail
 		t.LogAlways("UpsertCompEndpointTx: decode CompInfo: %s", err)
 	}
-	// Ensure endpoint name is normalized and valid
+	// Ensure endpoint name is normalized and valid for non-pdus
 	var normID string
     if skipValidation {
         normID = cep.ID
     } else {
-        // Original behavior for all other components
+        // Original behavior for non-pdu components
         normID = base.VerifyNormalizeCompID(cep.ID)
         if normID == "" {
             t.LogAlways("UpsertCompEndpointTx(%s): %s", cep.ID, ErrHMSDSArgBadID)
