@@ -2892,7 +2892,8 @@ type PDUInventoryPayload struct {
 	Outlets         []PreDiscoveredOutlet `json:"Outlets"`
 }
 type PreDiscoveredOutlet struct {
-	ID         string `json:"id"`
+	OriginalID string `json:"original_id"`
+	IDSuffix   string `json:"id_suffix"`
 	Name       string `json:"name"`
 	State      string `json:"state"`
 	SocketType string `json:"socket_type"`
@@ -2907,99 +2908,106 @@ type PDUOutletTarget struct {
 }
 
 func (s *SmD) parsePDUData(w http.ResponseWriter, data []byte, forceUpdate bool) error {
-    s.lg.Printf("parsing request data using PDU parsing method...")
+	s.lg.Printf("parsing request data using PDU parsing method...")
 
-    var root PDURootPayload
-    if err := json.Unmarshal(data, &root); err != nil {
-        sendJsonError(w, http.StatusInternalServerError, fmt.Sprintf("failed to unmarshal PDU data: %v", err))
-        return err
-    }
+	var root PDURootPayload
+	if err := json.Unmarshal(data, &root); err != nil {
+		sendJsonError(w, http.StatusInternalServerError, fmt.Sprintf("failed to unmarshal PDU data: %v", err))
+		return err
+	}
 
-    if len(root.PDUInventory.Outlets) == 0 {
-        s.lg.Printf("PDU data for %s contained no outlets, nothing to parse.", root.ID)
-        return nil
-    }
+	if len(root.PDUInventory.Outlets) == 0 {
+		s.lg.Printf("PDU data for %s contained no outlets, nothing to parse.", root.ID)
+		return nil
+	}
 
-    pduControllerComponent := &base.Component{
-        ID:      root.ID,
-        Type:    "CabinetPDUController",
-        State:   "On",
-        Enabled: &root.Enabled,
-    }
+	pduControllerComponent := &base.Component{
+		ID:      root.ID,
+		Type:    "CabinetPDUController",
+		State:   "On",
+		Enabled: &root.Enabled,
+	}
 
-    if _, err := s.db.UpsertComponents([]*base.Component{pduControllerComponent}, forceUpdate, true); err != nil {
-        err_str := fmt.Sprintf("failed to upsert PDU controller component for %s: %v", root.ID, err)
-        sendJsonError(w, http.StatusInternalServerError, err_str)
-        return fmt.Errorf(err_str)
-    }
-    s.lg.Printf("Successfully upserted parent PDU component: %s", root.ID)
+	if _, err := s.db.UpsertComponents([]*base.Component{pduControllerComponent}, forceUpdate, true); err != nil {
+		err_str := fmt.Sprintf("failed to upsert PDU controller component for %s: %v", root.ID, err)
+		sendJsonError(w, http.StatusInternalServerError, err_str)
+		return fmt.Errorf(err_str)
+	}
+	s.lg.Printf("Successfully upserted parent PDU component: %s", root.ID)
 
-    componentsToUpsert := make([]*base.Component, 0)
-    endpointsToUpsert := make([]*sm.ComponentEndpoint, 0)
+	componentsToUpsert := make([]*base.Component, 0)
+	endpointsToUpsert := make([]*sm.ComponentEndpoint, 0)
 
-    for _, outlet := range root.PDUInventory.Outlets {
-        smdID := fmt.Sprintf("%s%s", root.ID, outlet.ID)
-        enabled := (outlet.State == "On")
+	for _, outletMap := range root.PDUInventory.Outlets {
+		originalID := outletMap.OriginalID
+		idSuffix := outletMap.IDSuffix
+		outletName := outletMap.Name
+		outletState := outletMap.State
+		socketType := outletMap.SocketType
 
-        component := &base.Component{
-            ID:      smdID,
-            Type:    "CabinetPDUPowerConnector",
-            State:   outlet.State,
-            Enabled: &enabled,
-        }
-        componentsToUpsert = append(componentsToUpsert, component)
+		smdID := fmt.Sprintf("%s%s", root.ID, idSuffix)
+		enabled := (outletState == "On")
 
-		controlPath := fmt.Sprintf("/jaws/control/outlets/%s", outlet.ID)
+		component := &base.Component{
+			ID:      smdID, // Use the new xname
+			Type:    "CabinetPDUPowerConnector",
+			State:   outletState,
+			Enabled: &enabled,
+		}
+		componentsToUpsert = append(componentsToUpsert, component)
+	
+		controlPath := fmt.Sprintf("/jaws/control/outlets/%s", originalID)
+		monitorPath := fmt.Sprintf("/jaws/monitor/outlets/%s", originalID)
 
 		outletInfo := struct {
-            Name    string           `json:"Name"`
-            Actions *rf.OutletActions `json:"Actions"`
-        }{
-            Name: outlet.Name,
-            Actions: &rf.OutletActions{
-                PowerControl: &rf.ActionPowerControl{
-                    AllowableValues: []string{"On", "Off"},
-                    Target:          controlPath,
-                },
-            },
-        }
+			Name    string            `json:"Name"`
+			Actions *rf.OutletActions `json:"Actions"`
+		}{
+			Name: outletName,
+			Actions: &rf.OutletActions{
+				PowerControl: &rf.ActionPowerControl{
+					AllowableValues: []string{"On", "Off"},
+					Target:          controlPath,
+				},
+			},
+		}
 
-        customURL := fmt.Sprintf("%s%s", root.FQDN, controlPath)
+		customURL := fmt.Sprintf("%s%s", root.FQDN, monitorPath)
 
-        cep := &sm.ComponentEndpoint{
-            ComponentDescription: rf.ComponentDescription{
-                ID:             smdID,
-                Type:           "CabinetPDUPowerConnector",
-                RedfishType:    "Outlet",
-                RedfishSubtype: outlet.SocketType,
-                RfEndpointID:   root.ID,
-                OdataID:        controlPath,
-            },
-            URL:                   customURL,
-            ComponentEndpointType: "ComponentEndpointOutlet",
-            Enabled:               enabled,
-            RedfishOutletInfo:     outletInfo,
-        }
+		cep := &sm.ComponentEndpoint{
+			ComponentDescription: rf.ComponentDescription{
+				ID:             smdID,
+				Type:           "CabinetPDUPowerConnector",
+				RedfishType:    "Outlet",
+				RedfishSubtype: socketType,
+				RfEndpointID:   root.ID,
+				OdataID:        monitorPath,
+			},
+			URL:                   customURL,
+			ComponentEndpointType: "ComponentEndpointOutlet",
+			Enabled:               enabled,
+			RedfishOutletInfo:     outletInfo,
+		}
 
-        endpointsToUpsert = append(endpointsToUpsert, cep)
-    }
+		endpointsToUpsert = append(endpointsToUpsert, cep)
+	}
 
-    if len(componentsToUpsert) > 0 {
-        if _, err := s.db.UpsertComponents(componentsToUpsert, forceUpdate, true); err != nil {
-            err_str := fmt.Sprintf("failed to upsert PDU outlet components for %s: %v", root.ID, err)
-            sendJsonError(w, http.StatusInternalServerError, err_str)
-            return fmt.Errorf(err_str)
-        }
-    }
-    if len(endpointsToUpsert) > 0 {
-        for _, cep := range endpointsToUpsert {
-            if err := s.db.UpsertCompEndpoint(cep, true); err != nil {
-                s.lg.Printf("ERROR: failed to upsert component endpoint %s: %v", cep.ID, err)
-            }
-        }
-    }
-    s.lg.Printf("Successfully parsed and stored %d PDU outlets for endpoint %s", len(endpointsToUpsert), root.ID)
-    return nil
+	if len(componentsToUpsert) > 0 {
+		if _, err := s.db.UpsertComponents(componentsToUpsert, forceUpdate, true); err != nil {
+			err_str := fmt.Sprintf("failed to upsert PDU outlet components for %s: %v", root.ID, err)
+			sendJsonError(w, http.StatusInternalServerError, err_str)
+			return fmt.Errorf(err_str)
+		}
+	}
+	if len(endpointsToUpsert) > 0 {
+		for _, cep := range endpointsToUpsert {
+			if err := s.db.UpsertCompEndpoint(cep, true); err != nil {
+				s.lg.Printf("ERROR: failed to upsert component endpoint %s: %v", cep.ID, err)
+			}
+		}
+	}
+	s.lg.Printf("Successfully parsed and stored %d PDU outlets for endpoint %s", len(endpointsToUpsert), root.ID)
+	return nil
 }
 
 // getSchemaVersion() tries to extract the schema version from the JSON data.
