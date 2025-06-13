@@ -638,7 +638,7 @@ func (t *hmsdbPgTx) GetComponentByNIDTx(nid string) (*base.Component, error) {
 
 // Insert HMS Component into database, updating it if it exists.
 // Returns the number of affected rows. < 0 means RowsAffected() is not supported.
-func (t *hmsdbPgTx) InsertComponentTx(c *base.Component) (int64, error) {
+func (t *hmsdbPgTx) InsertComponentTx(c *base.Component, skipValidation bool) (int64, error) {
 	var enabledFlg bool
 	if c == nil {
 		t.LogAlways("Error: InsertComponentTx(): Component was nil.")
@@ -667,7 +667,12 @@ func (t *hmsdbPgTx) InsertComponentTx(c *base.Component) (int64, error) {
 		enabledFlg = *c.Enabled
 	}
 	// Normalize key
-	normID := base.NormalizeHMSCompID(c.ID)
+	var normID string
+	if skipValidation {
+		normID = c.ID
+	} else {
+		normID = base.NormalizeHMSCompID(c.ID)
+	}
 
 	// Perform insert
 	result, err := stmt.ExecContext(t.ctx,
@@ -738,7 +743,7 @@ func (t *hmsdbPgTx) InsertComponentTx(c *base.Component) (int64, error) {
 //	class = EXCLUDED.class
 //
 // RETURNING *;
-func (t *hmsdbPgTx) InsertComponentsTx(comps []*base.Component) ([]string, error) {
+func (t *hmsdbPgTx) InsertComponentsTx(comps []*base.Component, skipValidation bool) ([]string, error) {
 	results := []string{}
 	if len(comps) == 0 {
 		return []string{}, nil
@@ -753,8 +758,14 @@ func (t *hmsdbPgTx) InsertComponentsTx(comps []*base.Component) ([]string, error
 		Columns(compColsDefault...)
 
 	for _, c := range comps {
+		var normID string
 		// Normalize key
-		normID := base.NormalizeHMSCompID(c.ID)
+		if skipValidation {
+            // For PDUs, we use the ID as-is, skipping validation/normalization.
+            normID = c.ID
+        } else {
+            normID = base.NormalizeHMSCompID(c.ID)
+        }
 		// Take out duplicates so that we don't get errors for modifying a row multiple times.
 		if _, ok := valueMap[normID]; ok {
 			continue
@@ -3336,7 +3347,7 @@ func (t *hmsdbPgTx) GetCompEndpointsFilterTx(f *CompEPFilter) ([]*sm.ComponentEn
 
 // Insert ComponentEndpoint into database, updating it if it exists
 // (in transaction)
-func (t *hmsdbPgTx) UpsertCompEndpointTx(cep *sm.ComponentEndpoint) error {
+func (t *hmsdbPgTx) UpsertCompEndpointTx(cep *sm.ComponentEndpoint, skipValidation bool) error {
 	if cep == nil {
 		t.LogAlways("Error: UpsertCompEndpointTx(): Component was nil.")
 		return ErrHMSDSArgNil
@@ -3355,12 +3366,18 @@ func (t *hmsdbPgTx) UpsertCompEndpointTx(cep *sm.ComponentEndpoint) error {
 		// This should never fail
 		t.LogAlways("UpsertCompEndpointTx: decode CompInfo: %s", err)
 	}
-	// Ensure endpoint name is normalized and valid
-	normID := base.VerifyNormalizeCompID(cep.ID)
-	if normID == "" {
-		t.LogAlways("UpsertCompEndpointTx(%s): %s", normID, ErrHMSDSArgBadID)
-		return ErrHMSDSArgBadID
-	}
+	// Ensure endpoint name is normalized and valid for non-pdus
+	var normID string
+    if skipValidation {
+        normID = cep.ID
+    } else {
+        // Original behavior for non-pdu components
+        normID = base.VerifyNormalizeCompID(cep.ID)
+        if normID == "" {
+            t.LogAlways("UpsertCompEndpointTx(%s): %s", cep.ID, ErrHMSDSArgBadID)
+            return ErrHMSDSArgBadID
+        }
+    }
 	// Perform insert
 	res, err := stmt.ExecContext(t.ctx,
 		&normID,
