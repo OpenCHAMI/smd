@@ -2960,13 +2960,14 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 						RedfishSubtype: system.SystemType,     // TODO: need to get the RF subtype (SystemType)
 						UUID:           system.UUID,           // TODO: need to get the UUID (UUID)
 						RfEndpointID:   root.ID,
+						OdataID:        system.OdataId,
 					},
 					RfEndpointFQDN:        "",
 					URL:                   system.URI,
 					ComponentEndpointType: "ComponentEndpointComputerSystem",
 					Enabled:               enabled,
 					RedfishSystemInfo: &rf.ComponentSystemInfo{
-						Actions:    nil,
+						Actions:    system.SystemActions,
 						EthNICInfo: addEthernetInterfacesToNICInfo(system.EthernetInterfaces, enabled),
 					},
 				}
