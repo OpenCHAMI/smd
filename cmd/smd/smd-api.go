@@ -3111,6 +3111,27 @@ func (s *SmD) parsePDUData(w http.ResponseWriter, data []byte, forceUpdate bool)
 	componentsToUpsert := make([]*base.Component, 0)
 	endpointsToUpsert := make([]*sm.ComponentEndpoint, 0)
 
+	managerInfo := rf.ComponentManagerInfo{
+		Name: "JAWS",
+	}
+	jawsPath := "/jaws"
+
+	pduControllerEndpoint := &sm.ComponentEndpoint{
+		ComponentDescription: rf.ComponentDescription{
+			ID:             root.ID,
+			Type:           "CabinetPDUController",
+			RedfishType:    "Manager",
+			RedfishSubtype: "",
+			RfEndpointID:   root.ID,
+			OdataID:        jawsPath,
+		},
+		URL:                   fmt.Sprintf("%s%s", root.FQDN, jawsPath),
+		ComponentEndpointType: "ComponentEndpointManager",
+		Enabled:               root.Enabled,
+		RedfishManagerInfo:    &managerInfo,
+	}
+	endpointsToUpsert = append(endpointsToUpsert, pduControllerEndpoint)
+
 	for _, outletMap := range root.PDUInventory.Outlets {
 		originalID := outletMap.OriginalID
 		idSuffix := outletMap.IDSuffix
