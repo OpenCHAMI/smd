@@ -2429,9 +2429,9 @@ func (s *SmD) doRedfishEndpointPut(w http.ResponseWriter, r *http.Request) {
 	// fail.  A manual discovery would be the recovery mechanism.
 	// TODO:  Add auto-force based on time delta.
 	//
-	// Discovery can optionally be disabled with the --disable-discovery
+	// Discovery can optionally be enabled with the --enabled-discovery
 	// flag from the CLI.
-	if !s.disableDiscovery {
+	if s.enableDiscovery {
 		go s.discoverFromEndpoint(ep, 0, false)
 	}
 
@@ -2665,9 +2665,9 @@ func (s *SmD) doRedfishEndpointsPost(w http.ResponseWriter, r *http.Request) {
 	// force this because the endpoint should always be new, else we would
 	// have already failed the operation.
 	//
-	// Discovery can optionally be disabled with the --disable-discovery
+	// Discovery can optionally be enabled with the --enable-discovery
 	// flag from the CLI.
-	if !s.disableDiscovery {
+	if s.enableDiscovery {
 		go s.discoverFromEndpoints(eps.RedfishEndpoints, 0, true, false)
 	}
 
@@ -3104,7 +3104,7 @@ func (s *SmD) parsePDUData(w http.ResponseWriter, data []byte, forceUpdate bool)
 	if _, err := s.db.UpsertComponents([]*base.Component{pduControllerComponent}, forceUpdate); err != nil {
 		err_str := fmt.Sprintf("failed to upsert PDU controller component for %s: %v", root.ID, err)
 		sendJsonError(w, http.StatusInternalServerError, err_str)
-		return fmt.Errorf(err_str)
+		return errors.New(err_str)
 	}
 	s.lg.Printf("Successfully upserted parent PDU component: %s", root.ID)
 
@@ -3190,7 +3190,7 @@ func (s *SmD) parsePDUData(w http.ResponseWriter, data []byte, forceUpdate bool)
 		if _, err := s.db.UpsertComponents(componentsToUpsert, forceUpdate); err != nil {
 			err_str := fmt.Sprintf("failed to upsert PDU outlet components for %s: %v", root.ID, err)
 			sendJsonError(w, http.StatusInternalServerError, err_str)
-			return fmt.Errorf(err_str)
+			return errors.New(err_str)
 		}
 	}
 	if len(endpointsToUpsert) > 0 {
