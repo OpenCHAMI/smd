@@ -102,21 +102,21 @@ type SmD struct {
 	dbPort    int
 	dbOpts    string
 
-	logDir           string
-	tlsCert          string
-	tlsKey           string
-	proxyURL         string
-	httpListen       string
-	msgbusListen     string
-	logLevelIn       int
-	msgbusConfig     MsgBusConfigWrapper
-	msgbusHandle     MsgbusHandleWrapper
-	hwInvHistAgeMax  int
-	smapCompEP       *SyncMap
-	genTestPayloads  string
-	disableDiscovery bool
-	openchami        bool
-	zerolog          bool
+	logDir          string
+	tlsCert         string
+	tlsKey          string
+	proxyURL        string
+	httpListen      string
+	msgbusListen    string
+	logLevelIn      int
+	msgbusConfig    MsgBusConfigWrapper
+	msgbusHandle    MsgbusHandleWrapper
+	hwInvHistAgeMax int
+	smapCompEP      *SyncMap
+	genTestPayloads string
+	enableDiscovery bool
+	openchami       bool
+	zerolog         bool
 
 	// v2 APIs
 	apiRootV2           string
@@ -211,7 +211,7 @@ func (s *SmD) Log(lvl LogLevel, format string, a ...interface{}) {
 }
 
 func (s *SmD) LogAlwaysStr(format string) {
-    s.lg.Output(2, format)
+	s.lg.Output(2, format)
 }
 
 func (s *SmD) LogAlways(format string, a ...interface{}) {
@@ -557,15 +557,15 @@ var applyMigrations bool
 
 // Parse command line options.
 func (s *SmD) parseCmdLine() {
-	disableDiscoveryDefault := DISABLE_DISCOVERY_DEFAULT
-	envvar := "DISABLE_DISCOVERY"
+	enableDiscoveryDefault := ENABLE_DISCOVERY_DEFAULT
+	envvar := "ENABLE_DISCOVERY"
 	if val := os.Getenv(envvar); val != "" {
 		b, err := strconv.ParseBool(val)
 		if err != nil {
 			fmt.Printf("Warning: Bad env %s - '%s'\n", envvar, val)
 		} else {
-			// This will be the value set to s.disableDiscovery if that flag was not passed on the command line.
-			disableDiscoveryDefault = b
+			// This is the default value for s.enableDiscovery if the cli option --enable-discovery was not used
+			enableDiscoveryDefault = b
 		}
 	}
 
@@ -595,7 +595,7 @@ func (s *SmD) parseCmdLine() {
 	flag.StringVar(&s.dbOpts, "dbopts", "", "Database options string")
 	flag.StringVar(&s.jwksURL, "jwks-url", "", "Set the JWKS URL to fetch public key for validation")
 	flag.BoolVar(&applyMigrations, "migrate", false, "Apply all database migrations before starting")
-	flag.BoolVar(&s.disableDiscovery, "disable-discovery", disableDiscoveryDefault, "Disable discovery-related subroutines")
+	flag.BoolVar(&s.enableDiscovery, "enable-discovery", enableDiscoveryDefault, "Enable discovery-related subroutines")
 	flag.BoolVar(&s.openchami, "openchami", OPENCHAMI_DEFAULT, "Enabled OpenCHAMI features")
 	flag.BoolVar(&s.zerolog, "zerolog", ZEROLOG_DEFAULT, "Enabled zerolog")
 	help := flag.Bool("h", false, "Print help and exit")
@@ -777,8 +777,8 @@ func (s *SmD) setDSN() {
 func main() {
 	PrintVersionInfo()
 
-	fmt.Printf("Build time defaults. MsgbusBuild: %t, RFEventMonitorBuild: %t, openChamiDefault: %t, zerologDefault: %t, disableDiscoveryDefault: %t\n",
-		MSG_BUS_BUILD, RF_EVENT_MONITOR_BUILD, OPENCHAMI_DEFAULT, ZEROLOG_DEFAULT, DISABLE_DISCOVERY_DEFAULT)
+	fmt.Printf("Build time defaults. MsgbusBuild: %t, RFEventMonitorBuild: %t, openChamiDefault: %t, zerologDefault: %t, enableDiscoveryDefault: %t\n",
+		MSG_BUS_BUILD, RF_EVENT_MONITOR_BUILD, OPENCHAMI_DEFAULT, ZEROLOG_DEFAULT, ENABLE_DISCOVERY_DEFAULT)
 
 	var s SmD
 	var err error
@@ -979,7 +979,7 @@ func main() {
 	s.srfpJobList = make(map[string]*Job, 0)
 	s.discMap = make(map[string]int, 0)
 	s.JobSync()
-	if !s.disableDiscovery {
+	if !s.enableDiscovery {
 		s.DiscoverySync()
 		s.DiscoveryUpdater()
 	}

@@ -26,6 +26,6 @@
 
 package main
 
-const DISABLE_DISCOVERY_DEFAULT = true
+const ENABLE_DISCOVERY_DEFAULT = false
 const OPENCHAMI_DEFAULT = true
 const ZEROLOG_DEFAULT = true
