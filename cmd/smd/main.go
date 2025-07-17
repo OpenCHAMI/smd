@@ -102,21 +102,21 @@ type SmD struct {
 	dbPort    int
 	dbOpts    string
 
-	logDir           string
-	tlsCert          string
-	tlsKey           string
-	proxyURL         string
-	httpListen       string
-	msgbusListen     string
-	logLevelIn       int
-	msgbusConfig     MsgBusConfigWrapper
-	msgbusHandle     MsgbusHandleWrapper
-	hwInvHistAgeMax  int
-	smapCompEP       *SyncMap
-	genTestPayloads  string
-	disableDiscovery bool
-	openchami        bool
-	zerolog          bool
+	logDir          string
+	tlsCert         string
+	tlsKey          string
+	proxyURL        string
+	httpListen      string
+	msgbusListen    string
+	logLevelIn      int
+	msgbusConfig    MsgBusConfigWrapper
+	msgbusHandle    MsgbusHandleWrapper
+	hwInvHistAgeMax int
+	smapCompEP      *SyncMap
+	genTestPayloads string
+	enableDiscovery bool
+	openchami       bool
+	zerolog         bool
 
 	// v2 APIs
 	apiRootV2           string
@@ -211,7 +211,7 @@ func (s *SmD) Log(lvl LogLevel, format string, a ...interface{}) {
 }
 
 func (s *SmD) LogAlwaysStr(format string) {
-    s.lg.Output(2, format)
+	s.lg.Output(2, format)
 }
 
 func (s *SmD) LogAlways(format string, a ...interface{}) {
@@ -556,7 +556,19 @@ func (s *SmD) GetHTTPClient() *retryablehttp.Client {
 var applyMigrations bool
 
 // Parse command line options.
-func (s *SmD) parseCmdLine(openchamiDefault, zeroLogDefault bool) {
+func (s *SmD) parseCmdLine() {
+	enableDiscoveryDefault := ENABLE_DISCOVERY_DEFAULT
+	envvar := "ENABLE_DISCOVERY"
+	if val := os.Getenv(envvar); val != "" {
+		b, err := strconv.ParseBool(val)
+		if err != nil {
+			fmt.Printf("Warning: Bad env %s - '%s'\n", envvar, val)
+		} else {
+			// This is the default value for s.enableDiscovery if the cli option --enable-discovery was not used
+			enableDiscoveryDefault = b
+		}
+	}
+
 	flag.StringVar(&s.msgbusListen, "msg-host", "",
 		"Host:Port:Topic for message bus. Not used if unset")
 	flag.StringVar(&s.slsUrl, "sls-url", "",
@@ -583,9 +595,9 @@ func (s *SmD) parseCmdLine(openchamiDefault, zeroLogDefault bool) {
 	flag.StringVar(&s.dbOpts, "dbopts", "", "Database options string")
 	flag.StringVar(&s.jwksURL, "jwks-url", "", "Set the JWKS URL to fetch public key for validation")
 	flag.BoolVar(&applyMigrations, "migrate", false, "Apply all database migrations before starting")
-	flag.BoolVar(&s.disableDiscovery, "disable-discovery", false, "Disable discovery-related subroutines")
-	flag.BoolVar(&s.openchami, "openchami", openchamiDefault, "Enabled OpenCHAMI features")
-	flag.BoolVar(&s.zerolog, "zerolog", zeroLogDefault, "Enabled zerolog")
+	flag.BoolVar(&s.enableDiscovery, "enable-discovery", enableDiscoveryDefault, "Enable discovery-related subroutines")
+	flag.BoolVar(&s.openchami, "openchami", OPENCHAMI_DEFAULT, "Enabled OpenCHAMI features")
+	flag.BoolVar(&s.zerolog, "zerolog", ZEROLOG_DEFAULT, "Enabled zerolog")
 	help := flag.Bool("h", false, "Print help and exit")
 
 	flag.Parse()
@@ -595,7 +607,7 @@ func (s *SmD) parseCmdLine(openchamiDefault, zeroLogDefault bool) {
 		flag.Usage()
 		os.Exit(0)
 	}
-	envvar := "RF_MSG_HOST"
+	envvar = "RF_MSG_HOST"
 	if s.msgbusListen == "" {
 		if val := os.Getenv(envvar); val != "" {
 			s.msgbusListen = val
@@ -765,11 +777,8 @@ func (s *SmD) setDSN() {
 func main() {
 	PrintVersionInfo()
 
-	flavor, moduleName := getSmdFlavor()
-	openchamiDefault := flavor == OpenCHAMI
-	zerologDefault := flavor == OpenCHAMI
-	fmt.Printf("SMD flavor: %s, moduleName: %s, MsgbusBuild: %t, RFEventMonitorBuild: %t, openChamiDefault: %t, zerologDefault: %t\n",
-		flavor, moduleName, MSG_BUS_BUILD, RF_EVENT_MONITOR_BUILD, openchamiDefault, zerologDefault)
+	fmt.Printf("Build time defaults. MsgbusBuild: %t, RFEventMonitorBuild: %t, openChamiDefault: %t, zerologDefault: %t, enableDiscoveryDefault: %t\n",
+		MSG_BUS_BUILD, RF_EVENT_MONITOR_BUILD, OPENCHAMI_DEFAULT, ZEROLOG_DEFAULT, ENABLE_DISCOVERY_DEFAULT)
 
 	var s SmD
 	var err error
@@ -797,7 +806,7 @@ func main() {
 	s.sysInfoBaseV2 = s.apiRootV2 + "/sysinfo"
 	s.powerMapBaseV2 = s.sysInfoBaseV2 + "/powermaps"
 
-	s.parseCmdLine(openchamiDefault, zerologDefault)
+	s.parseCmdLine()
 
 	// Set up logging for State Manager
 	s.lg = log.New(os.Stdout, "", log.Lshortfile|log.LstdFlags|log.Lmicroseconds)
@@ -970,7 +979,7 @@ func main() {
 	s.srfpJobList = make(map[string]*Job, 0)
 	s.discMap = make(map[string]int, 0)
 	s.JobSync()
-	if !s.disableDiscovery {
+	if !s.enableDiscovery {
 		s.DiscoverySync()
 		s.DiscoveryUpdater()
 	}

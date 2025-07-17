@@ -28,25 +28,43 @@ import (
 
 func TestSmdFlavor(t *testing.T) {
 	flavor, moduleName := getSmdFlavor()
-	t.Logf("SmdFlavor values: flavor: %s, moduleName: %s", flavor, moduleName)
+	t.Logf("TestSmdFlavor values: flavor: %s, moduleName: %s", flavor, moduleName)
 
 	if flavor == UnknownSmdFlavor {
-		t.Fatalf("SmdFlavor unknown smd flavor: %s, moduleName: %s", flavor, moduleName)
+		t.Fatalf("TestSmdFlavor unknown smd flavor: %s, moduleName: %s", flavor, moduleName)
 	}
 
 	if flavor == CSM {
 		if !MSG_BUS_BUILD {
-			t.Errorf("SmdFlavor exepected the msg bus to be enabled. flavor: %s, moduleName: %s", flavor, moduleName)
+			t.Errorf("TestSmdFlavor exepected the msg bus to be enabled. flavor: %s, moduleName: %s", flavor, moduleName)
 		}
 		if !RF_EVENT_MONITOR_BUILD {
-			t.Errorf("SmdFlavor exepected the rf event monitor to be enabled. flavor: %s, moduleName: %s", flavor, moduleName)
+			t.Errorf("TestSmdFlavor exepected the rf event monitor to be enabled. flavor: %s, moduleName: %s", flavor, moduleName)
+		}
+		if !ENABLE_DISCOVERY_DEFAULT {
+			t.Errorf("TestSmdFlavor exepected ENABLE_DISCOVERY_DEFAULT to be true. flavor: %s, moduleName: %s", flavor, moduleName)
+		}
+		if OPENCHAMI_DEFAULT {
+			t.Errorf("TestSmdFlavor exepected OPENCHAMI_DEFAULT to be false. flavor: %s, moduleName: %s", flavor, moduleName)
+		}
+		if ZEROLOG_DEFAULT {
+			t.Errorf("TestSmdFlavor exepected ZEROLOG_DEFAULT to be false. flavor: %s, moduleName: %s", flavor, moduleName)
 		}
 	} else if flavor == OpenCHAMI {
 		if MSG_BUS_BUILD {
-			t.Errorf("SmdFlavor exepected the msg bus to be disabled. flavor: %s, moduleName: %s", flavor, moduleName)
+			t.Errorf("TestSmdFlavor exepected the msg bus to be disabled. flavor: %s, moduleName: %s", flavor, moduleName)
 		}
 		if RF_EVENT_MONITOR_BUILD {
-			t.Errorf("SmdFlavor exepected the rf event monitor to be disabled. flavor: %s, moduleName: %s", flavor, moduleName)
+			t.Errorf("TestSmdFlavor exepected the rf event monitor to be disabled. flavor: %s, moduleName: %s", flavor, moduleName)
+		}
+		if ENABLE_DISCOVERY_DEFAULT {
+			t.Errorf("TestSmdFlavor exepected ENABLE_DISCOVERY_DEFAULT to be false. flavor: %s, moduleName: %s", flavor, moduleName)
+		}
+		if !OPENCHAMI_DEFAULT {
+			t.Errorf("TestSmdFlavor exepected OPENCHAMI_DEFAULT to be true. flavor: %s, moduleName: %s", flavor, moduleName)
+		}
+		if !ZEROLOG_DEFAULT {
+			t.Errorf("TestSmdFlavor exepected ZEROLOG_DEFAULT to be true. flavor: %s, moduleName: %s", flavor, moduleName)
 		}
 	}
 }
