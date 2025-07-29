@@ -2799,6 +2799,15 @@ func (s *SmD) parseRedfishEndpointData(w http.ResponseWriter, eps *sm.RedfishEnd
 	return nil
 }
 
+func NormalizeURLPath(uri string) string {
+	if strings.HasPrefix(uri, "http") {
+		if parsedURL, err := url.Parse(uri); err == nil {
+			return parsedURL.Path
+		}
+	}
+	return uri
+}
+
 func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, forceUpdate bool) error {
 	s.lg.Printf("parsing request data using V2 parsing method...")
 
@@ -2830,6 +2839,23 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 		sendJsonError(w, http.StatusInternalServerError,
 			fmt.Sprintf("failed to unmarshal Redfish data: %v", err))
 		return fmt.Errorf("failed to unmarshal Redfish data: %v", err)
+	}
+
+	s.lg.Printf("Normalizing Redfish URIs to relative paths...")
+
+	for i := range root.Systems {
+		root.Systems[i].URI = NormalizeURLPath(root.Systems[i].URI)
+
+		for j := range root.Systems[i].EthernetInterfaces {
+			root.Systems[i].EthernetInterfaces[j].URI = NormalizeURLPath(root.Systems[i].EthernetInterfaces[j].URI)
+		}
+	}
+
+	for i := range root.Managers {
+		root.Managers[i].URI = NormalizeURLPath(root.Managers[i].URI)
+		for j := range root.Managers[i].EthernetInterfaces {
+			root.Managers[i].EthernetInterfaces[j].URI = NormalizeURLPath(root.Managers[i].EthernetInterfaces[j].URI)
+		}
 	}
 
 	// function to add EthernetInterface to NICs
