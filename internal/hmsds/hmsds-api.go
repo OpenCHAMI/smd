@@ -1338,7 +1338,7 @@ type HMSDBTx interface {
 
 	// Upsert ComponentEndpoint into database, updating it if it exists
 	// (in transaction)
-	UpsertCompEndpointTx(cep *sm.ComponentEndpoint) error
+	UpsertCompEndpointTx(cep *sm.ComponentEndpoint, bypassValidation bool) error
 
 	// Upsert ComponentEndpoints into database, updating them if they exist
 	// (in transaction)

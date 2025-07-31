@@ -2711,6 +2711,7 @@ func (s *SmD) doRedfishEndpointsPost(w http.ResponseWriter, r *http.Request) {
 // Parse the incoming JSON data, extracts specific keys, and writes the data
 // to the database
 func (s *SmD) parseRedfishEndpointData(w http.ResponseWriter, eps *sm.RedfishEndpointArray, data []byte) error {
+	var bypassValidation = true
 	s.lg.Printf("parsing request data using default parsing method...")
 	var obj map[string]any
 	err := json.Unmarshal(data, &obj)
@@ -3072,7 +3073,7 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 			}
 
 			// component endpoints
-			err = s.db.UpsertCompEndpoint(&componentEndpoint)
+			err = s.db.UpsertCompEndpoint(&componentEndpoint, bypassValidation)
 			if err != nil {
 				sendJsonError(w, http.StatusInternalServerError,
 					fmt.Sprintf("failed to upsert component endpoint: %v", err))
