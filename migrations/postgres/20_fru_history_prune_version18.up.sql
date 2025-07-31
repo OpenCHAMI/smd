@@ -40,6 +40,9 @@ BEGIN
     FOR comp_id IN SELECT distinct id FROM hwinv_hist LOOP
         SELECT * INTO fru_event1 FROM hwinv_hist WHERE id = comp_id.id ORDER BY timestamp ASC LIMIT 1;
         FOR fru_event2 IN SELECT * FROM hwinv_hist WHERE id = comp_id.id AND timestamp != fru_event1.timestamp ORDER BY timestamp ASC LOOP
+            -- TODO: Shouldn't this IF statement also check that the
+            --       event_type is the same?  Otherwise we'll be pruning
+            --       out unique events that haven't repeated?
             IF fru_event2.fru_id = fru_event1.fru_id THEN
                 DELETE FROM hwinv_hist WHERE id = fru_event2.id AND fru_id = fru_event2.fru_id AND timestamp = fru_event2.timestamp;
             ELSE
