@@ -555,7 +555,7 @@ type HMSDB interface {
 	GetCompEndpointsFilter(f *CompEPFilter) ([]*sm.ComponentEndpoint, error)
 
 	// Upsert ComponentEndpoint into database, updating it if it exists.
-	UpsertCompEndpoint(cep *sm.ComponentEndpoint, bypassValidation bool) error
+	UpsertCompEndpoint(cep *sm.ComponentEndpoint, strictXnameChecking bool) error
 
 	// Upsert ComponentEndpointArray into database within a single all-or-none
 	// transaction.
@@ -1338,7 +1338,7 @@ type HMSDBTx interface {
 
 	// Upsert ComponentEndpoint into database, updating it if it exists
 	// (in transaction)
-	UpsertCompEndpointTx(cep *sm.ComponentEndpoint, bypassValidation bool) error
+	UpsertCompEndpointTx(cep *sm.ComponentEndpoint, strictXnameChecking bool) error
 
 	// Upsert ComponentEndpoints into database, updating them if they exist
 	// (in transaction)

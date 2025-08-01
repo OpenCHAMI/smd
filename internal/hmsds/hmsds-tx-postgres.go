@@ -3337,7 +3337,7 @@ func (t *hmsdbPgTx) GetCompEndpointsFilterTx(f *CompEPFilter) ([]*sm.ComponentEn
 
 // Insert ComponentEndpoint into database, updating it if it exists
 // (in transaction)
-func (t *hmsdbPgTx) UpsertCompEndpointTx(cep *sm.ComponentEndpoint, bypassValidation bool) error {
+func (t *hmsdbPgTx) UpsertCompEndpointTx(cep *sm.ComponentEndpoint, strictXnameChecking bool) error {
 	if cep == nil {
 		t.LogAlways("Error: UpsertCompEndpointTx(): Component was nil.")
 		return ErrHMSDSArgNil
@@ -3358,7 +3358,7 @@ func (t *hmsdbPgTx) UpsertCompEndpointTx(cep *sm.ComponentEndpoint, bypassValida
 	}
 	// Ensure endpoint name is normalized and valid
 	var normID string
-	if bypassValidation {
+	if !strictXnameChecking {
 		// If bypassing, just normalize without the strict check.
 		normID = xnametypes.NormalizeHMSCompID(cep.ID)
 	} else {

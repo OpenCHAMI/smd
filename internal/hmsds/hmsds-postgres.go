@@ -2534,12 +2534,12 @@ func (d *hmsdbPg) GetCompEndpointsFilter(f *CompEPFilter) ([]*sm.ComponentEndpoi
 }
 
 // Upsert ComponentEndpoint into database, updating it if it exists.
-func (d *hmsdbPg) UpsertCompEndpoint(cep *sm.ComponentEndpoint, bypassValidation bool) error {
+func (d *hmsdbPg) UpsertCompEndpoint(cep *sm.ComponentEndpoint, strictXnameChecking bool) error {
 	t, err := d.Begin()
 	if err != nil {
 		return err
 	}
-	err = t.UpsertCompEndpointTx(cep, bypassValidation)
+	err = t.UpsertCompEndpointTx(cep, strictXnameChecking)
 	if err != nil {
 		t.Rollback()
 		return err
