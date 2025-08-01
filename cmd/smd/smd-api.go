@@ -2386,7 +2386,7 @@ func (s *SmD) doRedfishEndpointPut(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		// parse data using the new inventory data format (will conform to schema)
-		err = s.parseRedfishEndpointDataV2(w, body, true)
+		err = s.parseRedfishEndpointDataV2(w, body, true, true)
 		if err != nil {
 			sendJsonError(w, http.StatusInternalServerError,
 				fmt.Sprintf("failed parsing post data (V2): %v", err))
@@ -2694,7 +2694,7 @@ func (s *SmD) doRedfishEndpointsPost(w http.ResponseWriter, r *http.Request) {
 		if s.openchami {
 			s.lg.Printf("Payload does not contain PDUInventory key, routing to default V2 parser.")
 			if s.getSchemaVersion(w, body) > 0 { // Simplified from original
-				err = s.parseRedfishEndpointDataV2(w, body, false)
+				err = s.parseRedfishEndpointDataV2(w, body, false, s.strictXnameChecking)
 				if err != nil {
 					sendJsonError(w, http.StatusInternalServerError,
 						fmt.Sprintf("failed parsing post data (V2): %v", err))
@@ -2788,7 +2788,7 @@ func (s *SmD) parseRedfishEndpointData(w http.ResponseWriter, eps *sm.RedfishEnd
 			}
 
 			// finally, insert component endpoint into DB
-			err = s.db.UpsertCompEndpoint(&cep)
+			err = s.db.UpsertCompEndpoint(&cep, true)
 			if err != nil {
 				sendJsonError(w, http.StatusInternalServerError,
 					fmt.Sprintf("failed to upsert component endpoint: %v", err))
@@ -2808,7 +2808,7 @@ func NormalizeURLPath(uri string) string {
 	return uri
 }
 
-func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, forceUpdate bool) error {
+func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, forceUpdate bool, strictXnameChecking bool) error {
 	s.lg.Printf("parsing request data using V2 parsing method...")
 
 	// NOTE: temporary definition for manager
@@ -3072,7 +3072,7 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 			}
 
 			// component endpoints
-			err = s.db.UpsertCompEndpoint(&componentEndpoint)
+			err = s.db.UpsertCompEndpoint(&componentEndpoint, !strictXnameChecking)
 			if err != nil {
 				sendJsonError(w, http.StatusInternalServerError,
 					fmt.Sprintf("failed to upsert component endpoint: %v", err))
@@ -3221,7 +3221,7 @@ func (s *SmD) parsePDUData(w http.ResponseWriter, data []byte, forceUpdate bool)
 	}
 	if len(endpointsToUpsert) > 0 {
 		for _, cep := range endpointsToUpsert {
-			if err := s.db.UpsertCompEndpoint(cep); err != nil {
+			if err := s.db.UpsertCompEndpoint(cep, true); err != nil {
 				s.lg.Printf("ERROR: failed to upsert component endpoint %s: %v", cep.ID, err)
 			}
 		}

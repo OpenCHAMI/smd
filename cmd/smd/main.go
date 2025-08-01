@@ -142,18 +142,19 @@ type SmD struct {
 	sysInfoBaseV2       string
 	powerMapBaseV2      string
 
-	wp            *base.WorkerPool
-	wpRFEvent     *base.WorkerPool
-	scnSubs       sm.SCNSubscriptionArray
-	scnSubMap     SCNSubMap
-	scnSubLock    sync.Mutex
-	lg            *log.Logger // Log file
-	lgLvl         LogLevel
-	slsUrl        string
-	sls           *slsapi.SLS
-	hbtdUrl       string
-	hbtd          *hbtdapi.HBTD
-	hmsConfigPath string
+	wp                  *base.WorkerPool
+	wpRFEvent           *base.WorkerPool
+	scnSubs             sm.SCNSubscriptionArray
+	scnSubMap           SCNSubMap
+	scnSubLock          sync.Mutex
+	lg                  *log.Logger // Log file
+	lgLvl               LogLevel
+	slsUrl              string
+	sls                 *slsapi.SLS
+	hbtdUrl             string
+	hbtd                *hbtdapi.HBTD
+	hmsConfigPath       string
+	strictXnameChecking bool
 
 	// TODO: Remove anything conditional on writeVault when HSM no longer is
 	//       the one writing credentials to Vault.
@@ -599,6 +600,7 @@ func (s *SmD) parseCmdLine() {
 	flag.BoolVar(&s.openchami, "openchami", OPENCHAMI_DEFAULT, "Enabled OpenCHAMI features")
 	flag.BoolVar(&s.zerolog, "zerolog", ZEROLOG_DEFAULT, "Enabled zerolog")
 	help := flag.Bool("h", false, "Print help and exit")
+	flag.BoolVar(&s.strictXnameChecking, "strict-xname-checking", true, "Enable strict xname validation")
 
 	flag.Parse()
 
