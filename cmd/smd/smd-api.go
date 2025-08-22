@@ -2689,6 +2689,7 @@ func (s *SmD) doRedfishEndpointsPost(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			sendJsonError(w, http.StatusInternalServerError,
 				fmt.Sprintf("failed parsing PDU data: %v", err))
+			return
 		}
 	} else {
 		if s.openchami {
@@ -2698,6 +2699,7 @@ func (s *SmD) doRedfishEndpointsPost(w http.ResponseWriter, r *http.Request) {
 				if err != nil {
 					sendJsonError(w, http.StatusInternalServerError,
 						fmt.Sprintf("failed parsing post data (V2): %v", err))
+					return
 				}
 			}
 		}
@@ -2876,13 +2878,21 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 
 	// function to create CompEthInterfaceV2 from collection of EthernetInterfaces
 	var createCompEthInterfacesV2 = func(component base.Component, eths []schemas.EthernetInterface) {
+		type HttpError struct {
+			Code int
+			Msg  string
+			Err  error // used for sendJsonError
+		}
+		var httpErrors []HttpError
 		// todo sendJson*() can only be called once. Update this func to only call it once, either by building the err or returning on the first error.
 		for _, eth := range eths {
 			// convert IP address from manager ethernet interface to IPAddressMapping
 			ips := []sm.IPAddressMapping{sm.IPAddressMapping{IPAddr: eth.IP}}
 			cei, err := sm.NewCompEthInterfaceV2(eth.Description, eth.MAC, component.ID, ips)
 			if err != nil {
-				sendJsonError(w, http.StatusBadRequest, err.Error())
+				// todo remove sendJsonError
+				// sendJsonError(w, http.StatusBadRequest, err.Error())
+				httpErrors = append(httpErrors, HttpError{Code: http.StatusBadRequest, Msg: err.Error()})
 				continue
 			}
 			err = s.db.InsertCompEthInterface(cei)
@@ -2894,35 +2904,82 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 						// try deleting and reinserting the CompEthInterface since there is not an upsert/update function
 						rowAffected, err := s.db.DeleteCompEthInterfaceByID(cei.ID)
 						if err != nil {
-							sendJsonDBError(w, "", "operation failed trying to delete component ethernet interface.", err)
+							httpErrors = append(httpErrors,
+								HttpError{
+									Code: http.StatusBadRequest,
+									Msg:  "operation failed trying to delete component ethernet interface.",
+									Err:  err})
+							// todo remove sendJson
+							// sendJsonDBError(w, "", "operation failed trying to delete component ethernet interface.", err)
 							continue
 						}
 						if rowAffected {
 							err = s.db.InsertCompEthInterface(cei)
 							if err != nil {
 								if err == hmsds.ErrHMSDSDuplicateKey {
-									sendJsonError(w, http.StatusConflict, "operation would conflict "+
-										"with an existing component ethernet interface that has the same MAC address.")
+									// todo remove
+									// sendJsonError(w, http.StatusConflict, "operation would conflict "+
+									// "with an existing component ethernet interface that has the same MAC address.")
+									httpErrors = append(httpErrors,
+										HttpError{
+											Code: http.StatusConflict,
+											Msg:  "operation would conflict with an existing component ethernet interface that has the same MAC address."})
 								} else {
 									// Send this message as 500 or 400 plus error message if it is
 									// an HMSError and not, e.g. an internal DB error code.
-									sendJsonDBError(w, "", "operation  failed during store.", err)
+
+									// todo remove
+									// sendJsonDBError(w, "", "operation  failed during store.", err)
+
+									httpErrors = append(httpErrors,
+										HttpError{
+											Code: http.StatusBadRequest,
+											Msg:  "operation  failed during store.",
+											Err:  err})
 								}
 							}
 						}
 					} else {
 						// forceUpdate was not enabled when duplicate key was found, so we err.
-						sendJsonError(w, http.StatusConflict, "operation would conflict "+
-							"with an existing component ethernet interface that has the same MAC address.")
+						// todo remove
+						// sendJsonError(w, http.StatusConflict, "operation would conflict "+
+						// "with an existing component ethernet interface that has the same MAC address.")
+						httpErrors = append(httpErrors,
+							HttpError{
+								Code: http.StatusConflict,
+								Msg:  "operation would conflict with an existing component ethernet interface that has the same MAC address."})
 					}
 				} else {
 					// Some other error occurred that we want to let the user know about.
 					// Send this message as 500 or 400 plus error message if it is
 					// an HMSError and not, e.g. an internal DB error code.
-					sendJsonDBError(w, "", "operation failed during store.", err)
+
+					// todo remove
+					// sendJsonDBError(w, "", "operation failed during store.", err)
+
+					httpErrors = append(httpErrors,
+						HttpError{
+							Code: http.StatusBadRequest,
+							Msg:  "operation  failed during store.",
+							Err:  err})
 				}
 				continue
 			}
+		}
+		if len(httpErrors) > 0 {
+			message := ""
+			code := httpErrors[0].Code
+			for i, e := range httpErrors {
+				if i != 0 {
+					message = message + "\n"
+				}
+				message = message + e.Msg
+				if i >= 100 {
+					// skip the remaining messages.
+					break
+				}
+			}
+			sendJsonError(w, code, message)
 		}
 
 	}
