@@ -39,9 +39,9 @@ import (
 	"github.com/Cray-HPE/hms-xname/xnametypes"
 	"github.com/OpenCHAMI/smd/v2/internal/hmsds"
 	rf "github.com/OpenCHAMI/smd/v2/pkg/redfish"
+	"github.com/OpenCHAMI/smd/v2/pkg/schemas"
 	"github.com/OpenCHAMI/smd/v2/pkg/sm"
 	"github.com/go-chi/chi/v5"
-	"github.com/openchami/schemas/schemas"
 	redfish "github.com/openchami/schemas/schemas/csm"
 )
 
