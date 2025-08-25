@@ -1,6 +1,6 @@
 // MIT License
 //
-// (C) Copyright [2019-2023] Hewlett Packard Enterprise Development LP
+// (C) Copyright [2019-2023,2025] Hewlett Packard Enterprise Development LP
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
@@ -38,8 +38,9 @@ import (
 )
 
 const APP_VERSION = "1"
-const SCHEMA_VERSION = 20
-const SCHEMA_STEPS = 22
+const SCHEMA_VERSION = 21
+const SCHEMA_STEPS = 23
+const DELETE_DUPLICATE_DETECTED_EVENTS_STEP = 23
 
 var dbName string
 var dbUser string
@@ -302,6 +303,26 @@ func main() {
 		lg.Printf("Migration: Already at expected step.  Nothing to do.")
 		os.Exit(0)
 	}
+
+	// If we pruned "Detected" events in migration 23 we need to run a full
+	// vacuum to free space.  This is not allowed in the migration itself.
+
+	if version < DELETE_DUPLICATE_DETECTED_EVENTS_STEP &&
+		migrateStep >= DELETE_DUPLICATE_DETECTED_EVENTS_STEP {
+
+		lg.Printf("Migration: Running full vacuum to reclaim space...")
+
+		_, err = db.Exec("VACUUM FULL hwinv_hist;")
+
+		if err != nil {
+			log.Printf("VACUUM FULL failed: %v", err)
+		} else {
+			lg.Printf("Migration: Full vacuum completed successfully")
+		}
+	}
+
+	// Check the version again to ensure we are at the expected step.
+
 	version2, dirty2, err := m.Version()
 	if err == migrate.ErrNilVersion {
 		lg.Printf("Migration: NO VERSION AFTER MIGRATE (%d) yet", version2)
