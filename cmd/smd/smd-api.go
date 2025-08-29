@@ -5128,6 +5128,7 @@ func (s *SmD) doGroupMembersPost(w http.ResponseWriter, r *http.Request) {
 // already exist in the group, they are added to the group. Any xnames that
 // exist in the group that are not in the payload are removed from the group.
 func (s *SmD) doGroupMembersPut(w http.ResponseWriter, r *http.Request) {
+	defer base.DrainAndCloseRequestBody(r)
 	var membersIn sm.MemberPutBody
 
 	label := sm.NormalizeGroupField(chi.URLParam(r, "group_label"))
