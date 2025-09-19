@@ -54,8 +54,15 @@ func TestGenerateAndWriteSchemas(t *testing.T) {
 		}
 	)
 
+	dir, err := os.Getwd()
+	if err != nil {
+		log.Printf("Failed to find workding dir. err: %s\n", err)
+	}
+
 	if err := os.MkdirAll(path, 0755); err != nil {
-		t.Fatal("Failed to create schema directory")
+		t.Fatalf("Failed to create schema directory: %s/%s", dir, path)
+	} else {
+		log.Printf("created: %s/%s\n", dir, path)
 	}
 
 	for filename, model := range schemas {
@@ -66,8 +73,14 @@ func TestGenerateAndWriteSchemas(t *testing.T) {
 		}
 		fullpath := filepath.Join(path, filename)
 		if err := os.WriteFile(fullpath, data, 0644); err != nil {
-			t.Fatal("Failed to write JSON schema to file")
+			t.Fatalf("Failed to write JSON schema to file: %s", fullpath)
 		}
-		log.Println("Schema written")
+		log.Println("Schema written:", fullpath)
+	}
+
+	if err := os.RemoveAll(path); err != nil {
+		t.Fatalf("Failed to remove schema directory: %s/%s", dir, path)
+	} else {
+		log.Printf("Removed: %s/%s\n", dir, path)
 	}
 }
