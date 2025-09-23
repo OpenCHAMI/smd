@@ -79,6 +79,9 @@ def smoke_test(test_dir):
 
 
 def tavern_test(test_dir, test_name):
+    if test_name == "smoke":
+        smoke_test(test_dir)
+        return
     test_path = os.path.join(test_dir, "ct", "api", test_name)
     config_file = "/opt/ochami-pytest/libs/tavern_global_config_ct_test.yaml"
     pytest.main(["-vvvv", str(test_path), "--rootdir=/", "--tavern-global-cfg", config_file])
