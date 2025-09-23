@@ -52,7 +52,7 @@ unittest:
 	go test -cover -v -tags musl ./...
 
 ct-image:
-	docker build --no-cache -f test/base-image/Dockerfile test/base-image/ --tag smd-test:$(VERSION)
+	docker build --no-cache -f test/Dockerfile test/ --tag smd-test:$(VERSION)
 
 binaries: smd smd-init smd-loader native
 
