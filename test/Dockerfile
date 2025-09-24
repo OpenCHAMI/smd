@@ -59,6 +59,7 @@ RUN mkdir -p /opt/ochami-pytest && \
     chmod 755 /var/logs/ochami-pytest
 COPY bin  /opt/ochami-pytest/bin
 COPY libs /opt/ochami-pytest/libs
+COPY ct /tests/ct
 COPY smoke_pytest /opt/ochami-pytest/smoke_pytest
 
 
