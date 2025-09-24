@@ -69,4 +69,4 @@ USER 65534:65534
 ENV PATH="$PATH:/opt/ochami-pytest/bin"
 
 WORKDIR /
-CMD [ "/opt/ochami-pytest/bin/ochami-pytest", "help" ]
+CMD [ "/opt/ochami-pytest/bin/smd-test", "help" ]
