@@ -47,26 +47,26 @@ RUN set -ex \
         gcc \
         musl-dev
 
-RUN mkdir -p /opt/ochami-pytest && \
-    mkdir -p /var/logs/ochami-pytest && \
+RUN mkdir -p /opt/smd-test && \
+    mkdir -p /var/logs/smd-test && \
     mkdir -p /tests && \
     mkdir -p /.pytest_cache && \
     chown -R 65534:65534 /.pytest_cache && \
     chmod 755 /.pytest_cache && \
-    chown -R 65534:65534 /opt/ochami-pytest && \
+    chown -R 65534:65534 /opt/smd-test && \
     chown -R 65534:65534 /tests && \
-    chown -R 65534:65534 /var/logs/ochami-pytest && \
-    chmod 755 /var/logs/ochami-pytest
-COPY bin  /opt/ochami-pytest/bin
-COPY libs /opt/ochami-pytest/libs
+    chown -R 65534:65534 /var/logs/smd-test && \
+    chmod 755 /var/logs/smd-test
+COPY bin  /opt/smd-test/bin
+COPY libs /opt/smd-test/libs
 COPY ct /tests/ct
-COPY smoke_pytest /opt/ochami-pytest/smoke_pytest
+COPY smoke_pytest /opt/smd-test/smoke_pytest
 
 
 
 # Run as nobody
 USER 65534:65534
-ENV PATH="$PATH:/opt/ochami-pytest/bin"
+ENV PATH="$PATH:/opt/smd-test/bin"
 
 WORKDIR /
-CMD [ "/opt/ochami-pytest/bin/smd-test", "help" ]
+CMD [ "/opt/smd-test/bin/smd-test" ]

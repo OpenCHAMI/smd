@@ -75,7 +75,7 @@ def list_tests(test_dir):
 
 
 def smoke_test(test_dir):
-    pytest.main(["-vvvv", "/opt/ochami-pytest/smoke_pytest", "--smoke-json", f"{test_dir}/ct/smoke/smoke.json"])
+    pytest.main(["-vvvv", "/opt/smd-test/smoke_pytest", "--smoke-json", f"{test_dir}/ct/smoke/smoke.json"])
 
 
 def tavern_test(test_dir, test_name):
@@ -83,7 +83,7 @@ def tavern_test(test_dir, test_name):
         smoke_test(test_dir)
         return
     test_path = os.path.join(test_dir, "ct", "api", test_name)
-    config_file = "/opt/ochami-pytest/libs/tavern_global_config_ct_test.yaml"
+    config_file = "/opt/smd-test/libs/tavern_global_config_ct_test.yaml"
     pytest.main(["-vvvv", str(test_path), "--rootdir=/", "--tavern-global-cfg", config_file])
 
 
@@ -99,6 +99,10 @@ def main(argv):
     parser.add_argument("command", type=str, help="command", choices=command_choices)
     parser.add_argument("-n", "--node", type=str, action="append", help="Node Hostname or IP. Used in the smd-discover command.")
     parser.add_argument("-t", "--test", type=str, action="append", help="Test name. Used in the smd-discover command.")
+
+    if len(sys.argv) == 1:
+        parser.print_help(sys.stderr)
+        sys.exit(1)
 
     args = parser.parse_args()
 
