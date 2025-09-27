@@ -9445,1131 +9445,1131 @@ stages:
       method: DELETE
       verify: !bool "{verify}"
 
----
-test_name: Verify Component operations on (Virtual)Nodes with no system role information in SLS or NodeMaps
-
-marks:
-  - parametrize:
-      key:
-      - type
-      - xname
-      - bogus_nid
-      vals:
-      - [Node, x9999c5s17b0n0, 163850784]
-      - [Node, x9999c5s17b0n1, 163850785]
-      - [VirtualNode, x9999c5s17b0n0v0, 163850784]
-      - [VirtualNode, x9999c5s17b0n0v1, 163850785]
-
-stages:
-  # Remove test node from SLS
-  - name: Remove any test {type} from SLS
-    request:
-      url: "{sls_base_url}/v1/hardware/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-
-  # Remove any node maps from HSM for the node
-  - name: Remove any test {type} from NodeMaps
-    request:
-      url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-
-  # Remove any test Node from State Components
-  - name: Remove any test {type} from State Components
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-
-  # POST Create Node with no system role information
-  - name: Create {type} component using POST with no system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components"
-      method: POST
-      verify: !bool "{verify}"
-      json:
-        Components:
-        - ID: "{xname}"
-          State: Populated
-    response:
-      status_code: 204
-
-  # GET Verify Node was created successfully
-  - name: Verify {type} component was successfully created using POST with no system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: GET
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-      verify_response_with:
-        function: tavern.testutils.helpers:validate_pykwalify
-        extra_kwargs:
-          schema:
-            type: map
-            mapping:
-              ID:
-                type: str
-                enum:
-                - "{xname}"
-              Type:
-                type: str
-                enum:
-                - "{type}"
-              State:
-                type: str
-                enum:
-                - Populated
-              Flag:
-                type: str
-                enum:
-                - OK
-              Enabled:
-                type: bool
-                enum:
-                - True
-              Role:
-                type: str
-                enum:
-                - "Compute" # This is the role that nodes get by default
-              NID:
-                type: int
-                enum:
-                - !int "{bogus_nid}" # Bogus NID computed from xname
-
-  # DELETE Node
-  - name: Remove test {type} from State Components
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-
-  # POST Create node with System role information
-  - name: Create {type} component using POST with system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components"
-      method: POST
-      verify: !bool "{verify}"
-      json:
-        Components:
-        - ID: "{xname}"
-          State: Populated
-          Role: Management
-          SubRole: Worker
-          NID: 9999999977
-          Class: River
-          Arch: X86
-          NetType: "Sling"
-
-    response:
-      status_code: 204
-
-  # GET Verify Node was created successfully
-  - name: Verify {type} component was successfully created using POST with system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: GET
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-      verify_response_with:
-        function: tavern.testutils.helpers:validate_pykwalify
-        extra_kwargs:
-          schema:
-            type: map
-            mapping:
-              ID:
-                type: str
-                enum:
-                - "{xname}"
-              Type:
-                type: str
-                enum:
-                - "{type}"
-              State:
-                type: str
-                enum:
-                - Populated
-              Flag:
-                type: str
-                enum:
-                - OK
-              Enabled:
-                type: bool
-                enum:
-                - True
-              Role:
-                type: str
-                enum:
-                - "Management"
-              SubRole:
-                type: str
-                enum:
-                - "Worker"
-              NID:
-                type: int
-                enum:
-                - 9999999977
-              Class:
-                type: str
-                enum:
-                - "River"
-              Arch:
-                type: str
-                enum:
-                - "X86"
-              NetType:
-                type: str
-                enum:
-                - "Sling"
-
-  # DELETE Node
-  - name: Remove test {type} from State Components
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-
-  # PUT Node with no system role information
-  - name: Create Node component using PUT with no system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: PUT
-      verify: !bool "{verify}"
-      json:
-        Component:
-          ID: "{xname}"
-          State: Populated
-    response:
-      status_code: 204
-
-  # GET Verify Node was created successfully
-  - name: Verify {type} component was successfully created using PUT with no system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: GET
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-      verify_response_with:
-        function: tavern.testutils.helpers:validate_pykwalify
-        extra_kwargs:
-          schema:
-            type: map
-            mapping:
-              ID:
-                type: str
-                enum:
-                - "{xname}"
-              Type:
-                type: str
-                enum:
-                - "{type}"
-              State:
-                type: str
-                enum:
-                - Populated
-              Flag:
-                type: str
-                enum:
-                - OK
-              Enabled:
-                type: bool
-                enum:
-                - True
-              Role:
-                type: str
-                enum:
-                - "Compute" # This is the role that nodes get by default
-              NID:
-                type: int
-                enum:
-                - !int "{bogus_nid}" # Bogus NID computed from xname
-
-  # DELETE Node
-  - name: Remove test {type} from State Components
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-
-  # PUT Node with system role information
-  - name: Create {type} component using PUT with system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: PUT
-      verify: !bool "{verify}"
-      json:
-        Component:
-          ID: "{xname}"
-          State: Populated
-          Role: Management
-          SubRole: Worker
-          NID: 9999999977
-          Class: River
-          Arch: X86
-          NetType: "Sling"
-
-    response:
-      status_code: 204
-
-  # GET Verify Node was created successfully
-  - name: Verify {type} component was successfully created using PUT with system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: GET
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-      verify_response_with:
-        function: tavern.testutils.helpers:validate_pykwalify
-        extra_kwargs:
-          schema:
-            type: map
-            mapping:
-              ID:
-                type: str
-                enum:
-                - "{xname}"
-              Type:
-                type: str
-                enum:
-                - "{type}"
-              State:
-                type: str
-                enum:
-                - Populated
-              Flag:
-                type: str
-                enum:
-                - OK
-              Enabled:
-                type: bool
-                enum:
-                - True
-              Role:
-                type: str
-                enum:
-                - "Management"
-              SubRole:
-                type: str
-                enum:
-                - "Worker"
-              NID:
-                type: int
-                enum:
-                - 9999999977
-              Class:
-                type: str
-                enum:
-                - "River"
-              Arch:
-                type: str
-                enum:
-                - "X86"
-              NetType:
-                type: str
-                enum:
-                - "Sling"
-  # DELETE Node
-  - name: Remove test Node from State Components
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-
----
-test_name: Verify Component operations on (Virtual)Nodes with system role information in SLS
-
-marks:
-  - parametrize:
-      key:
-      - type
-      - xname
-      vals:
-      - [Node, x9999c5s17b0n0]
-      - [Node, x9999c5s17b0n1]
-      - [VirtualNode, x9999c5s17b0n0v0]
-      - [VirtualNode, x9999c5s17b0n0v1]
-
-stages:
-  # PUT test virtual node from SLS
-  - name: Create using PUT the test {type} into SLS
-    request:
-      url: "{sls_base_url}/v1/hardware/{xname}"
-      method: PUT
-      verify: !bool "{verify}"
-      json:
-        ID: "{xname}"
-        Class: River
-        ExtraProperties:
-          Role: Application
-          SubRole: Storage
-          NID: 9999999967
-          Aliases: 
-          - uan999
-    response:
-      status_code:
-      - 201
-
-
-  # Remove any node maps from HSM for the node
-  - name: Remove any test {type} from NodeMaps
-    request:
-      url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-
-  # Remove any test Node from State Components
-  - name: Remove any test {type} from State Components
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-
-  # POST Create Node with no system role information
-  - name: Create {type} component using POST with no system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components"
-      method: POST
-      verify: !bool "{verify}"
-      json:
-        Components:
-        - ID: "{xname}"
-          State: Populated
-    response:
-      status_code: 204
-
-  # GET Verify Node was created successfully
-  - name: Verify {type} component was successfully created using POST with no system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: GET
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-      verify_response_with:
-        function: tavern.testutils.helpers:validate_pykwalify
-        extra_kwargs:
-          schema:
-            type: map
-            mapping:
-              ID:
-                type: str
-                enum:
-                - "{xname}"
-              Type:
-                type: str
-                enum:
-                - "{type}"
-              State:
-                type: str
-                enum:
-                - Populated
-              Flag:
-                type: str
-                enum:
-                - OK
-              Enabled:
-                type: bool
-                enum:
-                - True
-              Role:
-                type: str
-                enum:
-                - "Application"
-              SubRole:
-                type: str
-                enum:
-                - "Storage"
-              NID:
-                type: int
-                enum:
-                - 9999999967
-              Class:
-                type: str
-                enum:
-                - "River"
-              Arch:
-                type: str
-                enum:
-                - "X86"
-              NetType:
-                type: str
-                enum:
-                - "Sling"
-
-  # DELETE Node
-  - name: Remove test {type} from State Components
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-
-  # POST Create node with System role information
-  - name: Create {type} component using POST with system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components"
-      method: POST
-      verify: !bool "{verify}"
-      json:
-        Components:
-        - ID: "{xname}"
-          State: Populated
-          Role: Management # This ROle is different than SLS
-          SubRole: Worker # This SubRole is different than SLS 
-          NID: 9999999977 # This NID is different than SLS
-          Class: River
-          Arch: X86
-          NetType: "Sling"
-
-    response:
-      status_code: 204
- 
-  # GET Verify Node was created successfully
-  - name: Verify {type} component was successfully created using POST with system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: GET
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-      verify_response_with:
-        function: tavern.testutils.helpers:validate_pykwalify
-        extra_kwargs:
-          schema:
-            type: map
-            mapping:
-              ID:
-                type: str
-                enum:
-                - "{xname}"
-              Type:
-                type: str
-                enum:
-                - "{type}"
-              State:
-                type: str
-                enum:
-                - Populated
-              Flag:
-                type: str
-                enum:
-                - OK
-              Enabled:
-                type: bool
-                enum:
-                - True
-              Role:
-                type: str
-                enum:
-                - "Management"
-              SubRole:
-                type: str
-                enum:
-                - "Worker"
-              NID:
-                type: int
-                enum:
-                - 9999999977
-              Class:
-                type: str
-                enum:
-                - "River"
-              Arch:
-                type: str
-                enum:
-                - "X86"
-              NetType:
-                type: str
-                enum:
-                - "Sling"
-
-  # DELETE Node
-  - name: Remove test {type} from State Components
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-
-  # PUT Node with no system role information
-  - name: Create Node component using PUT with no system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: PUT
-      verify: !bool "{verify}"
-      json:
-        Component:
-          ID: "{xname}"
-          State: Populated
-    response:
-      status_code: 204
-
-  # GET Verify Node was created successfully
-  - name: Verify {type} component was successfully created using PUT with no system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: GET
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-      verify_response_with:
-        function: tavern.testutils.helpers:validate_pykwalify
-        extra_kwargs:
-          schema:
-            type: map
-            mapping:
-              ID:
-                type: str
-                enum:
-                - "{xname}"
-              Type:
-                type: str
-                enum:
-                - "{type}"
-              State:
-                type: str
-                enum:
-                - Populated
-              Flag:
-                type: str
-                enum:
-                - OK
-              Enabled:
-                type: bool
-                enum:
-                - True
-              Role:
-                type: str
-                enum:
-                - "Application"
-              SubRole:
-                type: str
-                enum:
-                - "Storage"
-              NID:
-                type: int
-                enum:
-                - 9999999967
-              Class:
-                type: str
-                enum:
-                - "River"
-              Arch:
-                type: str
-                enum:
-                - "X86"
-              NetType:
-                type: str
-                enum:
-                - "Sling"
-
-  # DELETE Node
-  - name: Remove test {type} from State Components
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-
-  # PUT Node with system role information
-  - name: Create {type} component using PUT with system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: PUT
-      verify: !bool "{verify}"
-      json:
-        Component:
-          ID: "{xname}"
-          State: Populated
-          Role: Management
-          SubRole: Worker
-          NID: 9999999977
-          Class: River
-          Arch: X86
-          NetType: "Sling"
-
-    response:
-      status_code: 204
-
-  # GET Verify Node was created successfully
-  - name: Verify {type} component was successfully created using PUT with system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: GET
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-      verify_response_with:
-        function: tavern.testutils.helpers:validate_pykwalify
-        extra_kwargs:
-          schema:
-            type: map
-            mapping:
-              ID:
-                type: str
-                enum:
-                - "{xname}"
-              Type:
-                type: str
-                enum:
-                - "{type}"
-              State:
-                type: str
-                enum:
-                - Populated
-              Flag:
-                type: str
-                enum:
-                - OK
-              Enabled:
-                type: bool
-                enum:
-                - True
-              Role:
-                type: str
-                enum:
-                - "Management"
-              SubRole:
-                type: str
-                enum:
-                - "Worker"
-              NID:
-                type: int
-                enum:
-                - 9999999977
-              Class:
-                type: str
-                enum:
-                - "River"
-              Arch:
-                type: str
-                enum:
-                - "X86"
-              NetType:
-                type: str
-                enum:
-                - "Sling"
-  # DELETE Node
-  - name: Remove test Node from State Components
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-
-
-  # Remove test node from SLS
-  - name: Remove the test {type} from SLS
-    request:
-      url: "{sls_base_url}/v1/hardware/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-
----
-test_name: Verify Component operations on (Virtual)Nodes with system role information in NodeMaps
-
-marks:
-  - parametrize:
-      key:
-      - type
-      - xname
-      vals:
-      - [Node, x9999c5s17b0n0]
-      - [Node, x9999c5s17b0n1]
-      - [VirtualNode, x9999c5s17b0n0v0]
-      - [VirtualNode, x9999c5s17b0n0v1]
-
-stages:
-  # Delete test virtual node from SLS
-  - name: Remove any test {type} from SLS
-    request:
-      url: "{sls_base_url}/v1/hardware/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-
-  # PUT test virtual node into HSM NodeMaps
-  - name: Create test {type} in NodeMaps
-    request:
-      url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/{xname}"
-      method: PUT
-      verify: !bool "{verify}"
-      json:
-        Role: Application
-        SubRole: Storage
-        NID: 9999999967
-    response:
-      status_code: 200
-
-  # Remove any test Node from State Components
-  - name: Remove any test {type} from State Components
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-
-  # POST Create Node with no system role information
-  - name: Create {type} component using POST with no system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components"
-      method: POST
-      verify: !bool "{verify}"
-      json:
-        Components:
-        - ID: "{xname}"
-          State: Populated
-    response:
-      status_code: 204
-
-  # GET Verify Node was created successfully
-  - name: Verify {type} component was successfully created using POST with no system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: GET
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-      verify_response_with:
-        function: tavern.testutils.helpers:validate_pykwalify
-        extra_kwargs:
-          schema:
-            type: map
-            mapping:
-              ID:
-                type: str
-                enum:
-                - "{xname}"
-              Type:
-                type: str
-                enum:
-                - "{type}"
-              State:
-                type: str
-                enum:
-                - Populated
-              Flag:
-                type: str
-                enum:
-                - OK
-              Enabled:
-                type: bool
-                enum:
-                - True
-              Role:
-                type: str
-                enum:
-                - "Application"
-              SubRole:
-                type: str
-                enum:
-                - "Storage"
-              NID:
-                type: int
-                enum:
-                - 9999999967
-              Class:
-                type: str
-                enum:
-                - "River"
-              Arch:
-                type: str
-                enum:
-                - "X86"
-              NetType:
-                type: str
-                enum:
-                - "Sling"
-
-  # DELETE Node
-  - name: Remove test {type} from State Components
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-
-  # POST Create node with System role information
-  - name: Create {type} component using POST with system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components"
-      method: POST
-      verify: !bool "{verify}"
-      json:
-        Components:
-        - ID: "{xname}"
-          State: Populated
-          Role: Management # This ROle is different than NodeMaps
-          SubRole: Worker # This SubRole is different than NodeMaps
-          NID: 9999999977 # This NID is different than NodeMaps
-          Class: River
-          Arch: X86
-          NetType: "Sling"
-
-    response:
-      status_code: 204
- 
-  # GET Verify Node was created successfully
-  - name: Verify {type} component was successfully created using POST with system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: GET
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-      verify_response_with:
-        function: tavern.testutils.helpers:validate_pykwalify
-        extra_kwargs:
-          schema:
-            type: map
-            mapping:
-              ID:
-                type: str
-                enum:
-                - "{xname}"
-              Type:
-                type: str
-                enum:
-                - "{type}"
-              State:
-                type: str
-                enum:
-                - Populated
-              Flag:
-                type: str
-                enum:
-                - OK
-              Enabled:
-                type: bool
-                enum:
-                - True
-              Role:
-                type: str
-                enum:
-                - "Management"
-              SubRole:
-                type: str
-                enum:
-                - "Worker"
-              NID:
-                type: int
-                enum:
-                - 9999999977
-              Class:
-                type: str
-                enum:
-                - "River"
-              Arch:
-                type: str
-                enum:
-                - "X86"
-              NetType:
-                type: str
-                enum:
-                - "Sling"
-
-  # DELETE Node
-  - name: Remove test {type} from State Components
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-
-  # PUT Node with no system role information
-  - name: Create Node component using PUT with no system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: PUT
-      verify: !bool "{verify}"
-      json:
-        Component:
-          ID: "{xname}"
-          State: Populated
-    response:
-      status_code: 204
-
-  # GET Verify Node was created successfully
-  - name: Verify {type} component was successfully created using PUT with no system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: GET
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-      verify_response_with:
-        function: tavern.testutils.helpers:validate_pykwalify
-        extra_kwargs:
-          schema:
-            type: map
-            mapping:
-              ID:
-                type: str
-                enum:
-                - "{xname}"
-              Type:
-                type: str
-                enum:
-                - "{type}"
-              State:
-                type: str
-                enum:
-                - Populated
-              Flag:
-                type: str
-                enum:
-                - OK
-              Enabled:
-                type: bool
-                enum:
-                - True
-              Role:
-                type: str
-                enum:
-                - "Application"
-              SubRole:
-                type: str
-                enum:
-                - "Storage"
-              NID:
-                type: int
-                enum:
-                - 9999999967
-              Class:
-                type: str
-                enum:
-                - "River"
-              Arch:
-                type: str
-                enum:
-                - "X86"
-              NetType:
-                type: str
-                enum:
-                - "Sling"
-
-  # DELETE Node
-  - name: Remove test {type} from State Components
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-    response:
-      status_code: 200 
-
-  # PUT Node with system role information
-  - name: Create {type} component using PUT with system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: PUT
-      verify: !bool "{verify}"
-      json:
-        Component:
-          ID: "{xname}"
-          State: Populated
-          Role: Management
-          SubRole: Worker
-          NID: 9999999977
-          Class: River
-          Arch: X86
-          NetType: "Sling"
-
-    response:
-      status_code: 204
-
-  # GET Verify Node was created successfully
-  - name: Verify {type} component was successfully created using PUT with system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: GET
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-      verify_response_with:
-        function: tavern.testutils.helpers:validate_pykwalify
-        extra_kwargs:
-          schema:
-            type: map
-            mapping:
-              ID:
-                type: str
-                enum:
-                - "{xname}"
-              Type:
-                type: str
-                enum:
-                - "{type}"
-              State:
-                type: str
-                enum:
-                - Populated
-              Flag:
-                type: str
-                enum:
-                - OK
-              Enabled:
-                type: bool
-                enum:
-                - True
-              Role:
-                type: str
-                enum:
-                - "Management"
-              SubRole:
-                type: str
-                enum:
-                - "Worker"
-              NID:
-                type: int
-                enum:
-                - 9999999977
-              Class:
-                type: str
-                enum:
-                - "River"
-              Arch:
-                type: str
-                enum:
-                - "X86"
-              NetType:
-                type: str
-                enum:
-                - "Sling"
-  # DELETE Node
-  - name: Remove test Node from State Components
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-
-
-  # Remove test node from NodeMaps
-  - name: Remove the test {type} from NodeMaps
-    request:
-      url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-      headers:
-        Authorization: "Bearer {access_token}"
+# ---
+# test_name: Verify Component operations on (Virtual)Nodes with no system role information in SLS or NodeMaps
+#
+# marks:
+#   - parametrize:
+#       key:
+#       - type
+#       - xname
+#       - bogus_nid
+#       vals:
+#       - [Node, x9999c5s17b0n0, 163850784]
+#       - [Node, x9999c5s17b0n1, 163850785]
+#       - [VirtualNode, x9999c5s17b0n0v0, 163850784]
+#       - [VirtualNode, x9999c5s17b0n0v1, 163850785]
+#
+# stages:
+#   # Remove test node from SLS
+#   - name: Remove any test {type} from SLS
+#     request:
+#       url: "{sls_base_url}/v1/hardware/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#
+#   # Remove any node maps from HSM for the node
+#   - name: Remove any test {type} from NodeMaps
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#
+#   # Remove any test Node from State Components
+#   - name: Remove any test {type} from State Components
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#
+#   # POST Create Node with no system role information
+#   - name: Create {type} component using POST with no system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components"
+#       method: POST
+#       verify: !bool "{verify}"
+#       json:
+#         Components:
+#         - ID: "{xname}"
+#           State: Populated
+#     response:
+#       status_code: 204
+#
+#   # GET Verify Node was created successfully
+#   - name: Verify {type} component was successfully created using POST with no system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: GET
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#       verify_response_with:
+#         function: tavern.testutils.helpers:validate_pykwalify
+#         extra_kwargs:
+#           schema:
+#             type: map
+#             mapping:
+#               ID:
+#                 type: str
+#                 enum:
+#                 - "{xname}"
+#               Type:
+#                 type: str
+#                 enum:
+#                 - "{type}"
+#               State:
+#                 type: str
+#                 enum:
+#                 - Populated
+#               Flag:
+#                 type: str
+#                 enum:
+#                 - OK
+#               Enabled:
+#                 type: bool
+#                 enum:
+#                 - True
+#               Role:
+#                 type: str
+#                 enum:
+#                 - "Compute" # This is the role that nodes get by default
+#               NID:
+#                 type: int
+#                 enum:
+#                 - !int "{bogus_nid}" # Bogus NID computed from xname
+#
+#   # DELETE Node
+#   - name: Remove test {type} from State Components
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#
+#   # POST Create node with System role information
+#   - name: Create {type} component using POST with system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components"
+#       method: POST
+#       verify: !bool "{verify}"
+#       json:
+#         Components:
+#         - ID: "{xname}"
+#           State: Populated
+#           Role: Management
+#           SubRole: Worker
+#           NID: 9999999977
+#           Class: River
+#           Arch: X86
+#           NetType: "Sling"
+#
+#     response:
+#       status_code: 204
+#
+#   # GET Verify Node was created successfully
+#   - name: Verify {type} component was successfully created using POST with system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: GET
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#       verify_response_with:
+#         function: tavern.testutils.helpers:validate_pykwalify
+#         extra_kwargs:
+#           schema:
+#             type: map
+#             mapping:
+#               ID:
+#                 type: str
+#                 enum:
+#                 - "{xname}"
+#               Type:
+#                 type: str
+#                 enum:
+#                 - "{type}"
+#               State:
+#                 type: str
+#                 enum:
+#                 - Populated
+#               Flag:
+#                 type: str
+#                 enum:
+#                 - OK
+#               Enabled:
+#                 type: bool
+#                 enum:
+#                 - True
+#               Role:
+#                 type: str
+#                 enum:
+#                 - "Management"
+#               SubRole:
+#                 type: str
+#                 enum:
+#                 - "Worker"
+#               NID:
+#                 type: int
+#                 enum:
+#                 - 9999999977
+#               Class:
+#                 type: str
+#                 enum:
+#                 - "River"
+#               Arch:
+#                 type: str
+#                 enum:
+#                 - "X86"
+#               NetType:
+#                 type: str
+#                 enum:
+#                 - "Sling"
+#
+#   # DELETE Node
+#   - name: Remove test {type} from State Components
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#
+#   # PUT Node with no system role information
+#   - name: Create Node component using PUT with no system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: PUT
+#       verify: !bool "{verify}"
+#       json:
+#         Component:
+#           ID: "{xname}"
+#           State: Populated
+#     response:
+#       status_code: 204
+#
+#   # GET Verify Node was created successfully
+#   - name: Verify {type} component was successfully created using PUT with no system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: GET
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#       verify_response_with:
+#         function: tavern.testutils.helpers:validate_pykwalify
+#         extra_kwargs:
+#           schema:
+#             type: map
+#             mapping:
+#               ID:
+#                 type: str
+#                 enum:
+#                 - "{xname}"
+#               Type:
+#                 type: str
+#                 enum:
+#                 - "{type}"
+#               State:
+#                 type: str
+#                 enum:
+#                 - Populated
+#               Flag:
+#                 type: str
+#                 enum:
+#                 - OK
+#               Enabled:
+#                 type: bool
+#                 enum:
+#                 - True
+#               Role:
+#                 type: str
+#                 enum:
+#                 - "Compute" # This is the role that nodes get by default
+#               NID:
+#                 type: int
+#                 enum:
+#                 - !int "{bogus_nid}" # Bogus NID computed from xname
+#
+#   # DELETE Node
+#   - name: Remove test {type} from State Components
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#
+#   # PUT Node with system role information
+#   - name: Create {type} component using PUT with system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: PUT
+#       verify: !bool "{verify}"
+#       json:
+#         Component:
+#           ID: "{xname}"
+#           State: Populated
+#           Role: Management
+#           SubRole: Worker
+#           NID: 9999999977
+#           Class: River
+#           Arch: X86
+#           NetType: "Sling"
+#
+#     response:
+#       status_code: 204
+#
+#   # GET Verify Node was created successfully
+#   - name: Verify {type} component was successfully created using PUT with system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: GET
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#       verify_response_with:
+#         function: tavern.testutils.helpers:validate_pykwalify
+#         extra_kwargs:
+#           schema:
+#             type: map
+#             mapping:
+#               ID:
+#                 type: str
+#                 enum:
+#                 - "{xname}"
+#               Type:
+#                 type: str
+#                 enum:
+#                 - "{type}"
+#               State:
+#                 type: str
+#                 enum:
+#                 - Populated
+#               Flag:
+#                 type: str
+#                 enum:
+#                 - OK
+#               Enabled:
+#                 type: bool
+#                 enum:
+#                 - True
+#               Role:
+#                 type: str
+#                 enum:
+#                 - "Management"
+#               SubRole:
+#                 type: str
+#                 enum:
+#                 - "Worker"
+#               NID:
+#                 type: int
+#                 enum:
+#                 - 9999999977
+#               Class:
+#                 type: str
+#                 enum:
+#                 - "River"
+#               Arch:
+#                 type: str
+#                 enum:
+#                 - "X86"
+#               NetType:
+#                 type: str
+#                 enum:
+#                 - "Sling"
+#   # DELETE Node
+#   - name: Remove test Node from State Components
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#
+# ---
+# test_name: Verify Component operations on (Virtual)Nodes with system role information in SLS
+#
+# marks:
+#   - parametrize:
+#       key:
+#       - type
+#       - xname
+#       vals:
+#       - [Node, x9999c5s17b0n0]
+#       - [Node, x9999c5s17b0n1]
+#       - [VirtualNode, x9999c5s17b0n0v0]
+#       - [VirtualNode, x9999c5s17b0n0v1]
+#
+# stages:
+#   # PUT test virtual node from SLS
+#   - name: Create using PUT the test {type} into SLS
+#     request:
+#       url: "{sls_base_url}/v1/hardware/{xname}"
+#       method: PUT
+#       verify: !bool "{verify}"
+#       json:
+#         ID: "{xname}"
+#         Class: River
+#         ExtraProperties:
+#           Role: Application
+#           SubRole: Storage
+#           NID: 9999999967
+#           Aliases: 
+#           - uan999
+#     response:
+#       status_code:
+#       - 201
+#
+#
+#   # Remove any node maps from HSM for the node
+#   - name: Remove any test {type} from NodeMaps
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#
+#   # Remove any test Node from State Components
+#   - name: Remove any test {type} from State Components
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#
+#   # POST Create Node with no system role information
+#   - name: Create {type} component using POST with no system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components"
+#       method: POST
+#       verify: !bool "{verify}"
+#       json:
+#         Components:
+#         - ID: "{xname}"
+#           State: Populated
+#     response:
+#       status_code: 204
+#
+#   # GET Verify Node was created successfully
+#   - name: Verify {type} component was successfully created using POST with no system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: GET
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#       verify_response_with:
+#         function: tavern.testutils.helpers:validate_pykwalify
+#         extra_kwargs:
+#           schema:
+#             type: map
+#             mapping:
+#               ID:
+#                 type: str
+#                 enum:
+#                 - "{xname}"
+#               Type:
+#                 type: str
+#                 enum:
+#                 - "{type}"
+#               State:
+#                 type: str
+#                 enum:
+#                 - Populated
+#               Flag:
+#                 type: str
+#                 enum:
+#                 - OK
+#               Enabled:
+#                 type: bool
+#                 enum:
+#                 - True
+#               Role:
+#                 type: str
+#                 enum:
+#                 - "Application"
+#               SubRole:
+#                 type: str
+#                 enum:
+#                 - "Storage"
+#               NID:
+#                 type: int
+#                 enum:
+#                 - 9999999967
+#               Class:
+#                 type: str
+#                 enum:
+#                 - "River"
+#               Arch:
+#                 type: str
+#                 enum:
+#                 - "X86"
+#               NetType:
+#                 type: str
+#                 enum:
+#                 - "Sling"
+#
+#   # DELETE Node
+#   - name: Remove test {type} from State Components
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#
+#   # POST Create node with System role information
+#   - name: Create {type} component using POST with system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components"
+#       method: POST
+#       verify: !bool "{verify}"
+#       json:
+#         Components:
+#         - ID: "{xname}"
+#           State: Populated
+#           Role: Management # This ROle is different than SLS
+#           SubRole: Worker # This SubRole is different than SLS 
+#           NID: 9999999977 # This NID is different than SLS
+#           Class: River
+#           Arch: X86
+#           NetType: "Sling"
+#
+#     response:
+#       status_code: 204
+#
+#   # GET Verify Node was created successfully
+#   - name: Verify {type} component was successfully created using POST with system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: GET
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#       verify_response_with:
+#         function: tavern.testutils.helpers:validate_pykwalify
+#         extra_kwargs:
+#           schema:
+#             type: map
+#             mapping:
+#               ID:
+#                 type: str
+#                 enum:
+#                 - "{xname}"
+#               Type:
+#                 type: str
+#                 enum:
+#                 - "{type}"
+#               State:
+#                 type: str
+#                 enum:
+#                 - Populated
+#               Flag:
+#                 type: str
+#                 enum:
+#                 - OK
+#               Enabled:
+#                 type: bool
+#                 enum:
+#                 - True
+#               Role:
+#                 type: str
+#                 enum:
+#                 - "Management"
+#               SubRole:
+#                 type: str
+#                 enum:
+#                 - "Worker"
+#               NID:
+#                 type: int
+#                 enum:
+#                 - 9999999977
+#               Class:
+#                 type: str
+#                 enum:
+#                 - "River"
+#               Arch:
+#                 type: str
+#                 enum:
+#                 - "X86"
+#               NetType:
+#                 type: str
+#                 enum:
+#                 - "Sling"
+#
+#   # DELETE Node
+#   - name: Remove test {type} from State Components
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#
+#   # PUT Node with no system role information
+#   - name: Create Node component using PUT with no system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: PUT
+#       verify: !bool "{verify}"
+#       json:
+#         Component:
+#           ID: "{xname}"
+#           State: Populated
+#     response:
+#       status_code: 204
+#
+#   # GET Verify Node was created successfully
+#   - name: Verify {type} component was successfully created using PUT with no system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: GET
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#       verify_response_with:
+#         function: tavern.testutils.helpers:validate_pykwalify
+#         extra_kwargs:
+#           schema:
+#             type: map
+#             mapping:
+#               ID:
+#                 type: str
+#                 enum:
+#                 - "{xname}"
+#               Type:
+#                 type: str
+#                 enum:
+#                 - "{type}"
+#               State:
+#                 type: str
+#                 enum:
+#                 - Populated
+#               Flag:
+#                 type: str
+#                 enum:
+#                 - OK
+#               Enabled:
+#                 type: bool
+#                 enum:
+#                 - True
+#               Role:
+#                 type: str
+#                 enum:
+#                 - "Application"
+#               SubRole:
+#                 type: str
+#                 enum:
+#                 - "Storage"
+#               NID:
+#                 type: int
+#                 enum:
+#                 - 9999999967
+#               Class:
+#                 type: str
+#                 enum:
+#                 - "River"
+#               Arch:
+#                 type: str
+#                 enum:
+#                 - "X86"
+#               NetType:
+#                 type: str
+#                 enum:
+#                 - "Sling"
+#
+#   # DELETE Node
+#   - name: Remove test {type} from State Components
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#
+#   # PUT Node with system role information
+#   - name: Create {type} component using PUT with system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: PUT
+#       verify: !bool "{verify}"
+#       json:
+#         Component:
+#           ID: "{xname}"
+#           State: Populated
+#           Role: Management
+#           SubRole: Worker
+#           NID: 9999999977
+#           Class: River
+#           Arch: X86
+#           NetType: "Sling"
+#
+#     response:
+#       status_code: 204
+#
+#   # GET Verify Node was created successfully
+#   - name: Verify {type} component was successfully created using PUT with system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: GET
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#       verify_response_with:
+#         function: tavern.testutils.helpers:validate_pykwalify
+#         extra_kwargs:
+#           schema:
+#             type: map
+#             mapping:
+#               ID:
+#                 type: str
+#                 enum:
+#                 - "{xname}"
+#               Type:
+#                 type: str
+#                 enum:
+#                 - "{type}"
+#               State:
+#                 type: str
+#                 enum:
+#                 - Populated
+#               Flag:
+#                 type: str
+#                 enum:
+#                 - OK
+#               Enabled:
+#                 type: bool
+#                 enum:
+#                 - True
+#               Role:
+#                 type: str
+#                 enum:
+#                 - "Management"
+#               SubRole:
+#                 type: str
+#                 enum:
+#                 - "Worker"
+#               NID:
+#                 type: int
+#                 enum:
+#                 - 9999999977
+#               Class:
+#                 type: str
+#                 enum:
+#                 - "River"
+#               Arch:
+#                 type: str
+#                 enum:
+#                 - "X86"
+#               NetType:
+#                 type: str
+#                 enum:
+#                 - "Sling"
+#   # DELETE Node
+#   - name: Remove test Node from State Components
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#
+#
+#   # Remove test node from SLS
+#   - name: Remove the test {type} from SLS
+#     request:
+#       url: "{sls_base_url}/v1/hardware/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#
+# ---
+# test_name: Verify Component operations on (Virtual)Nodes with system role information in NodeMaps
+#
+# marks:
+#   - parametrize:
+#       key:
+#       - type
+#       - xname
+#       vals:
+#       - [Node, x9999c5s17b0n0]
+#       - [Node, x9999c5s17b0n1]
+#       - [VirtualNode, x9999c5s17b0n0v0]
+#       - [VirtualNode, x9999c5s17b0n0v1]
+#
+# stages:
+#   # Delete test virtual node from SLS
+#   - name: Remove any test {type} from SLS
+#     request:
+#       url: "{sls_base_url}/v1/hardware/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#
+#   # PUT test virtual node into HSM NodeMaps
+#   - name: Create test {type} in NodeMaps
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/{xname}"
+#       method: PUT
+#       verify: !bool "{verify}"
+#       json:
+#         Role: Application
+#         SubRole: Storage
+#         NID: 9999999967
+#     response:
+#       status_code: 200
+#
+#   # Remove any test Node from State Components
+#   - name: Remove any test {type} from State Components
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#
+#   # POST Create Node with no system role information
+#   - name: Create {type} component using POST with no system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components"
+#       method: POST
+#       verify: !bool "{verify}"
+#       json:
+#         Components:
+#         - ID: "{xname}"
+#           State: Populated
+#     response:
+#       status_code: 204
+#
+#   # GET Verify Node was created successfully
+#   - name: Verify {type} component was successfully created using POST with no system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: GET
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#       verify_response_with:
+#         function: tavern.testutils.helpers:validate_pykwalify
+#         extra_kwargs:
+#           schema:
+#             type: map
+#             mapping:
+#               ID:
+#                 type: str
+#                 enum:
+#                 - "{xname}"
+#               Type:
+#                 type: str
+#                 enum:
+#                 - "{type}"
+#               State:
+#                 type: str
+#                 enum:
+#                 - Populated
+#               Flag:
+#                 type: str
+#                 enum:
+#                 - OK
+#               Enabled:
+#                 type: bool
+#                 enum:
+#                 - True
+#               Role:
+#                 type: str
+#                 enum:
+#                 - "Application"
+#               SubRole:
+#                 type: str
+#                 enum:
+#                 - "Storage"
+#               NID:
+#                 type: int
+#                 enum:
+#                 - 9999999967
+#               Class:
+#                 type: str
+#                 enum:
+#                 - "River"
+#               Arch:
+#                 type: str
+#                 enum:
+#                 - "X86"
+#               NetType:
+#                 type: str
+#                 enum:
+#                 - "Sling"
+#
+#   # DELETE Node
+#   - name: Remove test {type} from State Components
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#
+#   # POST Create node with System role information
+#   - name: Create {type} component using POST with system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components"
+#       method: POST
+#       verify: !bool "{verify}"
+#       json:
+#         Components:
+#         - ID: "{xname}"
+#           State: Populated
+#           Role: Management # This ROle is different than NodeMaps
+#           SubRole: Worker # This SubRole is different than NodeMaps
+#           NID: 9999999977 # This NID is different than NodeMaps
+#           Class: River
+#           Arch: X86
+#           NetType: "Sling"
+#
+#     response:
+#       status_code: 204
+#
+#   # GET Verify Node was created successfully
+#   - name: Verify {type} component was successfully created using POST with system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: GET
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#       verify_response_with:
+#         function: tavern.testutils.helpers:validate_pykwalify
+#         extra_kwargs:
+#           schema:
+#             type: map
+#             mapping:
+#               ID:
+#                 type: str
+#                 enum:
+#                 - "{xname}"
+#               Type:
+#                 type: str
+#                 enum:
+#                 - "{type}"
+#               State:
+#                 type: str
+#                 enum:
+#                 - Populated
+#               Flag:
+#                 type: str
+#                 enum:
+#                 - OK
+#               Enabled:
+#                 type: bool
+#                 enum:
+#                 - True
+#               Role:
+#                 type: str
+#                 enum:
+#                 - "Management"
+#               SubRole:
+#                 type: str
+#                 enum:
+#                 - "Worker"
+#               NID:
+#                 type: int
+#                 enum:
+#                 - 9999999977
+#               Class:
+#                 type: str
+#                 enum:
+#                 - "River"
+#               Arch:
+#                 type: str
+#                 enum:
+#                 - "X86"
+#               NetType:
+#                 type: str
+#                 enum:
+#                 - "Sling"
+#
+#   # DELETE Node
+#   - name: Remove test {type} from State Components
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#
+#   # PUT Node with no system role information
+#   - name: Create Node component using PUT with no system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: PUT
+#       verify: !bool "{verify}"
+#       json:
+#         Component:
+#           ID: "{xname}"
+#           State: Populated
+#     response:
+#       status_code: 204
+#
+#   # GET Verify Node was created successfully
+#   - name: Verify {type} component was successfully created using PUT with no system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: GET
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#       verify_response_with:
+#         function: tavern.testutils.helpers:validate_pykwalify
+#         extra_kwargs:
+#           schema:
+#             type: map
+#             mapping:
+#               ID:
+#                 type: str
+#                 enum:
+#                 - "{xname}"
+#               Type:
+#                 type: str
+#                 enum:
+#                 - "{type}"
+#               State:
+#                 type: str
+#                 enum:
+#                 - Populated
+#               Flag:
+#                 type: str
+#                 enum:
+#                 - OK
+#               Enabled:
+#                 type: bool
+#                 enum:
+#                 - True
+#               Role:
+#                 type: str
+#                 enum:
+#                 - "Application"
+#               SubRole:
+#                 type: str
+#                 enum:
+#                 - "Storage"
+#               NID:
+#                 type: int
+#                 enum:
+#                 - 9999999967
+#               Class:
+#                 type: str
+#                 enum:
+#                 - "River"
+#               Arch:
+#                 type: str
+#                 enum:
+#                 - "X86"
+#               NetType:
+#                 type: str
+#                 enum:
+#                 - "Sling"
+#
+#   # DELETE Node
+#   - name: Remove test {type} from State Components
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200 
+#
+#   # PUT Node with system role information
+#   - name: Create {type} component using PUT with system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: PUT
+#       verify: !bool "{verify}"
+#       json:
+#         Component:
+#           ID: "{xname}"
+#           State: Populated
+#           Role: Management
+#           SubRole: Worker
+#           NID: 9999999977
+#           Class: River
+#           Arch: X86
+#           NetType: "Sling"
+#
+#     response:
+#       status_code: 204
+#
+#   # GET Verify Node was created successfully
+#   - name: Verify {type} component was successfully created using PUT with system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: GET
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#       verify_response_with:
+#         function: tavern.testutils.helpers:validate_pykwalify
+#         extra_kwargs:
+#           schema:
+#             type: map
+#             mapping:
+#               ID:
+#                 type: str
+#                 enum:
+#                 - "{xname}"
+#               Type:
+#                 type: str
+#                 enum:
+#                 - "{type}"
+#               State:
+#                 type: str
+#                 enum:
+#                 - Populated
+#               Flag:
+#                 type: str
+#                 enum:
+#                 - OK
+#               Enabled:
+#                 type: bool
+#                 enum:
+#                 - True
+#               Role:
+#                 type: str
+#                 enum:
+#                 - "Management"
+#               SubRole:
+#                 type: str
+#                 enum:
+#                 - "Worker"
+#               NID:
+#                 type: int
+#                 enum:
+#                 - 9999999977
+#               Class:
+#                 type: str
+#                 enum:
+#                 - "River"
+#               Arch:
+#                 type: str
+#                 enum:
+#                 - "X86"
+#               NetType:
+#                 type: str
+#                 enum:
+#                 - "Sling"
+#   # DELETE Node
+#   - name: Remove test Node from State Components
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#
+#
+#   # Remove test node from NodeMaps
+#   - name: Remove the test {type} from NodeMaps
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#       headers:
+#         Authorization: "Bearer {access_token}"
