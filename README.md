@@ -48,13 +48,24 @@ Built binaries will be located in the `dist/` directory.
 
 ## Testing
 
-### Running Test in Docker compose Environment
+### Running the CT Tests in Docker Compose Environment
 
-The SMD test image can be used to run SMD's pytest based integration tests.
+These are the directions to run SMD's CT tests. These tests use pytest and tavern.
 
-1. Start the quick start guide with the following changes
+1. Start services Using the quickstart guide
+
+    Use the quickstart guide to startt the services. See the README [here](https://github.com/OpenCHAMI/deployment-recipes/tree/main/quickstart)
+
+    Edit `openchami-svcs.yml` and add `ENABLE_DISCOVERY=true` to the smd container's environment variable list.
+
+    Create a docker compose file to start the Redfish Emulator. Copy [computes.yml](test/docker-compose/computes.yml)
+
+    Start the docker compose. Use the directions in the quick start, and also include the computes.yml.
+    For example:
     ```
+    docker compose -f base.yml -f postgres.yml -f jwt-security.yml -f haproxy-api-gateway.yml -f  openchami-svcs.yml -f autocert.yml -f coredhcp.yml -f configurator.yml -f computes.yml up -d
     ```
+
 2. Build the SMD test image
     ```
     make ct-image
@@ -68,17 +79,31 @@ The SMD test image can be used to run SMD's pytest based integration tests.
     docker run -it --rm --network ${COMPOSE_NAME}_internal smd-test:${SMD_VERSION}  smd-test smd-discover -n x0c0s1b0 -n x0c0s2b0 -n x0c0s3b0 -n x0c0s4b0
     ```
     ```
-docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test test -t smoke
-docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test test -t 1-hardware-checks
-docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test test -t 2-non-disruptive
-docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test test -t 3-disruptive
-docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test test -t 4-destructive-initial
-docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test test -t 5-destructive-final
+    docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test test -t smoke
+    docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test test -t 1-hardware-checks
+    docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test test -t 2-non-disruptive
+    docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test test -t 3-disruptive
+    docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test test -t 4-destructive-initial
+    docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test test -t 5-destructive-final
     ```
 
+    Here are some other options
 
+    List the tests
 
+    ```
+    docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test list
+    ```
 
+    Run the tests with tavern files a local directory
+    ```
+    docker run -it --rm --network ${COMPOSE_NAME}_internal -v $(pwd)/test/ct:/tests/ct  smd-test:${SMD_VERSION}  smd-test test -t 1-hardware-checks
+    ```
+
+    Run the tavern tests directly with pytest
+    ```
+    docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION} pytest -vvvv /tests/api/1-hardware-checks --rootdir=/ --tavern-global-cfg /opt/smd-test/libs/tavern_global_config_ct_test.yaml
+    ```
 
 ## Running
 
