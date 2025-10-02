@@ -47,8 +47,37 @@ goreleaser release --snapshot --clean
 Built binaries will be located in the `dist/` directory.
 
 ## Testing
-SMD includes continuous test (CT) verification for live HPC systems. The test image is invoked via `helm test`.
-In addition to the service itself, this repository builds and publishes cray-smd-test images containing tests that verify HSM on live Shasta systems. The tests are invoked via helm test as part of the Continuous Test (CT) framework during CSM installs and upgrades. The version of the cray-smd-test image (vX.Y.Z) should match the version of the cray-smd image being tested, both of which are specified in the helm chart for the service.
+
+### Running Test in Docker compose Environment
+
+The SMD test image can be used to run SMD's pytest based integration tests.
+
+1. Start the quick start guide with the following changes
+    ```
+    ```
+2. Build the SMD test image
+    ```
+    make ct-image
+    ```
+3. Run the tests
+    ```
+    export COMPOSE_NAME=quickstart
+    export SMD_VERSION=v2.18.0
+    ```
+    ```
+    docker run -it --rm --network ${COMPOSE_NAME}_internal smd-test:${SMD_VERSION}  smd-test smd-discover -n x0c0s1b0 -n x0c0s2b0 -n x0c0s3b0 -n x0c0s4b0
+    ```
+    ```
+docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test test -t smoke
+docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test test -t 1-hardware-checks
+docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test test -t 2-non-disruptive
+docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test test -t 3-disruptive
+docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test test -t 4-destructive-initial
+docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test test -t 5-destructive-final
+    ```
+
+
+
 
 
 ## Running
