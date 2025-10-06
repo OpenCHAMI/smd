@@ -50,11 +50,11 @@ Built binaries will be located in the `dist/` directory.
 
 ### Running the CT Tests in a Docker Compose Environment
 
-1. Start services using the quickstart guide
+1. Start services using the quick start guide
 
-    Use the quickstart guide to start the services. See the quickstart README [here](https://github.com/OpenCHAMI/deployment-recipes/tree/main/quickstart)
+    Use the quick start guide to start the services. See the quick start README [here](https://github.com/OpenCHAMI/deployment-recipes/tree/main/quickstart)
 
-    Edit `openchami-svcs.yml` and add `ENABLE_DISCOVERY=true` to the smd container's environment variable list.
+    Edit `openchami-svcs.yml` and add `ENABLE_DISCOVERY=true` to the SMD container's environment variable list.
 
     Create a docker compose file to start the Redfish Emulator. For example see [computes.yml](test/docker-compose/computes.yml)
 
