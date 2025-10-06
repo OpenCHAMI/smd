@@ -66,17 +66,27 @@ Built binaries will be located in the `dist/` directory.
     ```
 
 2. Build the SMD test image
+
     ```
     make ct-image
     ```
-3. Run the tests
+
+3. Set environment variables
+
     ```
     export COMPOSE_NAME=quickstart
     export SMD_VERSION=v2.18.0
     ```
+
+4. Add nodes to SMD
+
+    This discovers hardware using the redfish interfaces simulated by the Redfish Interface Emulator ([RIE](https://github.com/OpenCHAMI/csm-redfish-interface-emulator)).
     ```
     docker run -it --rm --network ${COMPOSE_NAME}_internal smd-test:${SMD_VERSION}  smd-test smd-discover -n x0c0s1b0 -n x0c0s2b0 -n x0c0s3b0 -n x0c0s4b0
     ```
+
+5. Run the tests
+
     ```
     docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test test -t smoke
     docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test test -t 1-hardware-checks
