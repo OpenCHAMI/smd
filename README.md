@@ -48,19 +48,18 @@ Built binaries will be located in the `dist/` directory.
 
 ## Testing
 
-### Running the CT Tests in Docker Compose Environment
+### Running the CT Tests in a Docker Compose Environment
 
-These are the directions to run SMD's CT tests. These tests use pytest and tavern.
+1. Start services using the quickstart guide
 
-1. Start services Using the quickstart guide
-
-    Use the quickstart guide to startt the services. See the README [here](https://github.com/OpenCHAMI/deployment-recipes/tree/main/quickstart)
+    Use the quickstart guide to start the services. See the quickstart README [here](https://github.com/OpenCHAMI/deployment-recipes/tree/main/quickstart)
 
     Edit `openchami-svcs.yml` and add `ENABLE_DISCOVERY=true` to the smd container's environment variable list.
 
-    Create a docker compose file to start the Redfish Emulator. Copy [computes.yml](test/docker-compose/computes.yml)
+    Create a docker compose file to start the Redfish Emulator. For example see [computes.yml](test/docker-compose/computes.yml)
 
-    Start the docker compose. Use the directions in the quick start, and also include the computes.yml.
+    Start the docker compose containers. Use the directions in the quick start, but also add `-d computes.yml` to the command line to start the simulator containers
+
     For example:
     ```
     docker compose -f base.yml -f postgres.yml -f jwt-security.yml -f haproxy-api-gateway.yml -f  openchami-svcs.yml -f autocert.yml -f coredhcp.yml -f configurator.yml -f computes.yml up -d
@@ -87,20 +86,19 @@ These are the directions to run SMD's CT tests. These tests use pytest and taver
     docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test test -t 5-destructive-final
     ```
 
-    Here are some other options
-
-    List the tests
+### Miscellaneous Test Options
+#### List the available tests
 
     ```
     docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test list
     ```
 
-    Run the tests with tavern files a local directory
+#### Run the tests with tavern files from a local directory
     ```
     docker run -it --rm --network ${COMPOSE_NAME}_internal -v $(pwd)/test/ct:/tests/ct  smd-test:${SMD_VERSION}  smd-test test -t 1-hardware-checks
     ```
 
-    Run the tavern tests directly with pytest
+#### Run the tavern tests directly with pytest
     ```
     docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION} pytest -vvvv /tests/api/1-hardware-checks --rootdir=/ --tavern-global-cfg /opt/smd-test/libs/tavern_global_config_ct_test.yaml
     ```
