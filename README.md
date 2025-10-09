@@ -86,16 +86,19 @@ Built binaries will be located in the `dist/` directory.
     docker run -it --rm --network ${COMPOSE_NAME}_internal smd-test:${SMD_VERSION}  smd-test smd-discover -n x0c0s1b0 -n x0c0s2b0 -n x0c0s3b0 -n x0c0s4b0
     ```
 
-5. Run the tests
+5. Run non-destructive tests
 
     ```
-    docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test test -t smoke
-    docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test test -t 1-hardware-checks
-    docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test test -t 2-non-disruptive
-    docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test test -t 3-disruptive
-    docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test test -t 4-destructive-initial
-    docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test test -t 5-destructive-final
+    docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test test -t smoke -t 1-hardware-checks -t 2-non-disruptive -t 3-disruptive
     ```
+
+6. Run destructive tests (Optional)
+
+    ```
+    docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test test -t 4-destructive-initial -t 5-destructive-final
+    ```
+
+    These tests will destore some of SMD's data, which will not be easily recovered.
 
 ### Miscellaneous Test Options
 #### List the available tests
@@ -106,7 +109,7 @@ Built binaries will be located in the `dist/` directory.
 
 #### Run the tests with tavern files from a local directory
     ```
-    docker run -it --rm --network ${COMPOSE_NAME}_internal -v $(pwd)/test/ct:/tests/ct  smd-test:${SMD_VERSION}  smd-test test -t 1-hardware-checks
+    docker run -it --rm --network ${COMPOSE_NAME}_internal -v $(pwd)/test/ct:/tests/ct  smd-test:${SMD_VERSION}  smd-test test -t smoke -t 1-hardware-checks -t 2-non-disruptive -t 3-disruptive
     ```
     Note: This example can be run from the root directory of a clone of the SMD git repository.
 

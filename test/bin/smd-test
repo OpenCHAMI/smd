@@ -77,7 +77,9 @@ def list_tests(test_dir):
 
 
 def smoke_test(test_dir):
-    pytest.main(["-vvvv", "/opt/smd-test/smoke_pytest", "--smoke-json", f"{test_dir}/ct/smoke/smoke.json"])
+    result = pytest.main(["-vvvv", "/opt/smd-test/smoke_pytest", "--smoke-json", f"{test_dir}/ct/smoke/smoke.json"])
+    if result != 0:
+        sys.exit(result)
 
 
 def tavern_test(test_dir, test_name):
@@ -86,7 +88,9 @@ def tavern_test(test_dir, test_name):
         return
     test_path = os.path.join(test_dir, "ct", "api", test_name)
     config_file = "/opt/smd-test/libs/tavern_global_config_ct_test.yaml"
-    pytest.main(["-vvvv", str(test_path), "--rootdir=/", "--tavern-global-cfg", config_file])
+    result = pytest.main(["-vvvv", str(test_path), "--rootdir=/", "--tavern-global-cfg", config_file])
+    if result != 0:
+        sys.exit(result)
 
 
 def main(argv):
