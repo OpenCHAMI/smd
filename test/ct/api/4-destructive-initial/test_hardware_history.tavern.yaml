@@ -61,6 +61,17 @@
 test_name: hsmAPIinventoryHardware[ByFRU]historyDestructive
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
+
   # GET /Inventory/Hardware/History API response code
   # GET /Inventory/Hardware/History API response body
   - name: hsmAPIinventoryHardwareHistoryGET - Retrieve all Hardware Inventory History entries using GET.
@@ -68,6 +79,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/Hardware/History"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -119,6 +132,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/Hardware/History?id={xname}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -171,6 +186,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/Hardware/History/{xname}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -215,6 +232,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/HardwareByFRU/History"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -266,6 +285,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/HardwareByFRU/History?fruid={fruid}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -318,6 +339,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/HardwareByFRU/History/{fruid}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -362,6 +385,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/Hardware/History/{xname}"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -388,6 +413,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/Hardware/History/{xname}"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
       verify_response_with:
@@ -425,6 +452,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/Hardware/History/{xname}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -472,6 +501,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/Hardware/History"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -498,6 +529,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/Hardware/History"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
       verify_response_with:
@@ -535,6 +568,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/Hardware/History"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -586,6 +621,8 @@ stages:
 #      url: "{hsm_base_url}/hsm/v2/Inventory/HardwareByFRU/History/{fruid}"
 #      method: DELETE
 #      verify: !bool "{verify}"
+#      headers:
+#        Authorization: "Bearer {access_token}"
 #    response:
 #      status_code: 200
 #      verify_response_with:
@@ -612,6 +649,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/HardwareByFRU/History/{fruid}"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
       verify_response_with:
@@ -649,6 +688,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/HardwareByFRU/History/#"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
 
@@ -659,6 +700,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/HardwareByFRU/History/{fruid}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:

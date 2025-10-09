@@ -42,12 +42,25 @@
 test_name: HSM Service Endpoint Collection
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
+
   # GET /Inventory/ServiceEndpoints
   - name: Get Service Endpoints
     request:
       url: "{hsm_base_url}/hsm/v2/Inventory/ServiceEndpoints"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -113,6 +126,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ServiceEndpoints/{service}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -178,6 +193,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ServiceEndpoints/{service}/RedfishEndpoints/{xname}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -233,6 +250,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ServiceEndpoints/{service}/RedfishEndpoints/{xname}"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       json:
@@ -245,6 +264,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ServiceEndpoints/{service}/RedfishEndpoints/{xname}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
       json:
@@ -259,6 +280,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ServiceEndpoints/{service}/RedfishEndpoints/FAKE"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
       json:
@@ -273,6 +296,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ServiceEndpoints"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       json:
@@ -285,6 +310,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/ServiceEndpoints"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
       json:

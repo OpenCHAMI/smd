@@ -47,9 +47,76 @@ goreleaser release --snapshot --clean
 Built binaries will be located in the `dist/` directory.
 
 ## Testing
-SMD includes continuous test (CT) verification for live HPC systems. The test image is invoked via `helm test`.
-In addition to the service itself, this repository builds and publishes cray-smd-test images containing tests that verify HSM on live Shasta systems. The tests are invoked via helm test as part of the Continuous Test (CT) framework during CSM installs and upgrades. The version of the cray-smd-test image (vX.Y.Z) should match the version of the cray-smd image being tested, both of which are specified in the helm chart for the service.
 
+### Running the CT Tests in a Docker Compose Environment
+
+1. Start services using the quick start guide
+
+    Use the quick start guide to start the services. See [README](https://github.com/OpenCHAMI/deployment-recipes/tree/main/quickstart)
+
+    Edit `openchami-svcs.yml` and add `ENABLE_DISCOVERY=true` to the SMD container's environment variable list.
+
+    Create a docker compose file to start the Redfish Emulator. For an example see [computes.yml](test/docker-compose/computes.yml)
+
+    Start the docker compose containers. Use the directions in the quick start, but also add `-d computes.yml` to start the simulator containers.
+
+    For example:
+    ```
+    docker compose -f base.yml -f postgres.yml -f jwt-security.yml -f haproxy-api-gateway.yml -f  openchami-svcs.yml -f autocert.yml -f coredhcp.yml -f configurator.yml -f computes.yml up -d
+    ```
+
+2. Build the SMD test image
+
+    ```
+    make ct-image
+    ```
+
+3. Set environment variables
+
+    ```
+    export COMPOSE_NAME=quickstart
+    export SMD_VERSION=v2.18.0
+    ```
+    Note: `SMD_VERSION` is the version of the test image. The version of the running SMD container is in `openchami-svcs.yml`
+
+4. Add nodes to SMD
+
+    This discovers hardware using the redfish interfaces simulated by the Redfish Interface Emulator ([RIE](https://github.com/OpenCHAMI/csm-redfish-interface-emulator)).
+    ```
+    docker run -it --rm --network ${COMPOSE_NAME}_internal smd-test:${SMD_VERSION}  smd-test smd-discover -n x0c0s1b0 -n x0c0s2b0 -n x0c0s3b0 -n x0c0s4b0
+    ```
+
+5. Run non-destructive tests
+
+    ```
+    docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test test -t smoke -t 1-hardware-checks -t 2-non-disruptive -t 3-disruptive
+    ```
+
+6. Run destructive tests (Optional)
+
+    ```
+    docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test test -t 4-destructive-initial -t 5-destructive-final
+    ```
+
+    These tests will destore some of SMD's data, which will not be easily recovered.
+
+### Miscellaneous Test Options
+#### List the available tests
+
+    ```
+    docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION}  smd-test list
+    ```
+
+#### Run the tests with tavern files from a local directory
+    ```
+    docker run -it --rm --network ${COMPOSE_NAME}_internal -v $(pwd)/test/ct:/tests/ct  smd-test:${SMD_VERSION}  smd-test test -t smoke -t 1-hardware-checks -t 2-non-disruptive -t 3-disruptive
+    ```
+    Note: This example can be run from the root directory of a clone of the SMD git repository.
+
+#### Run the tavern tests directly with pytest
+    ```
+    docker run -it --rm --network ${COMPOSE_NAME}_internal  smd-test:${SMD_VERSION} pytest -vvvv /tests/api/1-hardware-checks --rootdir=/ --tavern-global-cfg /opt/smd-test/libs/tavern_global_config_ct_test.yaml
+    ```
 
 ## Running
 

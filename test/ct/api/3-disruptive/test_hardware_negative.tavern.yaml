@@ -59,6 +59,16 @@
 test_name: hsmAPIinventoryHardwareNegative
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # POST /Inventory/Hardware CMMRectifier Missing ID API response code
   # POST /Inventory/Hardware CMMRectifier Missing ID API response body
   - name: hsmAPIinventoryHardwarePOSTcmmRectifierMissingID - Attempt to create a CMMRectifier Hardware Inventory entry with a missing ID using POST.
@@ -66,6 +76,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/Hardware"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Hardware":[{"Type":"CMMRectifier","Ordinal":9,"Status":"Populated","HWInventoryByLocationType":"HWInvByLocCMMRectifier","CMMRectifierLocationInfo":{"Name":"Rectifier9","FirmwareVersion":""},"PopulatedFRU":{"FRUID":"CMMRectifier.ABB.LBGEPE20KZ46051725","Type":"CMMRectifier","Subtype":"","HWInventoryByFRUType":"HWInvByFRUCMMRectifier","CMMRectifierFRUInfo":{"Manufacturer":"ABB","SerialNumber":"LBGEPE20KZ46051725","Model":"CC15000H3C380T","PartNumber":"","PowerCapacityWatts":0,"PowerInputWatts":0,"PowerOutputWatts":0,"PowerSupplyType":""}}}]}
     response:
       status_code: 400
@@ -104,6 +116,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/Hardware"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Hardware":[{"ID":"","Type":"Chassis","Ordinal":7,"Status":"Populated","HWInventoryByLocationType":"HWInvByLocChassis","ChassisLocationInfo":{"Id":"Enclosure","Name":"Enclosure","Description":"CMM","HostName":""},"PopulatedFRU":{"FRUID":"Chassis.HPE.101426404D.IMZ2409069079","Type":"Chassis","Subtype":"","HWInventoryByFRUType":"HWInvByFRUChassis","ChassisFRUInfo":{"AssetTag":"","ChassisType":"Enclosure","Model":"CMM","Manufacturer":"HPE","PartNumber":"101426404.D","SerialNumber":"IMZ2409069079","SKU":""}}}]}
     response:
       status_code: 400
@@ -142,6 +156,8 @@ stages:
 #      url: "{hsm_base_url}/hsm/v2/Inventory/Hardware"
 #      method: POST
 #      verify: !bool "{verify}"
+#      headers:
+#        Authorization: "Bearer {access_token}"
 #      #TODO: Improve handling of bad or conflicting data for /Inventory/Hardware POST CASMHMS-5834
 #      json: {"Hardware":[{"ID":"x9999c7s9","Type":"MgmtSwitchConnector","Ordinal":9,"Status":"Populated","HWInventoryByLocationType":"HWInvByLocComputeModule","ComputeModuleLocationInfo":{"Id":"Blade9","Name":"Blade9","Description":"","HostName":""},"PopulatedFRU":{"FRUID":"FRUIDforx9999c7s9","Type":"ComputeModule","Subtype":"","HWInventoryByFRUType":"HWInvByFRUComputeModule","ComputeModuleFRUInfo":{"AssetTag":"","ChassisType":"Blade","Model":"Blade9","Manufacturer":"HPE","PartNumber":"","SerialNumber":"","SKU":""}}}]}
 #    response:
@@ -181,6 +197,8 @@ stages:
 #      url: "{hsm_base_url}/hsm/v2/Inventory/Hardware"
 #      method: POST
 #      verify: !bool "{verify}"
+#      headers:
+#        Authorization: "Bearer {access_token}"
 #      #TODO: Improve handling of bad or conflicting data for /Inventory/Hardware POST CASMHMS-5834
 #      json: {"Hardware":[{"ID":"x9999c7r9e9","Type":"","Ordinal":9,"Status":"Populated","HWInventoryByLocationType":"HWInvByLocHSNBoard","HSNBoardLocationInfo":{"Id":"Enclosure","Name":"Enclosure","Description":"HPE_Slingshot_1_Switch_Blade","HostName":""},"PopulatedFRU":{"FRUID":"HSNBoard.HPE.102000002A.HER1920112770","Type":"HSNBoard","Subtype":"","HWInventoryByFRUType":"HWInvByFRUHSNBoard","HSNBoardFRUInfo":{"AssetTag":"","ChassisType":"Enclosure","Model":"HPE_Slingshot_1_Switch_Blade","Manufacturer":"HPE","PartNumber":"102000002.A","SerialNumber":"HER1920112770","SKU":""}}}]}
 #    response:
@@ -220,6 +238,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/Hardware"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Hardware":[{"ID":"x9999c7s9b9n9d9"}]}
     response:
       status_code: 400
@@ -258,6 +278,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/Hardware"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Hardware":[{"ID":"x9999c7s9b9","PopulatedFRU":{"FRUID":"FRUIDforx9999c7s9b9","Type":"NodeBMC","Subtype":"","HWInventoryByFRUType":"HWInvByFRUNodeBMC","NodeBMCFRUInfo":{"ManagerType":"EnclosureManager","Model":"","Manufacturer":"","PartNumber":"","SerialNumber":""}}}]}
     response:
       status_code: 400
@@ -296,6 +318,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/Hardware"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Hardware":[{"ID":"x9999c7s9e9","Type":"NodeEnclosure","Ordinal":9,"Status":"Populated","HWInventoryByLocationType":"HWInvByLocNodeEnclosure","NodeEnclosureLocationInfo":{},"PopulatedFRU":{}}]}
     response:
       status_code: 400
@@ -334,6 +358,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/Hardware"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Hardware":[{"ID":"FAKE","Type":"NodeHsnNic","Ordinal":3,"Status":"Populated","HWInventoryByLocationType":"HWInvByLocNodeHsnNic","NodeHsnNicLocationInfo":{"Id":"HPCNet0","Name":"","Description":"SS11200Gb2PNICMezzREV02(HSN)"},"PopulatedFRU":{"FRUID":"NodeHsnNic.HPEPRM.P43012001.OTI6996696413","Type":"NodeHsnNic","Subtype":"","HWInventoryByFRUType":"HWInvByFRUNodeHsnNic","NodeHsnNicFRUInfo":{"Manufacturer":"HPE-PRM","Model":"R4K44A","PartNumber":"P43012-001","SerialNumber":"OTI6996696413"}}}]}
     response:
       status_code: 400
@@ -372,6 +398,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/Hardware/x9989c7s9b9n9"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
       verify_response_with:
@@ -409,6 +437,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/Hardware?id=FAKE"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 400
       verify_response_with:
@@ -446,6 +476,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/Hardware?type=FAKE"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 400
       verify_response_with:
@@ -483,6 +515,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/Hardware/Query/x9999c7s9b9n9?children=False"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -510,6 +544,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/Hardware/Query/FAKE"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 400
       verify_response_with:
@@ -547,6 +583,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/Hardware/x9999c7s9b9n9"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
       verify_response_with:
@@ -584,6 +622,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/Hardware/FAKE"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
       verify_response_with:

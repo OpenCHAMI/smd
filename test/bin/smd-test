@@ -1,0 +1,135 @@
+#!/usr/bin/env python3
+
+# SPDX-FileCopyrightText: Copyright © 2025 OpenCHAMI a Series of LF Projects, LLC
+#
+# SPDX-License-Identifier: MIT
+
+import argparse
+import logging
+import signal
+import subprocess
+import sys
+import requests
+import json
+import pytest
+import traceback
+import os
+from glob import glob
+
+
+OPAAL_URL= "http://opaal:3333"
+SMD_URL = "http://smd:27779"
+TEST_DIR = "/tests"
+
+
+def get_access_token(opaal_url):
+    url = f"{opaal_url}/token"
+    r = requests.get(url=url, verify=False, timeout=30)
+    if r.status_code != 200:
+        raise Exception(f"request to {url} failed with {r.status_code}")
+    body = json.loads(r.text)
+    return body.get("access_token")
+
+
+def discover_node(smd_url, token, node_hostname):
+    url = f"{smd_url}/hsm/v2/Inventory/RedfishEndpoints"
+    req_headers = {
+        'Authorization': f'Bearer {token}',
+        'cache-control': 'no-cache',
+        'Content-Type': 'application/json',
+    }
+
+    req_body = {
+        "RedfishEndpoints": [
+            {
+                "ID": node_hostname,
+                "FQDN": node_hostname,
+                "RediscoverOnUpdate":True,
+                "User": "root",
+                "Password": "root_password",
+            }
+        ]
+    }
+    req_body_str = json.dumps(req_body)
+
+    resp = requests.post(url, headers=req_headers, data=req_body_str, verify=False)
+
+    print()
+    print(f"node: {node_hostname}")
+    print(f"code: {resp.status_code}")
+    print(f"body: {resp.text}")
+
+
+def list_tests(test_dir):
+    tests = []
+    if os.path.exists(f'{test_dir}/ct/smoke/smoke.json'):
+        tests.append("smoke")
+
+    api_test_dir = f"{test_dir}/ct/api"
+    for item in os.listdir(api_test_dir):
+        item_path = os.path.join(api_test_dir, item)
+        if os.path.isdir(item_path):
+            tests.append(item)
+
+    for test in tests:
+        print(test)
+
+
+
+def smoke_test(test_dir):
+    result = pytest.main(["-vvvv", "/opt/smd-test/smoke_pytest", "--smoke-json", f"{test_dir}/ct/smoke/smoke.json"])
+    if result != 0:
+        sys.exit(result)
+
+
+def tavern_test(test_dir, test_name):
+    if test_name == "smoke":
+        smoke_test(test_dir)
+        return
+    test_path = os.path.join(test_dir, "ct", "api", test_name)
+    config_file = "/opt/smd-test/libs/tavern_global_config_ct_test.yaml"
+    result = pytest.main(["-vvvv", str(test_path), "--rootdir=/", "--tavern-global-cfg", config_file])
+    if result != 0:
+        sys.exit(result)
+
+
+def main(argv):
+    command_choices = [
+        "help",
+        "smd-discover",
+        "list",
+        "test",
+        "smoke",
+        ]
+    parser = argparse.ArgumentParser()
+    parser.add_argument("command", type=str, help="command", choices=command_choices)
+    parser.add_argument("-n", "--node", type=str, action="append", help="Node Hostname or IP. Used in the smd-discover command.")
+    parser.add_argument("-t", "--test", type=str, action="append", help="Test name. Used in the smd-discover command.")
+
+    if len(sys.argv) == 1:
+        parser.print_help(sys.stderr)
+        sys.exit(1)
+
+    args = parser.parse_args()
+
+    try:
+        if args.command == "help":
+            parser.print_help()
+        elif args.command == "smd-discover":
+            token = get_access_token(OPAAL_URL)
+            for node in args.node:
+                discover_node(SMD_URL, token, node)
+        elif args.command == "list":
+            list_tests(TEST_DIR)
+        elif args.command == "smoke":
+            smoke_test(TEST_DIR)
+        elif args.command == "test":
+            for test in args.test:
+                tavern_test(TEST_DIR, test)
+    except Exception as e:
+        print(e)
+        print(traceback.format_exc())
+
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv))

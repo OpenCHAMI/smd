@@ -337,6 +337,17 @@
 test_name: hsmAPIstateComponentsDestructive
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
+
   # DELETE /State/Components API response code
   # DELETE /State/Components API response body
   - name: hsmAPIstateComponentsDELETE - Remove all Components using DELETE.
@@ -344,6 +355,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code:
         - 200
@@ -356,6 +369,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
       verify_response_with:
@@ -393,6 +408,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       json:
@@ -405,6 +422,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Components":[{"ID":"x9999c7s9b9n9","Type":"Node","State":"On","Flag":"OK","Enabled":true,"SoftwareStatus":"AdminStatus","Role":"Compute","NID":9999999999,"NetType":"Sling","Arch":"X86","Class":"River"}],"Force":false}
     response:
       status_code: 204
@@ -416,6 +435,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       json:
@@ -428,6 +449,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?id=x9999c7s9b9n9"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -506,6 +529,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b9n9"
       method: PUT
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Component":{"ID":"x9999c7s9b9n9","Type":"Node","State":"Standby","Flag":"Alert","Enabled":true,"SoftwareStatus":"AdminStatus","Role":"Compute","NID":9999999999,"NetType":"Infiniband","Arch":"ARM","Class":"River"},"Force":false}
     response:
       status_code: 204
@@ -517,6 +542,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b9n9"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -587,6 +614,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b9n9"
       method: PUT
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Component":{"ID":"x9999c7s9b9n9","Type":"Node","State":"Standby","Flag":"Alert","Enabled":true,"SoftwareStatus":"AdminStatus","Role":"Compute","NID":9999999999,"NetType":"Infiniband","Arch":"ARM","Class":"River"},"Force":true}
     response:
       status_code: 204
@@ -598,6 +627,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b9n9"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -668,6 +699,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b9n9"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -695,6 +728,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b9n9"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
       verify_response_with:
@@ -732,6 +767,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b9n9"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
       verify_response_with:
@@ -769,6 +806,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/ByNID/9999999999"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 404
       verify_response_with:
@@ -806,6 +845,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b9n9"
       method: PUT
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Component":{"ID":"x9999c7s9b9n9","Type":"Node","State":"Ready","Flag":"OK","Enabled":true,"SoftwareStatus":"AdminStatus","Role":"Compute","NID":9999999999,"NetType":"Ethernet","Arch":"Other","Class":"River"},"Force":false}
     response:
       status_code: 204
@@ -817,6 +858,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b9n9"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -887,6 +930,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components"
       method: DELETE
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -914,6 +959,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Components":[{"ID":"x9999c7s9b9","Type":"NodeBMC","State":"Ready","Flag":"OK","Enabled":true,"Role":"Management","NetType":"Sling","Arch":"X86","Class":"River","Locked":false}],"Force":false}
     response:
       status_code: 204
@@ -925,6 +972,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Components":[{"ID":"x9999c7s9b9","Type":"NodeBMC","State":"Off","Flag":"Warning","Enabled":false,"Role":"Management","NetType":"Infiniband","Arch":"ARM","Class":"Mountain","Locked":true}],"Force":false}
     response:
       status_code: 204
@@ -936,6 +985,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b9"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -996,6 +1047,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Components":[{"ID":"x9999c7s9b9","Type":"NodeBMC","State":"Off","Flag":"Warning","Enabled":false,"Role":"Management","NetType":"Infiniband","Arch":"ARM","Class":"Mountain","Locked":true}],"Force":true}
     response:
       status_code: 204
@@ -1007,6 +1060,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b9"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -1067,6 +1122,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Components":[{"ID":"x9999c7s9b9n8","Type":"Node","State":"Unknown","Flag":"Unknown","Enabled":true,"SoftwareStatus":"TestStatus8","Role":"Compute","SubRole":"Master","NID":9999999998,"NetType":"Sling","Arch":"X86","Class":"River"},{"ID":"x9999c7s9b9n7","Type":"Node","State":"Empty","Flag":"OK","Enabled":true,"SoftwareStatus":"TestStatus7","Role":"Service","SubRole":"Worker","NID":9999999997,"NetType":"Infiniband","Arch":"X86","Class":"River"},{"ID":"x9999c7s9b9n6","Type":"Node","State":"Populated","Flag":"Warning","Enabled":true,"SoftwareStatus":"TestStatus6","Role":"System","SubRole":"Storage","NID":9999999996,"NetType":"Ethernet","Arch":"ARM","Class":"River"},{"ID":"x9999c7s9b9n5","Type":"Node","State":"Off","Flag":"Warn","Enabled":true,"SoftwareStatus":"TestStatus5","Role":"Application","SubRole":"Master","NID":9999999995,"NetType":"OEM","Arch":"ARM","Class":"Mountain"},{"ID":"x9999c7s9b9n4","Type":"Node","State":"On","Flag":"Alert","Enabled":false,"SoftwareStatus":"TestStatus4","Role":"Storage","SubRole":"Worker","NID":9999999994,"NetType":"None","Arch":"Other","Class":"Mountain"},{"ID":"x9999c7s9b9n3","Type":"Node","State":"Standby","Flag":"Locked","Enabled":false,"SoftwareStatus":"TestStatus3","Role":"Management","SubRole":"Storage","NID":9999999993,"NetType":"Sling","Arch":"Other","Class":"Mountain"},{"ID":"x9999c7s9b9n2","Type":"Node","State":"Halt","Flag":"OK","Enabled":false,"SoftwareStatus":"TestStatus2","Role":"Compute","SubRole":"Master","NID":9999999992,"NetType":"Sling","Arch":"Unknown","Class":"Hill"},{"ID":"x9999c7s9b9n1","Type":"Node","State":"Ready","Flag":"OK","Enabled":false,"SoftwareStatus":"TestStatus1","Role":"Compute","SubRole":"Worker","NID":9999999991,"NetType":"Sling","Arch":"Unknown","Class":"Hill"},{"ID":"x9999c7s9b9n0","Type":"Node","State":"Ready","Flag":"OK","Enabled":true,"SoftwareStatus":"TestStatus0","Role":"Compute","SubRole":"Storage","NID":9999999990,"NetType":"Sling","Arch":"X86","Class":"Hill"}],"Force":false}
     response:
       status_code: 204
@@ -1078,6 +1135,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Components":[{"ID":"x9999c7s9e9","Type":"NodeEnclosure","State":"On","Flag":"OK","Enabled":false,"NetType":"Sling","Arch":"X86","Class":"Mountain"}],"Force":false}
     response:
       status_code: 204
@@ -1089,6 +1148,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Components":[{"ID":"x9999c7r9b9","Type":"RouterBMC","State":"Ready","Flag":"OK","Enabled":true,"NetType":"Sling","Arch":"X86","Class":"Mountain"},{"ID":"x9999c7r9","Type":"RouterModule","State":"Empty","Flag":"OK","Enabled":true,"NetType":"Sling","Arch":"X86","Class":"Mountain"}],"Force":false}
     response:
       status_code: 204
@@ -1100,6 +1161,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Components":[{"ID":"x9999c7","Type":"Chassis","State":"Off","Flag":"OK","Enabled":true,"NetType":"Sling","Arch":"X86","Class":"Mountain"},{"ID":"x9999c7b0","Type":"ChassisBMC","State":"Ready","Flag":"OK","Enabled":true,"NetType":"Sling","Arch":"X86","Class":"Mountain"}],"Force":false}
     response:
       status_code: 204
@@ -1111,6 +1174,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Components":[{"ID":"x9999c7r9e9","Type":"HSNBoard","State":"On","Flag":"Warning","Enabled":false,"NetType":"Sling","Arch":"X86","Class":"River"},{"ID":"x9999m3","Type":"CabinetPDUController","State":"Ready","Flag":"OK","Enabled":true,"NetType":"Infiniband","Arch":"X86"}],"Force":false}
     response:
       status_code: 204
@@ -1122,6 +1187,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?type=CabinetPDUController"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -1180,6 +1247,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?type=ChassisBMC"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -1243,6 +1312,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?type=Chassis"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -1306,6 +1377,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?type=HSNBoard"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -1369,6 +1442,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?type=NodeBMC"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -1437,6 +1512,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?type=NodeEnclosure"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -1500,6 +1577,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?type=Node"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -1564,6 +1643,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?type=RouterBMC"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -1627,6 +1708,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?type=RouterModule"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -1690,6 +1773,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?state=Unknown&stateonly=True"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -1735,6 +1820,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?state=Empty"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -1802,6 +1889,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?state=Populated"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -1885,6 +1974,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?state=Off"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -1950,6 +2041,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?state=On"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -2013,6 +2106,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?state=Standby"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -2096,6 +2191,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?state=Halt"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -2179,6 +2276,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?state=Ready"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -2242,6 +2341,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?flag=OK&flagonly=True"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -2278,6 +2379,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?flag=Warning"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -2341,6 +2444,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?flag=Alert"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -2424,6 +2529,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?flag=Locked"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -2507,6 +2614,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?role=Compute&roleonly=True"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -2548,6 +2657,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?role=Service"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -2631,6 +2742,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?role=System"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -2714,6 +2827,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?role=Application"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -2797,6 +2912,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?role=Storage"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -2880,6 +2997,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?role=Management"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -2945,6 +3064,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?subrole=Master"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -3010,6 +3131,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?subrole=Worker"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -3075,6 +3198,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?subrole=Storage"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -3140,6 +3265,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?enabled=True"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -3203,6 +3330,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?enabled=False"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -3266,6 +3395,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?softwarestatus=TestStatus0"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -3349,6 +3480,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?arch=X86"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -3412,6 +3545,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?arch=ARM"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -3475,6 +3610,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?arch=Other"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -3538,6 +3675,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?class=River"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -3601,6 +3740,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?class=Mountain"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -3664,6 +3805,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?class=Hill"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -3727,6 +3870,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?nid=9999999990&nidonly=True"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -3767,6 +3912,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?nid_start=9999999996"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -3838,6 +3985,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?nid_start=9999999996&nid_end=9999999997"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -3907,6 +4056,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?id=x9999c7s9b9n0&type=Node&state=Ready&flag=OK&enabled=true&softwarestatus=TestStatus0&role=Compute&subrole=Storage&nid=9999999990&nettype=Sling&arch=X86&class=Hill"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -3992,6 +4143,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/Query"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ComponentIDs":["x9999c7s9b9n8"]}
     response:
       status_code: 200
@@ -4078,6 +4231,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/Query"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ComponentIDs":["x9999c7s9b9n8"],"Type":["Node"]}
     response:
       status_code: 200
@@ -4164,6 +4319,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/Query"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ComponentIDs":["x9999c7s9b9n1"],"State":["Ready"],"stateonly":true}
     response:
       status_code: 200
@@ -4210,6 +4367,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/Query"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ComponentIDs":["x9999c7s9b9n7"],"Flag":["OK"],"flagonly":true}
     response:
       status_code: 200
@@ -4251,6 +4410,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/Query"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ComponentIDs":["x9999c7s9b9n6"],"Enabled":["true"]}
     response:
       status_code: 200
@@ -4337,6 +4498,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/Query"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ComponentIDs":["x9999c7s9b9n5"],"SoftwareStatus":["TestStatus5"]}
     response:
       status_code: 200
@@ -4423,6 +4586,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/Query"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ComponentIDs":["x9999c7s9b9n2"],"Role":["Compute"],"roleonly":true}
     response:
       status_code: 200
@@ -4469,6 +4634,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/Query"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ComponentIDs":["x9999c7s9b9n8"],"SubRole":["Master"]}
     response:
       status_code: 200
@@ -4555,6 +4722,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/Query"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ComponentIDs":["x9999c7s9b9n7"],"Arch":["X86"]}
     response:
       status_code: 200
@@ -4641,6 +4810,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/Query"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ComponentIDs":["x9999c7s9b9n6"],"Class":["River"]}
     response:
       status_code: 200
@@ -4727,6 +4898,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/Query"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ComponentIDs":["x9999c7s9b9n3"],"NID":["9999999993"],"nidonly":true}
     response:
       status_code: 200
@@ -4768,6 +4941,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/Query"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ComponentIDs":["x9999c7s9b9n8","x9999c7s9b9n7","x9999c7s9b9n6"],"nid_start":["9999999996"]}
     response:
       status_code: 200
@@ -4840,6 +5015,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/Query"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ComponentIDs":["x9999c7s9b9n8","x9999c7s9b9n7","x9999c7s9b9n6"],"nid_start":["9999999996"],"nid_end":["9999999997"]}
     response:
       status_code: 200
@@ -4910,6 +5087,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/Query"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ComponentIDs":["x9999c7s9b9n3"],"Type":["Node"],"State":["Standby"],"Flag":["Locked"],"Enabled":["false"],"SoftwareStatus":["TestStatus3"],"Role":["Management"],"SubRole":["Storage"],"Arch":["Other"],"Class":["Mountain"],"NID":["9999999993"]}
     response:
       status_code: 200
@@ -4996,6 +5175,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/ByNID/Query"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NIDRanges":["9999999998"]}
     response:
       status_code: 200
@@ -5082,6 +5263,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/ByNID/Query"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NIDRanges":["9999999998"],"Type":["Node"]}
     response:
       status_code: 200
@@ -5168,6 +5351,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/ByNID/Query"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NIDRanges":["9999999991"],"State":["Ready"],"stateonly":true}
     response:
       status_code: 200
@@ -5214,6 +5399,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/ByNID/Query"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NIDRanges":["9999999997"],"Flag":["OK"],"flagonly":true}
     response:
       status_code: 200
@@ -5255,6 +5442,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/ByNID/Query"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NIDRanges":["9999999996"],"Enabled":["true"]}
     response:
       status_code: 200
@@ -5341,6 +5530,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/ByNID/Query"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NIDRanges":["9999999995"],"SoftwareStatus":["TestStatus5"]}
     response:
       status_code: 200
@@ -5427,6 +5618,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/ByNID/Query"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NIDRanges":["9999999995"],"Role":["Compute"],"roleonly":true}
     response:
       status_code: 200
@@ -5473,6 +5666,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/ByNID/Query"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NIDRanges":["9999999998"],"SubRole":["Master"]}
     response:
       status_code: 200
@@ -5559,6 +5754,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/ByNID/Query"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NIDRanges":["9999999997"],"Arch":["X86"]}
     response:
       status_code: 200
@@ -5645,6 +5842,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/ByNID/Query"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NIDRanges":["9999999996"],"Class":["River"]}
     response:
       status_code: 200
@@ -5731,6 +5930,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/ByNID/Query"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NIDRanges":["9999999993"],"NID":["9999999993"],"nidonly":true}
     response:
       status_code: 200
@@ -5772,6 +5973,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/ByNID/Query"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NIDRanges":["9999999996-9999999998"],"nid_start":["9999999996"]}
     response:
       status_code: 200
@@ -5844,6 +6047,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/ByNID/Query"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NIDRanges":["9999999993"],"Type":["Node"],"State":["Standby"],"Flag":["Locked"],"Enabled":["false"],"SoftwareStatus":["TestStatus3"],"Role":["Management"],"SubRole":["Storage"],"Arch":["Other"],"Class":["Mountain"]}
     response:
       status_code: 200
@@ -5930,6 +6135,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/Query/x9999c7s9b9n8"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -6015,6 +6222,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/Query/x9999c7s9b9n8?type=Node"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -6100,6 +6309,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/Query/x9999c7s9b9n1?state=Ready&stateonly=True"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -6145,6 +6356,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/Query/x9999c7s9b9n7?flag=OK&flagonly=True"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -6185,6 +6398,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/Query/x9999c7s9b9n6?enabled=True"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -6270,6 +6485,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/Query/x9999c7s9b9n5?softwarestatus=TestStatus5"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -6355,6 +6572,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/Query/x9999c7s9b9n2?role=Compute&roleonly=True"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -6400,6 +6619,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/Query/x9999c7s9b9n8?subrole=Master"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -6485,6 +6706,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/Query/x9999c7s9b9n7?arch=X86"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -6570,6 +6793,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/Query/x9999c7s9b9n6?class=River"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -6655,6 +6880,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/Query/x9999c7s9b9n3?nid=9999999993&nidonly=True"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -6696,6 +6923,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/Query/x9999c7s9b9n6?nid_start=9999999996"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -6768,6 +6997,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/Query/x9999c7s9b9n6?nid_start=9999999996&nid_end=9999999997"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -6837,6 +7068,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/Query/x9999c7s9b9n3?type=Node&state=Standby&flag=Locked&enabled=False&SoftwareStatus=TestStatus3&role=Management&subrole=Storage&arch=Other&class=Mountain&NID=9999999993"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -6922,6 +7155,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/ByNID/9999999990"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -6999,6 +7234,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/ByNID/9999999998"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -7076,6 +7313,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components"
       method: POST
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Components":[{"ID":"x9999c7s9b8n8","Type":"Node","State":"Ready","Flag":"OK","Enabled":true,"SoftwareStatus":"TestStatus8","Role":"Compute","SubRole":"Master","NID":9999999988,"NetType":"Sling","Arch":"X86","Class":"River"},{"ID":"x9999c7s9b8n7","Type":"Node","State":"On","Flag":"Alert","Enabled":true,"SoftwareStatus":"TestStatus7","Role":"Service","SubRole":"Worker","NID":9999999987,"NetType":"Infiniband","Arch":"Other","Class":"Mountain"},{"ID":"x9999c7s9b8n6","Type":"Node","State":"Off","Flag":"Warning","Enabled":true,"SoftwareStatus":"TestStatus6","Role":"System","SubRole":"Storage","NID":9999999986,"NetType":"Ethernet","Arch":"ARM","Class":"Hill"}],"Force":false}
     response:
       status_code: 204
@@ -7087,6 +7326,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/BulkStateData"
       method: PATCH
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       #TODO: Example payload shows force option but Swagger doesn't explain what it does, Force=false seemed to only update the first node x9999c7s9b8n8 CASMHMS-5837
       #json: {"ComponentIDs":["x9999c7s9b8n8","x9999c7s9b8n7"],"State":"Standby","Flag":"Alert","Force":false}
       json: {"ComponentIDs":["x9999c7s9b8n8","x9999c7s9b8n7"],"State":"Standby","Flag":"Alert","Force":true}
@@ -7100,6 +7341,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b8n8"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -7177,6 +7420,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b8n7"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -7254,6 +7499,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b8n6"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -7331,6 +7578,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b8n6/StateData"
       method: PATCH
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       #TODO: Example payload shows force option but Swagger doesn't explain what it does, Force=false and Force=true seem to do the same thing here CASMHMS-5837
       #json: {"State":"Ready","Flag":"OK","Force":false}
       json: {"State":"Ready","Force":true}
@@ -7344,6 +7593,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?id=x9999c7s9b8n6&stateonly=True"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -7389,6 +7640,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?id=x9999c7s9b8n6&flagonly=True"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -7429,6 +7682,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?id=x9999c7s9b8n6&roleonly=True"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -7474,6 +7729,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?id=x9999c7s9b8n6&nidonly=True"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -7514,6 +7771,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/BulkFlagOnly"
       method: PATCH
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ComponentIDs":["x9999c7s9b8n7","x9999c7s9b8n6"],"Flag":"Warning"}
     response:
       status_code: 204
@@ -7525,6 +7784,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b8n7"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -7602,6 +7863,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b8n6"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -7679,6 +7942,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b8n8"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -7756,6 +8021,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b8n8/FlagOnly"
       method: PATCH
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Flag":"OK"}
     response:
       status_code: 204
@@ -7767,6 +8034,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?id=x9999c7s9b8n8&flagonly=True"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -7807,6 +8076,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/BulkEnabled"
       method: PATCH
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ComponentIDs":["x9999c7s9b8n7","x9999c7s9b8n6"],"Enabled":false}
     response:
       status_code: 204
@@ -7818,6 +8089,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b8n7"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -7895,6 +8168,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b8n6"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -7972,6 +8247,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b8n8"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -8049,6 +8326,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b8n8/Enabled"
       method: PATCH
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Enabled":false}
     response:
       status_code: 204
@@ -8060,6 +8339,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b8n8"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -8137,6 +8418,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/BulkSoftwareStatus"
       method: PATCH
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ComponentIDs":["x9999c7s9b8n7","x9999c7s9b8n6"],"SoftwareStatus":"UpdatedBulkSoftwareStatus"}
     response:
       status_code: 204
@@ -8148,6 +8431,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b8n7"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -8225,6 +8510,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b8n6"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -8302,6 +8589,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b8n8"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -8379,6 +8668,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b8n8/SoftwareStatus"
       method: PATCH
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"SoftwareStatus":"UpdatedXnameSoftwareStatus"}
     response:
       status_code: 204
@@ -8390,6 +8681,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b8n8"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -8467,6 +8760,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/BulkRole"
       method: PATCH
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"ComponentIDs":["x9999c7s9b8n7","x9999c7s9b8n6"],"Role":"Compute","SubRole":"Worker"}
     response:
       status_code: 204
@@ -8478,6 +8773,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b8n7"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -8555,6 +8852,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b8n6"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -8632,6 +8931,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b8n8"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -8709,6 +9010,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b8n8/Role"
       method: PATCH
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Role":"Service","SubRole":"Worker"}
     response:
       status_code: 204
@@ -8720,6 +9023,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b8n8"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -8797,6 +9102,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/BulkNID"
       method: PATCH
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"Components":[{"ID":"x9999c7s9b8n7","NID":9999999977},{"ID":"x9999c7s9b8n6","NID":9999999976}]}
     response:
       status_code: 204
@@ -8808,6 +9115,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b8n7"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -8885,6 +9194,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b8n6"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -8962,6 +9273,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b8n8"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -9039,6 +9352,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b8n8/NID"
       method: PATCH
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
       json: {"NID":9999999978}
     response:
       status_code: 204
@@ -9050,6 +9365,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components/x9999c7s9b8n8"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -9128,1129 +9445,1131 @@ stages:
       method: DELETE
       verify: !bool "{verify}"
 
----
-test_name: Verify Component operations on (Virtual)Nodes with no system role information in SLS or NodeMaps
-
-marks:
-  - parametrize:
-      key:
-      - type
-      - xname
-      - bogus_nid
-      vals:
-      - [Node, x9999c5s17b0n0, 163850784]
-      - [Node, x9999c5s17b0n1, 163850785]
-      - [VirtualNode, x9999c5s17b0n0v0, 163850784]
-      - [VirtualNode, x9999c5s17b0n0v1, 163850785]
-
-stages:
-  # Remove test node from SLS
-  - name: Remove any test {type} from SLS
-    request:
-      url: "{sls_base_url}/v1/hardware/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-
-  # Remove any node maps from HSM for the node
-  - name: Remove any test {type} from NodeMaps
-    request:
-      url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-
-  # Remove any test Node from State Components
-  - name: Remove any test {type} from State Components
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-
-  # POST Create Node with no system role information
-  - name: Create {type} component using POST with no system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components"
-      method: POST
-      verify: !bool "{verify}"
-      json:
-        Components:
-        - ID: "{xname}"
-          State: Populated
-    response:
-      status_code: 204
-
-  # GET Verify Node was created successfully
-  - name: Verify {type} component was successfully created using POST with no system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: GET
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-      verify_response_with:
-        function: tavern.testutils.helpers:validate_pykwalify
-        extra_kwargs:
-          schema:
-            type: map
-            mapping:
-              ID:
-                type: str
-                enum:
-                - "{xname}"
-              Type:
-                type: str
-                enum:
-                - "{type}"
-              State:
-                type: str
-                enum:
-                - Populated
-              Flag:
-                type: str
-                enum:
-                - OK
-              Enabled:
-                type: bool
-                enum:
-                - True
-              Role:
-                type: str
-                enum:
-                - "Compute" # This is the role that nodes get by default
-              NID:
-                type: int
-                enum:
-                - !int "{bogus_nid}" # Bogus NID computed from xname
-
-  # DELETE Node
-  - name: Remove test {type} from State Components
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-
-  # POST Create node with System role information
-  - name: Create {type} component using POST with system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components"
-      method: POST
-      verify: !bool "{verify}"
-      json:
-        Components:
-        - ID: "{xname}"
-          State: Populated
-          Role: Management
-          SubRole: Worker
-          NID: 9999999977
-          Class: River
-          Arch: X86
-          NetType: "Sling"
-
-    response:
-      status_code: 204
-
-  # GET Verify Node was created successfully
-  - name: Verify {type} component was successfully created using POST with system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: GET
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-      verify_response_with:
-        function: tavern.testutils.helpers:validate_pykwalify
-        extra_kwargs:
-          schema:
-            type: map
-            mapping:
-              ID:
-                type: str
-                enum:
-                - "{xname}"
-              Type:
-                type: str
-                enum:
-                - "{type}"
-              State:
-                type: str
-                enum:
-                - Populated
-              Flag:
-                type: str
-                enum:
-                - OK
-              Enabled:
-                type: bool
-                enum:
-                - True
-              Role:
-                type: str
-                enum:
-                - "Management"
-              SubRole:
-                type: str
-                enum:
-                - "Worker"
-              NID:
-                type: int
-                enum:
-                - 9999999977
-              Class:
-                type: str
-                enum:
-                - "River"
-              Arch:
-                type: str
-                enum:
-                - "X86"
-              NetType:
-                type: str
-                enum:
-                - "Sling"
-
-  # DELETE Node
-  - name: Remove test {type} from State Components
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-
-  # PUT Node with no system role information
-  - name: Create Node component using PUT with no system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: PUT
-      verify: !bool "{verify}"
-      json:
-        Component:
-          ID: "{xname}"
-          State: Populated
-    response:
-      status_code: 204
-
-  # GET Verify Node was created successfully
-  - name: Verify {type} component was successfully created using PUT with no system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: GET
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-      verify_response_with:
-        function: tavern.testutils.helpers:validate_pykwalify
-        extra_kwargs:
-          schema:
-            type: map
-            mapping:
-              ID:
-                type: str
-                enum:
-                - "{xname}"
-              Type:
-                type: str
-                enum:
-                - "{type}"
-              State:
-                type: str
-                enum:
-                - Populated
-              Flag:
-                type: str
-                enum:
-                - OK
-              Enabled:
-                type: bool
-                enum:
-                - True
-              Role:
-                type: str
-                enum:
-                - "Compute" # This is the role that nodes get by default
-              NID:
-                type: int
-                enum:
-                - !int "{bogus_nid}" # Bogus NID computed from xname
-
-  # DELETE Node
-  - name: Remove test {type} from State Components
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-
-  # PUT Node with system role information
-  - name: Create {type} component using PUT with system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: PUT
-      verify: !bool "{verify}"
-      json:
-        Component:
-          ID: "{xname}"
-          State: Populated
-          Role: Management
-          SubRole: Worker
-          NID: 9999999977
-          Class: River
-          Arch: X86
-          NetType: "Sling"
-
-    response:
-      status_code: 204
-
-  # GET Verify Node was created successfully
-  - name: Verify {type} component was successfully created using PUT with system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: GET
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-      verify_response_with:
-        function: tavern.testutils.helpers:validate_pykwalify
-        extra_kwargs:
-          schema:
-            type: map
-            mapping:
-              ID:
-                type: str
-                enum:
-                - "{xname}"
-              Type:
-                type: str
-                enum:
-                - "{type}"
-              State:
-                type: str
-                enum:
-                - Populated
-              Flag:
-                type: str
-                enum:
-                - OK
-              Enabled:
-                type: bool
-                enum:
-                - True
-              Role:
-                type: str
-                enum:
-                - "Management"
-              SubRole:
-                type: str
-                enum:
-                - "Worker"
-              NID:
-                type: int
-                enum:
-                - 9999999977
-              Class:
-                type: str
-                enum:
-                - "River"
-              Arch:
-                type: str
-                enum:
-                - "X86"
-              NetType:
-                type: str
-                enum:
-                - "Sling"
-  # DELETE Node
-  - name: Remove test Node from State Components
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-
----
-test_name: Verify Component operations on (Virtual)Nodes with system role information in SLS
-
-marks:
-  - parametrize:
-      key:
-      - type
-      - xname
-      vals:
-      - [Node, x9999c5s17b0n0]
-      - [Node, x9999c5s17b0n1]
-      - [VirtualNode, x9999c5s17b0n0v0]
-      - [VirtualNode, x9999c5s17b0n0v1]
-
-stages:
-  # PUT test virtual node from SLS
-  - name: Create using PUT the test {type} into SLS
-    request:
-      url: "{sls_base_url}/v1/hardware/{xname}"
-      method: PUT
-      verify: !bool "{verify}"
-      json:
-        ID: "{xname}"
-        Class: River
-        ExtraProperties:
-          Role: Application
-          SubRole: Storage
-          NID: 9999999967
-          Aliases: 
-          - uan999
-    response:
-      status_code:
-      - 201
-
-
-  # Remove any node maps from HSM for the node
-  - name: Remove any test {type} from NodeMaps
-    request:
-      url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-
-  # Remove any test Node from State Components
-  - name: Remove any test {type} from State Components
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-
-  # POST Create Node with no system role information
-  - name: Create {type} component using POST with no system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components"
-      method: POST
-      verify: !bool "{verify}"
-      json:
-        Components:
-        - ID: "{xname}"
-          State: Populated
-    response:
-      status_code: 204
-
-  # GET Verify Node was created successfully
-  - name: Verify {type} component was successfully created using POST with no system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: GET
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-      verify_response_with:
-        function: tavern.testutils.helpers:validate_pykwalify
-        extra_kwargs:
-          schema:
-            type: map
-            mapping:
-              ID:
-                type: str
-                enum:
-                - "{xname}"
-              Type:
-                type: str
-                enum:
-                - "{type}"
-              State:
-                type: str
-                enum:
-                - Populated
-              Flag:
-                type: str
-                enum:
-                - OK
-              Enabled:
-                type: bool
-                enum:
-                - True
-              Role:
-                type: str
-                enum:
-                - "Application"
-              SubRole:
-                type: str
-                enum:
-                - "Storage"
-              NID:
-                type: int
-                enum:
-                - 9999999967
-              Class:
-                type: str
-                enum:
-                - "River"
-              Arch:
-                type: str
-                enum:
-                - "X86"
-              NetType:
-                type: str
-                enum:
-                - "Sling"
-
-  # DELETE Node
-  - name: Remove test {type} from State Components
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-
-  # POST Create node with System role information
-  - name: Create {type} component using POST with system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components"
-      method: POST
-      verify: !bool "{verify}"
-      json:
-        Components:
-        - ID: "{xname}"
-          State: Populated
-          Role: Management # This ROle is different than SLS
-          SubRole: Worker # This SubRole is different than SLS 
-          NID: 9999999977 # This NID is different than SLS
-          Class: River
-          Arch: X86
-          NetType: "Sling"
-
-    response:
-      status_code: 204
- 
-  # GET Verify Node was created successfully
-  - name: Verify {type} component was successfully created using POST with system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: GET
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-      verify_response_with:
-        function: tavern.testutils.helpers:validate_pykwalify
-        extra_kwargs:
-          schema:
-            type: map
-            mapping:
-              ID:
-                type: str
-                enum:
-                - "{xname}"
-              Type:
-                type: str
-                enum:
-                - "{type}"
-              State:
-                type: str
-                enum:
-                - Populated
-              Flag:
-                type: str
-                enum:
-                - OK
-              Enabled:
-                type: bool
-                enum:
-                - True
-              Role:
-                type: str
-                enum:
-                - "Management"
-              SubRole:
-                type: str
-                enum:
-                - "Worker"
-              NID:
-                type: int
-                enum:
-                - 9999999977
-              Class:
-                type: str
-                enum:
-                - "River"
-              Arch:
-                type: str
-                enum:
-                - "X86"
-              NetType:
-                type: str
-                enum:
-                - "Sling"
-
-  # DELETE Node
-  - name: Remove test {type} from State Components
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-
-  # PUT Node with no system role information
-  - name: Create Node component using PUT with no system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: PUT
-      verify: !bool "{verify}"
-      json:
-        Component:
-          ID: "{xname}"
-          State: Populated
-    response:
-      status_code: 204
-
-  # GET Verify Node was created successfully
-  - name: Verify {type} component was successfully created using PUT with no system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: GET
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-      verify_response_with:
-        function: tavern.testutils.helpers:validate_pykwalify
-        extra_kwargs:
-          schema:
-            type: map
-            mapping:
-              ID:
-                type: str
-                enum:
-                - "{xname}"
-              Type:
-                type: str
-                enum:
-                - "{type}"
-              State:
-                type: str
-                enum:
-                - Populated
-              Flag:
-                type: str
-                enum:
-                - OK
-              Enabled:
-                type: bool
-                enum:
-                - True
-              Role:
-                type: str
-                enum:
-                - "Application"
-              SubRole:
-                type: str
-                enum:
-                - "Storage"
-              NID:
-                type: int
-                enum:
-                - 9999999967
-              Class:
-                type: str
-                enum:
-                - "River"
-              Arch:
-                type: str
-                enum:
-                - "X86"
-              NetType:
-                type: str
-                enum:
-                - "Sling"
-
-  # DELETE Node
-  - name: Remove test {type} from State Components
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-
-  # PUT Node with system role information
-  - name: Create {type} component using PUT with system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: PUT
-      verify: !bool "{verify}"
-      json:
-        Component:
-          ID: "{xname}"
-          State: Populated
-          Role: Management
-          SubRole: Worker
-          NID: 9999999977
-          Class: River
-          Arch: X86
-          NetType: "Sling"
-
-    response:
-      status_code: 204
-
-  # GET Verify Node was created successfully
-  - name: Verify {type} component was successfully created using PUT with system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: GET
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-      verify_response_with:
-        function: tavern.testutils.helpers:validate_pykwalify
-        extra_kwargs:
-          schema:
-            type: map
-            mapping:
-              ID:
-                type: str
-                enum:
-                - "{xname}"
-              Type:
-                type: str
-                enum:
-                - "{type}"
-              State:
-                type: str
-                enum:
-                - Populated
-              Flag:
-                type: str
-                enum:
-                - OK
-              Enabled:
-                type: bool
-                enum:
-                - True
-              Role:
-                type: str
-                enum:
-                - "Management"
-              SubRole:
-                type: str
-                enum:
-                - "Worker"
-              NID:
-                type: int
-                enum:
-                - 9999999977
-              Class:
-                type: str
-                enum:
-                - "River"
-              Arch:
-                type: str
-                enum:
-                - "X86"
-              NetType:
-                type: str
-                enum:
-                - "Sling"
-  # DELETE Node
-  - name: Remove test Node from State Components
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-
-
-  # Remove test node from SLS
-  - name: Remove the test {type} from SLS
-    request:
-      url: "{sls_base_url}/v1/hardware/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-
----
-test_name: Verify Component operations on (Virtual)Nodes with system role information in NodeMaps
-
-marks:
-  - parametrize:
-      key:
-      - type
-      - xname
-      vals:
-      - [Node, x9999c5s17b0n0]
-      - [Node, x9999c5s17b0n1]
-      - [VirtualNode, x9999c5s17b0n0v0]
-      - [VirtualNode, x9999c5s17b0n0v1]
-
-stages:
-  # Delete test virtual node from SLS
-  - name: Remove any test {type} from SLS
-    request:
-      url: "{sls_base_url}/v1/hardware/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-
-  # PUT test virtual node into HSM NodeMaps
-  - name: Create test {type} in NodeMaps
-    request:
-      url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/{xname}"
-      method: PUT
-      verify: !bool "{verify}"
-      json:
-        Role: Application
-        SubRole: Storage
-        NID: 9999999967
-    response:
-      status_code: 200
-
-  # Remove any test Node from State Components
-  - name: Remove any test {type} from State Components
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-
-  # POST Create Node with no system role information
-  - name: Create {type} component using POST with no system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components"
-      method: POST
-      verify: !bool "{verify}"
-      json:
-        Components:
-        - ID: "{xname}"
-          State: Populated
-    response:
-      status_code: 204
-
-  # GET Verify Node was created successfully
-  - name: Verify {type} component was successfully created using POST with no system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: GET
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-      verify_response_with:
-        function: tavern.testutils.helpers:validate_pykwalify
-        extra_kwargs:
-          schema:
-            type: map
-            mapping:
-              ID:
-                type: str
-                enum:
-                - "{xname}"
-              Type:
-                type: str
-                enum:
-                - "{type}"
-              State:
-                type: str
-                enum:
-                - Populated
-              Flag:
-                type: str
-                enum:
-                - OK
-              Enabled:
-                type: bool
-                enum:
-                - True
-              Role:
-                type: str
-                enum:
-                - "Application"
-              SubRole:
-                type: str
-                enum:
-                - "Storage"
-              NID:
-                type: int
-                enum:
-                - 9999999967
-              Class:
-                type: str
-                enum:
-                - "River"
-              Arch:
-                type: str
-                enum:
-                - "X86"
-              NetType:
-                type: str
-                enum:
-                - "Sling"
-
-  # DELETE Node
-  - name: Remove test {type} from State Components
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-
-  # POST Create node with System role information
-  - name: Create {type} component using POST with system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components"
-      method: POST
-      verify: !bool "{verify}"
-      json:
-        Components:
-        - ID: "{xname}"
-          State: Populated
-          Role: Management # This ROle is different than NodeMaps
-          SubRole: Worker # This SubRole is different than NodeMaps
-          NID: 9999999977 # This NID is different than NodeMaps
-          Class: River
-          Arch: X86
-          NetType: "Sling"
-
-    response:
-      status_code: 204
- 
-  # GET Verify Node was created successfully
-  - name: Verify {type} component was successfully created using POST with system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: GET
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-      verify_response_with:
-        function: tavern.testutils.helpers:validate_pykwalify
-        extra_kwargs:
-          schema:
-            type: map
-            mapping:
-              ID:
-                type: str
-                enum:
-                - "{xname}"
-              Type:
-                type: str
-                enum:
-                - "{type}"
-              State:
-                type: str
-                enum:
-                - Populated
-              Flag:
-                type: str
-                enum:
-                - OK
-              Enabled:
-                type: bool
-                enum:
-                - True
-              Role:
-                type: str
-                enum:
-                - "Management"
-              SubRole:
-                type: str
-                enum:
-                - "Worker"
-              NID:
-                type: int
-                enum:
-                - 9999999977
-              Class:
-                type: str
-                enum:
-                - "River"
-              Arch:
-                type: str
-                enum:
-                - "X86"
-              NetType:
-                type: str
-                enum:
-                - "Sling"
-
-  # DELETE Node
-  - name: Remove test {type} from State Components
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-
-  # PUT Node with no system role information
-  - name: Create Node component using PUT with no system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: PUT
-      verify: !bool "{verify}"
-      json:
-        Component:
-          ID: "{xname}"
-          State: Populated
-    response:
-      status_code: 204
-
-  # GET Verify Node was created successfully
-  - name: Verify {type} component was successfully created using PUT with no system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: GET
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-      verify_response_with:
-        function: tavern.testutils.helpers:validate_pykwalify
-        extra_kwargs:
-          schema:
-            type: map
-            mapping:
-              ID:
-                type: str
-                enum:
-                - "{xname}"
-              Type:
-                type: str
-                enum:
-                - "{type}"
-              State:
-                type: str
-                enum:
-                - Populated
-              Flag:
-                type: str
-                enum:
-                - OK
-              Enabled:
-                type: bool
-                enum:
-                - True
-              Role:
-                type: str
-                enum:
-                - "Application"
-              SubRole:
-                type: str
-                enum:
-                - "Storage"
-              NID:
-                type: int
-                enum:
-                - 9999999967
-              Class:
-                type: str
-                enum:
-                - "River"
-              Arch:
-                type: str
-                enum:
-                - "X86"
-              NetType:
-                type: str
-                enum:
-                - "Sling"
-
-  # DELETE Node
-  - name: Remove test {type} from State Components
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-    response:
-      status_code: 200 
-
-  # PUT Node with system role information
-  - name: Create {type} component using PUT with system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: PUT
-      verify: !bool "{verify}"
-      json:
-        Component:
-          ID: "{xname}"
-          State: Populated
-          Role: Management
-          SubRole: Worker
-          NID: 9999999977
-          Class: River
-          Arch: X86
-          NetType: "Sling"
-
-    response:
-      status_code: 204
-
-  # GET Verify Node was created successfully
-  - name: Verify {type} component was successfully created using PUT with system role information
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: GET
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-      verify_response_with:
-        function: tavern.testutils.helpers:validate_pykwalify
-        extra_kwargs:
-          schema:
-            type: map
-            mapping:
-              ID:
-                type: str
-                enum:
-                - "{xname}"
-              Type:
-                type: str
-                enum:
-                - "{type}"
-              State:
-                type: str
-                enum:
-                - Populated
-              Flag:
-                type: str
-                enum:
-                - OK
-              Enabled:
-                type: bool
-                enum:
-                - True
-              Role:
-                type: str
-                enum:
-                - "Management"
-              SubRole:
-                type: str
-                enum:
-                - "Worker"
-              NID:
-                type: int
-                enum:
-                - 9999999977
-              Class:
-                type: str
-                enum:
-                - "River"
-              Arch:
-                type: str
-                enum:
-                - "X86"
-              NetType:
-                type: str
-                enum:
-                - "Sling"
-  # DELETE Node
-  - name: Remove test Node from State Components
-    request:
-      url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-
-
-  # Remove test node from NodeMaps
-  - name: Remove the test {type} from NodeMaps
-    request:
-      url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/{xname}"
-      method: DELETE
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
+# ---
+# test_name: Verify Component operations on (Virtual)Nodes with no system role information in SLS or NodeMaps
+#
+# marks:
+#   - parametrize:
+#       key:
+#       - type
+#       - xname
+#       - bogus_nid
+#       vals:
+#       - [Node, x9999c5s17b0n0, 163850784]
+#       - [Node, x9999c5s17b0n1, 163850785]
+#       - [VirtualNode, x9999c5s17b0n0v0, 163850784]
+#       - [VirtualNode, x9999c5s17b0n0v1, 163850785]
+#
+# stages:
+#   # Remove test node from SLS
+#   - name: Remove any test {type} from SLS
+#     request:
+#       url: "{sls_base_url}/v1/hardware/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#
+#   # Remove any node maps from HSM for the node
+#   - name: Remove any test {type} from NodeMaps
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#
+#   # Remove any test Node from State Components
+#   - name: Remove any test {type} from State Components
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#
+#   # POST Create Node with no system role information
+#   - name: Create {type} component using POST with no system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components"
+#       method: POST
+#       verify: !bool "{verify}"
+#       json:
+#         Components:
+#         - ID: "{xname}"
+#           State: Populated
+#     response:
+#       status_code: 204
+#
+#   # GET Verify Node was created successfully
+#   - name: Verify {type} component was successfully created using POST with no system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: GET
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#       verify_response_with:
+#         function: tavern.testutils.helpers:validate_pykwalify
+#         extra_kwargs:
+#           schema:
+#             type: map
+#             mapping:
+#               ID:
+#                 type: str
+#                 enum:
+#                 - "{xname}"
+#               Type:
+#                 type: str
+#                 enum:
+#                 - "{type}"
+#               State:
+#                 type: str
+#                 enum:
+#                 - Populated
+#               Flag:
+#                 type: str
+#                 enum:
+#                 - OK
+#               Enabled:
+#                 type: bool
+#                 enum:
+#                 - True
+#               Role:
+#                 type: str
+#                 enum:
+#                 - "Compute" # This is the role that nodes get by default
+#               NID:
+#                 type: int
+#                 enum:
+#                 - !int "{bogus_nid}" # Bogus NID computed from xname
+#
+#   # DELETE Node
+#   - name: Remove test {type} from State Components
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#
+#   # POST Create node with System role information
+#   - name: Create {type} component using POST with system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components"
+#       method: POST
+#       verify: !bool "{verify}"
+#       json:
+#         Components:
+#         - ID: "{xname}"
+#           State: Populated
+#           Role: Management
+#           SubRole: Worker
+#           NID: 9999999977
+#           Class: River
+#           Arch: X86
+#           NetType: "Sling"
+#
+#     response:
+#       status_code: 204
+#
+#   # GET Verify Node was created successfully
+#   - name: Verify {type} component was successfully created using POST with system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: GET
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#       verify_response_with:
+#         function: tavern.testutils.helpers:validate_pykwalify
+#         extra_kwargs:
+#           schema:
+#             type: map
+#             mapping:
+#               ID:
+#                 type: str
+#                 enum:
+#                 - "{xname}"
+#               Type:
+#                 type: str
+#                 enum:
+#                 - "{type}"
+#               State:
+#                 type: str
+#                 enum:
+#                 - Populated
+#               Flag:
+#                 type: str
+#                 enum:
+#                 - OK
+#               Enabled:
+#                 type: bool
+#                 enum:
+#                 - True
+#               Role:
+#                 type: str
+#                 enum:
+#                 - "Management"
+#               SubRole:
+#                 type: str
+#                 enum:
+#                 - "Worker"
+#               NID:
+#                 type: int
+#                 enum:
+#                 - 9999999977
+#               Class:
+#                 type: str
+#                 enum:
+#                 - "River"
+#               Arch:
+#                 type: str
+#                 enum:
+#                 - "X86"
+#               NetType:
+#                 type: str
+#                 enum:
+#                 - "Sling"
+#
+#   # DELETE Node
+#   - name: Remove test {type} from State Components
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#
+#   # PUT Node with no system role information
+#   - name: Create Node component using PUT with no system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: PUT
+#       verify: !bool "{verify}"
+#       json:
+#         Component:
+#           ID: "{xname}"
+#           State: Populated
+#     response:
+#       status_code: 204
+#
+#   # GET Verify Node was created successfully
+#   - name: Verify {type} component was successfully created using PUT with no system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: GET
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#       verify_response_with:
+#         function: tavern.testutils.helpers:validate_pykwalify
+#         extra_kwargs:
+#           schema:
+#             type: map
+#             mapping:
+#               ID:
+#                 type: str
+#                 enum:
+#                 - "{xname}"
+#               Type:
+#                 type: str
+#                 enum:
+#                 - "{type}"
+#               State:
+#                 type: str
+#                 enum:
+#                 - Populated
+#               Flag:
+#                 type: str
+#                 enum:
+#                 - OK
+#               Enabled:
+#                 type: bool
+#                 enum:
+#                 - True
+#               Role:
+#                 type: str
+#                 enum:
+#                 - "Compute" # This is the role that nodes get by default
+#               NID:
+#                 type: int
+#                 enum:
+#                 - !int "{bogus_nid}" # Bogus NID computed from xname
+#
+#   # DELETE Node
+#   - name: Remove test {type} from State Components
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#
+#   # PUT Node with system role information
+#   - name: Create {type} component using PUT with system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: PUT
+#       verify: !bool "{verify}"
+#       json:
+#         Component:
+#           ID: "{xname}"
+#           State: Populated
+#           Role: Management
+#           SubRole: Worker
+#           NID: 9999999977
+#           Class: River
+#           Arch: X86
+#           NetType: "Sling"
+#
+#     response:
+#       status_code: 204
+#
+#   # GET Verify Node was created successfully
+#   - name: Verify {type} component was successfully created using PUT with system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: GET
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#       verify_response_with:
+#         function: tavern.testutils.helpers:validate_pykwalify
+#         extra_kwargs:
+#           schema:
+#             type: map
+#             mapping:
+#               ID:
+#                 type: str
+#                 enum:
+#                 - "{xname}"
+#               Type:
+#                 type: str
+#                 enum:
+#                 - "{type}"
+#               State:
+#                 type: str
+#                 enum:
+#                 - Populated
+#               Flag:
+#                 type: str
+#                 enum:
+#                 - OK
+#               Enabled:
+#                 type: bool
+#                 enum:
+#                 - True
+#               Role:
+#                 type: str
+#                 enum:
+#                 - "Management"
+#               SubRole:
+#                 type: str
+#                 enum:
+#                 - "Worker"
+#               NID:
+#                 type: int
+#                 enum:
+#                 - 9999999977
+#               Class:
+#                 type: str
+#                 enum:
+#                 - "River"
+#               Arch:
+#                 type: str
+#                 enum:
+#                 - "X86"
+#               NetType:
+#                 type: str
+#                 enum:
+#                 - "Sling"
+#   # DELETE Node
+#   - name: Remove test Node from State Components
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#
+# ---
+# test_name: Verify Component operations on (Virtual)Nodes with system role information in SLS
+#
+# marks:
+#   - parametrize:
+#       key:
+#       - type
+#       - xname
+#       vals:
+#       - [Node, x9999c5s17b0n0]
+#       - [Node, x9999c5s17b0n1]
+#       - [VirtualNode, x9999c5s17b0n0v0]
+#       - [VirtualNode, x9999c5s17b0n0v1]
+#
+# stages:
+#   # PUT test virtual node from SLS
+#   - name: Create using PUT the test {type} into SLS
+#     request:
+#       url: "{sls_base_url}/v1/hardware/{xname}"
+#       method: PUT
+#       verify: !bool "{verify}"
+#       json:
+#         ID: "{xname}"
+#         Class: River
+#         ExtraProperties:
+#           Role: Application
+#           SubRole: Storage
+#           NID: 9999999967
+#           Aliases: 
+#           - uan999
+#     response:
+#       status_code:
+#       - 201
+#
+#
+#   # Remove any node maps from HSM for the node
+#   - name: Remove any test {type} from NodeMaps
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#
+#   # Remove any test Node from State Components
+#   - name: Remove any test {type} from State Components
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#
+#   # POST Create Node with no system role information
+#   - name: Create {type} component using POST with no system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components"
+#       method: POST
+#       verify: !bool "{verify}"
+#       json:
+#         Components:
+#         - ID: "{xname}"
+#           State: Populated
+#     response:
+#       status_code: 204
+#
+#   # GET Verify Node was created successfully
+#   - name: Verify {type} component was successfully created using POST with no system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: GET
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#       verify_response_with:
+#         function: tavern.testutils.helpers:validate_pykwalify
+#         extra_kwargs:
+#           schema:
+#             type: map
+#             mapping:
+#               ID:
+#                 type: str
+#                 enum:
+#                 - "{xname}"
+#               Type:
+#                 type: str
+#                 enum:
+#                 - "{type}"
+#               State:
+#                 type: str
+#                 enum:
+#                 - Populated
+#               Flag:
+#                 type: str
+#                 enum:
+#                 - OK
+#               Enabled:
+#                 type: bool
+#                 enum:
+#                 - True
+#               Role:
+#                 type: str
+#                 enum:
+#                 - "Application"
+#               SubRole:
+#                 type: str
+#                 enum:
+#                 - "Storage"
+#               NID:
+#                 type: int
+#                 enum:
+#                 - 9999999967
+#               Class:
+#                 type: str
+#                 enum:
+#                 - "River"
+#               Arch:
+#                 type: str
+#                 enum:
+#                 - "X86"
+#               NetType:
+#                 type: str
+#                 enum:
+#                 - "Sling"
+#
+#   # DELETE Node
+#   - name: Remove test {type} from State Components
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#
+#   # POST Create node with System role information
+#   - name: Create {type} component using POST with system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components"
+#       method: POST
+#       verify: !bool "{verify}"
+#       json:
+#         Components:
+#         - ID: "{xname}"
+#           State: Populated
+#           Role: Management # This ROle is different than SLS
+#           SubRole: Worker # This SubRole is different than SLS 
+#           NID: 9999999977 # This NID is different than SLS
+#           Class: River
+#           Arch: X86
+#           NetType: "Sling"
+#
+#     response:
+#       status_code: 204
+#
+#   # GET Verify Node was created successfully
+#   - name: Verify {type} component was successfully created using POST with system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: GET
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#       verify_response_with:
+#         function: tavern.testutils.helpers:validate_pykwalify
+#         extra_kwargs:
+#           schema:
+#             type: map
+#             mapping:
+#               ID:
+#                 type: str
+#                 enum:
+#                 - "{xname}"
+#               Type:
+#                 type: str
+#                 enum:
+#                 - "{type}"
+#               State:
+#                 type: str
+#                 enum:
+#                 - Populated
+#               Flag:
+#                 type: str
+#                 enum:
+#                 - OK
+#               Enabled:
+#                 type: bool
+#                 enum:
+#                 - True
+#               Role:
+#                 type: str
+#                 enum:
+#                 - "Management"
+#               SubRole:
+#                 type: str
+#                 enum:
+#                 - "Worker"
+#               NID:
+#                 type: int
+#                 enum:
+#                 - 9999999977
+#               Class:
+#                 type: str
+#                 enum:
+#                 - "River"
+#               Arch:
+#                 type: str
+#                 enum:
+#                 - "X86"
+#               NetType:
+#                 type: str
+#                 enum:
+#                 - "Sling"
+#
+#   # DELETE Node
+#   - name: Remove test {type} from State Components
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#
+#   # PUT Node with no system role information
+#   - name: Create Node component using PUT with no system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: PUT
+#       verify: !bool "{verify}"
+#       json:
+#         Component:
+#           ID: "{xname}"
+#           State: Populated
+#     response:
+#       status_code: 204
+#
+#   # GET Verify Node was created successfully
+#   - name: Verify {type} component was successfully created using PUT with no system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: GET
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#       verify_response_with:
+#         function: tavern.testutils.helpers:validate_pykwalify
+#         extra_kwargs:
+#           schema:
+#             type: map
+#             mapping:
+#               ID:
+#                 type: str
+#                 enum:
+#                 - "{xname}"
+#               Type:
+#                 type: str
+#                 enum:
+#                 - "{type}"
+#               State:
+#                 type: str
+#                 enum:
+#                 - Populated
+#               Flag:
+#                 type: str
+#                 enum:
+#                 - OK
+#               Enabled:
+#                 type: bool
+#                 enum:
+#                 - True
+#               Role:
+#                 type: str
+#                 enum:
+#                 - "Application"
+#               SubRole:
+#                 type: str
+#                 enum:
+#                 - "Storage"
+#               NID:
+#                 type: int
+#                 enum:
+#                 - 9999999967
+#               Class:
+#                 type: str
+#                 enum:
+#                 - "River"
+#               Arch:
+#                 type: str
+#                 enum:
+#                 - "X86"
+#               NetType:
+#                 type: str
+#                 enum:
+#                 - "Sling"
+#
+#   # DELETE Node
+#   - name: Remove test {type} from State Components
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#
+#   # PUT Node with system role information
+#   - name: Create {type} component using PUT with system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: PUT
+#       verify: !bool "{verify}"
+#       json:
+#         Component:
+#           ID: "{xname}"
+#           State: Populated
+#           Role: Management
+#           SubRole: Worker
+#           NID: 9999999977
+#           Class: River
+#           Arch: X86
+#           NetType: "Sling"
+#
+#     response:
+#       status_code: 204
+#
+#   # GET Verify Node was created successfully
+#   - name: Verify {type} component was successfully created using PUT with system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: GET
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#       verify_response_with:
+#         function: tavern.testutils.helpers:validate_pykwalify
+#         extra_kwargs:
+#           schema:
+#             type: map
+#             mapping:
+#               ID:
+#                 type: str
+#                 enum:
+#                 - "{xname}"
+#               Type:
+#                 type: str
+#                 enum:
+#                 - "{type}"
+#               State:
+#                 type: str
+#                 enum:
+#                 - Populated
+#               Flag:
+#                 type: str
+#                 enum:
+#                 - OK
+#               Enabled:
+#                 type: bool
+#                 enum:
+#                 - True
+#               Role:
+#                 type: str
+#                 enum:
+#                 - "Management"
+#               SubRole:
+#                 type: str
+#                 enum:
+#                 - "Worker"
+#               NID:
+#                 type: int
+#                 enum:
+#                 - 9999999977
+#               Class:
+#                 type: str
+#                 enum:
+#                 - "River"
+#               Arch:
+#                 type: str
+#                 enum:
+#                 - "X86"
+#               NetType:
+#                 type: str
+#                 enum:
+#                 - "Sling"
+#   # DELETE Node
+#   - name: Remove test Node from State Components
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#
+#
+#   # Remove test node from SLS
+#   - name: Remove the test {type} from SLS
+#     request:
+#       url: "{sls_base_url}/v1/hardware/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#
+# ---
+# test_name: Verify Component operations on (Virtual)Nodes with system role information in NodeMaps
+#
+# marks:
+#   - parametrize:
+#       key:
+#       - type
+#       - xname
+#       vals:
+#       - [Node, x9999c5s17b0n0]
+#       - [Node, x9999c5s17b0n1]
+#       - [VirtualNode, x9999c5s17b0n0v0]
+#       - [VirtualNode, x9999c5s17b0n0v1]
+#
+# stages:
+#   # Delete test virtual node from SLS
+#   - name: Remove any test {type} from SLS
+#     request:
+#       url: "{sls_base_url}/v1/hardware/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#
+#   # PUT test virtual node into HSM NodeMaps
+#   - name: Create test {type} in NodeMaps
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/{xname}"
+#       method: PUT
+#       verify: !bool "{verify}"
+#       json:
+#         Role: Application
+#         SubRole: Storage
+#         NID: 9999999967
+#     response:
+#       status_code: 200
+#
+#   # Remove any test Node from State Components
+#   - name: Remove any test {type} from State Components
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#
+#   # POST Create Node with no system role information
+#   - name: Create {type} component using POST with no system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components"
+#       method: POST
+#       verify: !bool "{verify}"
+#       json:
+#         Components:
+#         - ID: "{xname}"
+#           State: Populated
+#     response:
+#       status_code: 204
+#
+#   # GET Verify Node was created successfully
+#   - name: Verify {type} component was successfully created using POST with no system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: GET
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#       verify_response_with:
+#         function: tavern.testutils.helpers:validate_pykwalify
+#         extra_kwargs:
+#           schema:
+#             type: map
+#             mapping:
+#               ID:
+#                 type: str
+#                 enum:
+#                 - "{xname}"
+#               Type:
+#                 type: str
+#                 enum:
+#                 - "{type}"
+#               State:
+#                 type: str
+#                 enum:
+#                 - Populated
+#               Flag:
+#                 type: str
+#                 enum:
+#                 - OK
+#               Enabled:
+#                 type: bool
+#                 enum:
+#                 - True
+#               Role:
+#                 type: str
+#                 enum:
+#                 - "Application"
+#               SubRole:
+#                 type: str
+#                 enum:
+#                 - "Storage"
+#               NID:
+#                 type: int
+#                 enum:
+#                 - 9999999967
+#               Class:
+#                 type: str
+#                 enum:
+#                 - "River"
+#               Arch:
+#                 type: str
+#                 enum:
+#                 - "X86"
+#               NetType:
+#                 type: str
+#                 enum:
+#                 - "Sling"
+#
+#   # DELETE Node
+#   - name: Remove test {type} from State Components
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#
+#   # POST Create node with System role information
+#   - name: Create {type} component using POST with system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components"
+#       method: POST
+#       verify: !bool "{verify}"
+#       json:
+#         Components:
+#         - ID: "{xname}"
+#           State: Populated
+#           Role: Management # This ROle is different than NodeMaps
+#           SubRole: Worker # This SubRole is different than NodeMaps
+#           NID: 9999999977 # This NID is different than NodeMaps
+#           Class: River
+#           Arch: X86
+#           NetType: "Sling"
+#
+#     response:
+#       status_code: 204
+#
+#   # GET Verify Node was created successfully
+#   - name: Verify {type} component was successfully created using POST with system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: GET
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#       verify_response_with:
+#         function: tavern.testutils.helpers:validate_pykwalify
+#         extra_kwargs:
+#           schema:
+#             type: map
+#             mapping:
+#               ID:
+#                 type: str
+#                 enum:
+#                 - "{xname}"
+#               Type:
+#                 type: str
+#                 enum:
+#                 - "{type}"
+#               State:
+#                 type: str
+#                 enum:
+#                 - Populated
+#               Flag:
+#                 type: str
+#                 enum:
+#                 - OK
+#               Enabled:
+#                 type: bool
+#                 enum:
+#                 - True
+#               Role:
+#                 type: str
+#                 enum:
+#                 - "Management"
+#               SubRole:
+#                 type: str
+#                 enum:
+#                 - "Worker"
+#               NID:
+#                 type: int
+#                 enum:
+#                 - 9999999977
+#               Class:
+#                 type: str
+#                 enum:
+#                 - "River"
+#               Arch:
+#                 type: str
+#                 enum:
+#                 - "X86"
+#               NetType:
+#                 type: str
+#                 enum:
+#                 - "Sling"
+#
+#   # DELETE Node
+#   - name: Remove test {type} from State Components
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#
+#   # PUT Node with no system role information
+#   - name: Create Node component using PUT with no system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: PUT
+#       verify: !bool "{verify}"
+#       json:
+#         Component:
+#           ID: "{xname}"
+#           State: Populated
+#     response:
+#       status_code: 204
+#
+#   # GET Verify Node was created successfully
+#   - name: Verify {type} component was successfully created using PUT with no system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: GET
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#       verify_response_with:
+#         function: tavern.testutils.helpers:validate_pykwalify
+#         extra_kwargs:
+#           schema:
+#             type: map
+#             mapping:
+#               ID:
+#                 type: str
+#                 enum:
+#                 - "{xname}"
+#               Type:
+#                 type: str
+#                 enum:
+#                 - "{type}"
+#               State:
+#                 type: str
+#                 enum:
+#                 - Populated
+#               Flag:
+#                 type: str
+#                 enum:
+#                 - OK
+#               Enabled:
+#                 type: bool
+#                 enum:
+#                 - True
+#               Role:
+#                 type: str
+#                 enum:
+#                 - "Application"
+#               SubRole:
+#                 type: str
+#                 enum:
+#                 - "Storage"
+#               NID:
+#                 type: int
+#                 enum:
+#                 - 9999999967
+#               Class:
+#                 type: str
+#                 enum:
+#                 - "River"
+#               Arch:
+#                 type: str
+#                 enum:
+#                 - "X86"
+#               NetType:
+#                 type: str
+#                 enum:
+#                 - "Sling"
+#
+#   # DELETE Node
+#   - name: Remove test {type} from State Components
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200 
+#
+#   # PUT Node with system role information
+#   - name: Create {type} component using PUT with system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: PUT
+#       verify: !bool "{verify}"
+#       json:
+#         Component:
+#           ID: "{xname}"
+#           State: Populated
+#           Role: Management
+#           SubRole: Worker
+#           NID: 9999999977
+#           Class: River
+#           Arch: X86
+#           NetType: "Sling"
+#
+#     response:
+#       status_code: 204
+#
+#   # GET Verify Node was created successfully
+#   - name: Verify {type} component was successfully created using PUT with system role information
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: GET
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#       verify_response_with:
+#         function: tavern.testutils.helpers:validate_pykwalify
+#         extra_kwargs:
+#           schema:
+#             type: map
+#             mapping:
+#               ID:
+#                 type: str
+#                 enum:
+#                 - "{xname}"
+#               Type:
+#                 type: str
+#                 enum:
+#                 - "{type}"
+#               State:
+#                 type: str
+#                 enum:
+#                 - Populated
+#               Flag:
+#                 type: str
+#                 enum:
+#                 - OK
+#               Enabled:
+#                 type: bool
+#                 enum:
+#                 - True
+#               Role:
+#                 type: str
+#                 enum:
+#                 - "Management"
+#               SubRole:
+#                 type: str
+#                 enum:
+#                 - "Worker"
+#               NID:
+#                 type: int
+#                 enum:
+#                 - 9999999977
+#               Class:
+#                 type: str
+#                 enum:
+#                 - "River"
+#               Arch:
+#                 type: str
+#                 enum:
+#                 - "X86"
+#               NetType:
+#                 type: str
+#                 enum:
+#                 - "Sling"
+#   # DELETE Node
+#   - name: Remove test Node from State Components
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/State/Components/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#
+#
+#   # Remove test node from NodeMaps
+#   - name: Remove the test {type} from NodeMaps
+#     request:
+#       url: "{hsm_base_url}/hsm/v2/Defaults/NodeMaps/{xname}"
+#       method: DELETE
+#       verify: !bool "{verify}"
+#     response:
+#       status_code: 200
+#       headers:
+#         Authorization: "Bearer {access_token}"

@@ -45,6 +45,16 @@
 test_name: Ensure that we can gather information from the RedfishEndpoints collection
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # GET /RedfishEndpoints API response code
   # GET /RedfishEndpoints API response body
   - name: Ensure that we can conduct a query on the RedfishEndpoints collection
@@ -52,6 +62,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/RedfishEndpoints"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -81,6 +93,7 @@ stages:
                               - "DiscoveryStarted"
                               # expected for ncn-m001 which is not connected to the site network
                               - "HTTPsGetFailed"
+                              - "NotYetQueried"
                           RedfishVersion:
                             type: str
                             required: False
@@ -138,6 +151,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/RedfishEndpoints?type=NodeBMC"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -167,6 +182,7 @@ stages:
                               - "DiscoveryStarted"
                               # expected for ncn-m001 which is not connected to the site network
                               - "HTTPsGetFailed"
+                              - "NotYetQueried"
                           RedfishVersion:
                             type: str
                             required: False
@@ -216,6 +232,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?type=NodeBMC"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       save:
@@ -229,6 +247,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/RedfishEndpoints/{xname}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -251,6 +271,7 @@ stages:
                       - "DiscoveryStarted"
                       # expected for ncn-m001 which is not connected to the site network
                       - "HTTPsGetFailed"
+                      - "NotYetQueried"
                   RedfishVersion:
                     type: str
                     required: False
@@ -307,6 +328,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/RedfishEndpoints?id={xname}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -336,6 +359,7 @@ stages:
                               - "DiscoveryStarted"
                               # expected for ncn-m001 which is not connected to the site network
                               - "HTTPsGetFailed"
+                              - "NotYetQueried"
                           RedfishVersion:
                             type: str
                             required: False
@@ -389,6 +413,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/RedfishEndpoints?fqdn={fqdn}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
@@ -418,6 +444,7 @@ stages:
                               - "DiscoveryStarted"
                               # expected for ncn-m001 which is not connected to the site network
                               - "HTTPsGetFailed"
+                              - "NotYetQueried"
                           RedfishVersion:
                             type: str
                             required: False
@@ -473,6 +500,8 @@ stages:
   #    headers:
   #      Authorization: "Bearer {access_token}"
   #    verify: !bool "{verify}"
+  #    headers:
+  #      Authorization: "Bearer {access_token}"
   #  response:
   #    status_code: 200
   #    verify_response_with:
@@ -502,6 +531,7 @@ stages:
   #                            - "DiscoveryStarted"
   #                            # expected for ncn-m001 which is not connected to the site network
   #                            - "HTTPsGetFailed"
+  #                            - "NotYetQueried"
   #                        RedfishVersion:
   #                          type: str
   #                          required: False
@@ -555,6 +585,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/RedfishEndpoints/Query/{xname}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 400
       json:
@@ -570,6 +602,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/RedfishEndpoints/Query/FAKE"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 400
       json:

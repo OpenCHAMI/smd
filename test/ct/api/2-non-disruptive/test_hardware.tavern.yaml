@@ -49,12 +49,24 @@
 test_name: Query the Hardware collection
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # GET /Hardware API response code
   - name: Retrieve the hardware information from the Hardware collection
     request:
       url: "{hsm_base_url}/hsm/v2/Inventory/Hardware"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
 
@@ -62,12 +74,24 @@ stages:
 test_name: Query the HardwareByFRU collection
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   # GET /HardwareByFRU API response code
   - name: Retrieve the hardware information from the HardwareByFRU collection
     request:
       url: "{hsm_base_url}/hsm/v2/Inventory/HardwareByFRU"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
 
@@ -75,6 +99,16 @@ stages:
 test_name: Query the Hardware collection for Node information
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   - name: Retrieve a node xname from the Components collection to use in the next stage
     request:
       # also query with role=Compute since not all of the same node data is expected
@@ -82,6 +116,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/State/Components?type=Node&role=Compute"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       save:
@@ -95,6 +131,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/Hardware/{node_xname}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       json:
@@ -139,6 +177,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/HardwareByFRU/{FRUID}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       json:
@@ -161,11 +201,23 @@ stages:
 test_name: Query the Hardware collection for Node Enclosure information
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   - name: Retrieve a node enclosure xname from the Components collection to use in the next stage
     request:
       url: "{hsm_base_url}/hsm/v2/State/Components?type=NodeEnclosure"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       save:
@@ -179,6 +231,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/Hardware/{node_enclosure_xname}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       json:
@@ -216,6 +270,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/HardwareByFRU/{FRUID}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       json:
@@ -239,13 +295,23 @@ stages:
 #test_name: Query the Hardware collection for Node Processor information
 #
 #stages:
+#  - name: Get access token
+#    request:
+#      url: "{opaal_base_url}/token"
+#      method: GET
+#      verify: !bool "{verify}"
+#    response:
+#      status_code: 200
+#      save:
+#        json:
+#          access_token: access_token
 #  - name: Retrieve a node xname from the Components collection to use in the next stage
 #    request:
 #      url: "{hsm_base_url}/hsm/v2/State/Components?type=Node"
 #      method: GET
+#      verify: !bool "{verify}"
 #      headers:
 #        Authorization: "Bearer {access_token}"
-#      verify: !bool "{verify}"
 #    response:
 #      status_code: 200
 #      save:
@@ -258,9 +324,9 @@ stages:
 #    request:
 #      url: "{hsm_base_url}/hsm/v2/Inventory/Hardware/{node_xname}p0"
 #      method: GET
+#      verify: !bool "{verify}"
 #      headers:
 #        Authorization: "Bearer {access_token}"
-#      verify: !bool "{verify}"
 #    response:
 #      status_code: 200
 #      json:
@@ -305,9 +371,9 @@ stages:
 #    request:
 #      url: "{hsm_base_url}/hsm/v2/Inventory/HardwareByFRU/{FRUID}"
 #      method: GET
+#      verify: !bool "{verify}"
 #      headers:
 #        Authorization: "Bearer {access_token}"
-#      verify: !bool "{verify}"
 #    response:
 #      status_code: 200
 #      json:
@@ -339,13 +405,23 @@ stages:
 #test_name: Query the Hardware collection for Node Memory information
 #
 #stages:
+#  - name: Get access token
+#    request:
+#      url: "{opaal_base_url}/token"
+#      method: GET
+#      verify: !bool "{verify}"
+#    response:
+#      status_code: 200
+#      save:
+#        json:
+#          access_token: access_token
 #  - name: Retrieve a node xname from the Components collection to use in the next stage
 #    request:
 #      url: "{hsm_base_url}/hsm/v2/State/Components?type=Node"
 #      method: GET
+#      verify: !bool "{verify}"
 #      headers:
 #        Authorization: "Bearer {access_token}"
-#      verify: !bool "{verify}"
 #    response:
 #      status_code: 200
 #      save:
@@ -358,9 +434,9 @@ stages:
 #    request:
 #      url: "{hsm_base_url}/hsm/v2/Inventory/Hardware/{node_xname}d0"
 #      method: GET
+#      verify: !bool "{verify}"
 #      headers:
 #        Authorization: "Bearer {access_token}"
-#      verify: !bool "{verify}"
 #    response:
 #      status_code: 200
 #      json:
@@ -406,9 +482,9 @@ stages:
 #    request:
 #      url: "{hsm_base_url}/hsm/v2/Inventory/HardwareByFRU/{FRUID}"
 #      method: GET
+#      verify: !bool "{verify}"
 #      headers:
 #        Authorization: "Bearer {access_token}"
-#      verify: !bool "{verify}"
 #    response:
 #      status_code: 200
 #      json:
@@ -434,11 +510,23 @@ stages:
 test_name: Call the Hardware Inventory Query API with a Node xname
 
 stages:
+  - name: Get access token
+    request:
+      url: "{opaal_base_url}/token"
+      method: GET
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          access_token: access_token
   - name: Retrieve a node xname from the Components collection to use in the next stage
     request:
       url: "{hsm_base_url}/hsm/v2/State/Components?type=Node"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       save:
@@ -452,6 +540,8 @@ stages:
       url: "{hsm_base_url}/hsm/v2/Inventory/Hardware/Query/{node_xname}"
       method: GET
       verify: !bool "{verify}"
+      headers:
+        Authorization: "Bearer {access_token}"
     response:
       status_code: 200
       verify_response_with:
