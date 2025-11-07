@@ -187,7 +187,8 @@ type Manager struct {
 	UUID                  string   `json:"UUID"`
 	Status                StatusRF `json:"Status"`
 
-	// TODO: GraphicalConsole, SerialConsole, CommandShell
+	// TODO: GraphicalConsole
+	CommandShell   CommandShell `json:"CommandShell"`
 
 	EthernetInterfaces ResourceID `json:"EthernetInterfaces"`
 	NetworkProtocol    ResourceID `json:"NetworkProtocol"`
@@ -433,6 +434,7 @@ type ComputerSystem struct {
 	SecureBoot         ResourceID `json:"SecureBoot"`
 	SimpleStorage      ResourceID `json:"SimpleStorage"`
 	Storage            ResourceID `json:"Storage"`
+	SerialConsole	   SerialConsole `json:"SerialConsole"`
 
 	Links ComputerSystemLinks `json:"Links"`
 
@@ -995,4 +997,45 @@ type RedfishErrorContents struct {
 // redfish-error: https://redfish.dmtf.org/schemas/redfish-error.v1_0_0.json
 type RedfishError struct {
 	Error RedfishErrorContents `json:"error"`
+}
+// CommandConnectType represents supported command shell connection types
+type CommandConnectType string
+
+const (
+    CommandConnectSSH    CommandConnectType = "SSH"
+    CommandConnectTelnet CommandConnectType = "Telnet"
+    CommandConnectIPMI   CommandConnectType = "IPMI"
+    CommandConnectOem    CommandConnectType = "Oem"
+)
+
+// SerialConsoleProtocol represents protocol specific properties for serial console
+type SerialConsoleProtocol struct {
+    ServiceEnabled bool `json:"ServiceEnabled"`
+    Port int `json:"Port,omitempty"`
+    HotKeySequenceDisplay string `json:"HotKeySequenceDisplay,omitempty"`
+    SharedWithManagerCLI bool `json:"SharedWithManagerCLI,omitempty"`
+	ConsoleEntryCommand string `json:"ConsoleEntryCommand,omitempty"`
+}
+
+// WebSocketConsole represents properties for WebSocket console
+type WebSocketConsole struct {
+	ServiceEnabled bool `json:"ServiceEnabled"`
+	Interactive bool `json:"Interactive"`
+	ConsoleURI string `json:"ConsoleURI"`
+}
+
+// SerialConsole represents Redfish SerialConsole object ( a host console )
+type SerialConsole struct {
+    MaxConcurrentSessions int `json:"MaxConcurrentSessions"`
+    IPMI *SerialConsoleProtocol `json:"IPMI,omitempty"`
+	SSH  *SerialConsoleProtocol `json:"SSH,omitempty"`
+	Telnet *SerialConsoleProtocol `json:"Telnet,omitempty"`
+	WebSocket *WebSocketConsole `json:"WebSocket,omitempty"`
+}
+
+// CommandShell represents Redfish CommandShell object ( a bmc console )
+type CommandShell struct {
+	ServiceEnabled bool `json:"ServiceEnabled"`
+    MaxConcurrentSessions int `json:"MaxConcurrentSessions"`
+    ConnectTypesSupported []CommandConnectType `json:"ConnectTypesSupported"`
 }

@@ -84,12 +84,14 @@ type ComponentSystemInfo struct {
 	EthNICInfo []*EthernetNICInfo     `json:"EthernetNICInfo,omitempty"`
 	PowerCtlInfo
 	Controls   []*Control             `json:"Controls,omitempty"`
+	SerialConsole *SerialConsole    `json:"SerialConsole,omitempty"`
 }
 
 type ComponentManagerInfo struct {
 	Name       string             `json:"Name,omitempty"`
 	Actions    *ManagerActions    `json:"Actions,omitempty"`
 	EthNICInfo []*EthernetNICInfo `json:"EthernetNICInfo,omitempty"`
+	CommandShell *CommandShell    `json:"CommandShell,omitempty"`
 }
 
 type ComponentPDUInfo struct {
@@ -670,6 +672,9 @@ func (m *EpManager) discoverRemotePhase1() {
 		}
 	}
 
+	// Copy the command shell
+	m.CommandShell = &m.ManagerRF.CommandShell
+
 	// Get link to Manager's ethernet interfaces
 	if m.ManagerRF.EthernetInterfaces.Oid == "" {
 		errlog.Printf("%s: No EthernetInterfaces Found.\n", topURL)
@@ -1108,6 +1113,10 @@ func (s *EpSystem) discoverRemotePhase1() {
 	s.UUID = s.SystemRF.UUID
 	s.ManagedBy = s.SystemRF.Links.ManagedBy
 	s.ChassisForSys = s.SystemRF.Links.Chassis
+
+	// Copy over serial console config
+	s.SerialConsole = &s.SystemRF.SerialConsole
+
 	// The format of the Actions field of the ComputerSystem Redfish response
 	// has changed in the AMI Redfish implementation. Both the Mountain and
 	// Gigabyte nodes use this new Action field.
