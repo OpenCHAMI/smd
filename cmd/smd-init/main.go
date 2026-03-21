@@ -96,21 +96,19 @@ func parseCmdLine() {
 	if dbPortStr == "" {
 		if val := os.Getenv(envvar); val != "" {
 			dbPortStr = val
+		} else {
+			dbPortStr = "5432"
 		}
 	}
-	if dbPortStr == "" {
-		lg.Printf("Missing DB port number")
+
+	port, err := strconv.ParseInt(dbPortStr, 10, 64)
+	if err != nil {
+		lg.Printf("Bad dbport '%s': %s", dbPortStr, err)
 		flag.Usage()
 		os.Exit(1)
-	} else {
-		port, err := strconv.ParseInt(dbPortStr, 10, 64)
-		if err != nil {
-			lg.Printf("Bad dbport '%s': %s", dbPortStr, err)
-			flag.Usage()
-			os.Exit(1)
-		}
-		dbPort = int(port)
 	}
+	dbPort = int(port)
+	
 	envvar = "SMD_DBOPTS"
 	if dbOpts == "" {
 		if val := os.Getenv(envvar); val != "" {

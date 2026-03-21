@@ -653,6 +653,8 @@ func (s *SmD) parseCmdLine() {
 	if s.dbPortStr == "" {
 		if val := os.Getenv(envvar); val != "" {
 			s.dbPortStr = val
+		} else {
+			s.dbPortStr = "5432"
 		}
 	}
 	envvar = "SMD_JWKS_URL"
@@ -662,19 +664,14 @@ func (s *SmD) parseCmdLine() {
 		}
 	}
 
-	if s.dbPortStr == "" {
-		fmt.Printf("Missing DB port number")
+	port, err := strconv.ParseInt(s.dbPortStr, 10, 64)
+	if err != nil {
+		fmt.Printf("Bad dbport '%s': %s", s.dbPortStr, err)
 		flag.Usage()
 		os.Exit(1)
-	} else {
-		port, err := strconv.ParseInt(s.dbPortStr, 10, 64)
-		if err != nil {
-			fmt.Printf("Bad dbport '%s': %s", s.dbPortStr, err)
-			flag.Usage()
-			os.Exit(1)
-		}
-		s.dbPort = int(port)
 	}
+	s.dbPort = int(port)
+
 	envvar = "SMD_DBOPTS"
 	if s.dbOpts == "" {
 		if val := os.Getenv(envvar); val != "" {
