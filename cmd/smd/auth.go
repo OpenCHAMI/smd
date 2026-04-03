@@ -160,13 +160,20 @@ func (s *SmD) logAuthRejection(backend string, r *http.Request, recorder *authSt
 	)
 
 	if backend == authBackendTokenSmith {
-		message += fmt.Sprintf(" expected_issuer=%q expected_audiences=%q", s.authIssuer, strings.Join(s.authAudiences, ","))
+		message += fmt.Sprintf(
+			" auth_constraints=configured issuer_configured=%t audiences_configured=%t",
+			strings.TrimSpace(s.authIssuer) != "",
+			len(s.authAudiences) > 0,
+		)
 	}
-	if challenge := compactWhitespace(recorder.Header().Get("WWW-Authenticate")); challenge != "" {
-		message += fmt.Sprintf(" www_authenticate=%q", challenge)
+	if challengeState, challengeScheme, challengeError := summarizeWWWAuthenticate(recorder.Header().Get("WWW-Authenticate")); challengeState != "missing" {
+		message += fmt.Sprintf(" challenge=%s challenge_scheme=%s", challengeState, challengeScheme)
+		if challengeError != "none" {
+			message += fmt.Sprintf(" challenge_error=%s", challengeError)
+		}
 	}
-	if detail := recorder.BodySnippet(); detail != "" {
-		message += fmt.Sprintf(" detail=%q", detail)
+	if detailClass := classifyAuthFailureDetail(recorder.BodySnippet(), statusCode); detailClass != "none" {
+		message += fmt.Sprintf(" auth_reason=%s", detailClass)
 	}
 
 	s.LogAlways("%s", message)
@@ -188,6 +195,60 @@ func describeAuthorizationHeader(header string) (state string, scheme string) {
 
 func compactWhitespace(value string) string {
 	return strings.Join(strings.Fields(value), " ")
+}
+
+func summarizeWWWAuthenticate(header string) (state string, scheme string, errorCode string) {
+	challenge := compactWhitespace(header)
+	if challenge == "" {
+		return "missing", "none", "none"
+	}
+
+	fields := strings.Fields(challenge)
+	if len(fields) == 0 {
+		return "present", "unknown", "none"
+	}
+
+	scheme = strings.ToLower(fields[0])
+	errorCode = "none"
+	if index := strings.Index(strings.ToLower(challenge), `error="`); index >= 0 {
+		value := challenge[index+len(`error="`):]
+		if end := strings.Index(value, `"`); end >= 0 {
+			parsed := strings.TrimSpace(value[:end])
+			if parsed != "" {
+				errorCode = strings.ToLower(parsed)
+			}
+		}
+	}
+
+	return "present", scheme, errorCode
+}
+
+func classifyAuthFailureDetail(detail string, statusCode int) string {
+	if statusCode == http.StatusForbidden {
+		return "forbidden"
+	}
+
+	normalized := strings.ToLower(compactWhitespace(detail))
+	if normalized == "" {
+		return "none"
+	}
+
+	switch {
+	case strings.Contains(normalized, "issuer"):
+		return "issuer"
+	case strings.Contains(normalized, "audience") || strings.Contains(normalized, " aud"):
+		return "audience"
+	case strings.Contains(normalized, "scope"):
+		return "scope"
+	case strings.Contains(normalized, "claim"):
+		return "claims"
+	case strings.Contains(normalized, "expir"):
+		return "expired"
+	case strings.Contains(normalized, "token"):
+		return "token"
+	default:
+		return "rejected"
+	}
 }
 
 type authStatusRecorder struct {

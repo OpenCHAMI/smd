@@ -191,10 +191,13 @@ func TestTokenSmithAuthRejectionLoggingIncludesClearContext(t *testing.T) {
 		"remote=10.2.3.4:12345",
 		"auth_header=present",
 		"auth_scheme=bearer",
-		`expected_issuer="https://issuer.example.com"`,
-		`expected_audiences="smd,admin"`,
-		`www_authenticate="Bearer error=\"invalid_token\""`,
-		`detail="issuer mismatch"`,
+		"auth_constraints=configured",
+		"issuer_configured=true",
+		"audiences_configured=true",
+		"challenge=present",
+		"challenge_scheme=bearer",
+		"challenge_error=invalid_token",
+		"auth_reason=issuer",
 	}
 	for _, check := range checks {
 		if !strings.Contains(output, check) {
@@ -203,6 +206,18 @@ func TestTokenSmithAuthRejectionLoggingIncludesClearContext(t *testing.T) {
 	}
 	if strings.Contains(output, "redacted-token") {
 		t.Fatalf("expected auth rejection log not to contain bearer token, got %q", output)
+	}
+	blocked := []string{
+		"https://issuer.example.com",
+		"smd,admin",
+		`www_authenticate="Bearer error=\"invalid_token\""`,
+		`detail="issuer mismatch"`,
+		"issuer mismatch",
+	}
+	for _, blockedValue := range blocked {
+		if strings.Contains(output, blockedValue) {
+			t.Fatalf("expected auth rejection log not to contain %q, got %q", blockedValue, output)
+		}
 	}
 }
 
@@ -285,8 +300,9 @@ func TestTokenSmithJWKSBackedRejectedTokenLogsClearly(t *testing.T) {
 		"remote=10.20.30.40:12345",
 		"auth_header=present",
 		"auth_scheme=bearer",
-		`expected_issuer="https://issuer.example.com"`,
-		`expected_audiences="smd"`,
+		"auth_constraints=configured",
+		"issuer_configured=true",
+		"audiences_configured=true",
 	}
 	for _, check := range checks {
 		if !strings.Contains(output, check) {
@@ -295,6 +311,15 @@ func TestTokenSmithJWKSBackedRejectedTokenLogsClearly(t *testing.T) {
 	}
 	if strings.Contains(output, signedToken) {
 		t.Fatalf("expected log output not to include bearer token, got %q", output)
+	}
+	blocked := []string{
+		s.authIssuer,
+		strings.Join(s.authAudiences, ","),
+	}
+	for _, blockedValue := range blocked {
+		if blockedValue != "" && strings.Contains(output, blockedValue) {
+			t.Fatalf("expected log output not to include %q, got %q", blockedValue, output)
+		}
 	}
 }
 
