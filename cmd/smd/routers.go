@@ -28,11 +28,9 @@ import (
 	"strings"
 	"time"
 
-	jwtauth "github.com/OpenCHAMI/jwtauth/v5"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/gorilla/handlers"
-	openchami_authenticator "github.com/openchami/chi-middleware/auth"
 	openchami_logger "github.com/openchami/chi-middleware/log"
 	"github.com/rs/zerolog"
 	zlog "github.com/rs/zerolog/log"
@@ -66,16 +64,9 @@ func (s *SmD) NewRouter(publicRoutes []Route, protectedRoutes []Route) *chi.Mux 
 
 	router.Use(middleware.Timeout(60 * time.Second))
 	if s.IsUsingAuthentication() {
+		protectedAuthMiddleware := s.ProtectedAuthMiddleware()
 		router.Group(func(r chi.Router) {
-			if s.UsingTokenSmithAuth() {
-				r.Use(s.authMiddleware)
-			} else {
-				tokenAuth := s.tokenAuth.(*jwtauth.JWTAuth)
-				r.Use(
-					jwtauth.Verifier(tokenAuth),
-					openchami_authenticator.AuthenticatorWithRequiredClaims(tokenAuth, []string{"sub", "iss", "aud"}),
-				)
-			}
+			r.Use(protectedAuthMiddleware)
 
 			// Register protected routes
 			for _, route := range protectedRoutes {

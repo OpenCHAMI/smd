@@ -41,6 +41,7 @@ import (
 	"github.com/Cray-HPE/hms-certs/pkg/hms_certs"
 	compcreds "github.com/Cray-HPE/hms-compcredentials"
 	sstorage "github.com/Cray-HPE/hms-securestorage"
+	jwtauth "github.com/OpenCHAMI/jwtauth/v5"
 	"github.com/OpenCHAMI/smd/v2/internal/hbtdapi"
 	"github.com/OpenCHAMI/smd/v2/internal/hmsds"
 	"github.com/OpenCHAMI/smd/v2/internal/pgmigrate"
@@ -176,14 +177,14 @@ type SmD struct {
 	discMapLock sync.Mutex
 
 	//router
-	router           *chi.Mux
-	tokenAuth        any
-	jwksURL          string
-	authBackend      string
-	authIssuer       string
-	authAudiencesCSV string
-	authAudiences    []string
-	authMiddleware   func(http.Handler) http.Handler
+	router                  *chi.Mux
+	legacyTokenAuth         *jwtauth.JWTAuth
+	jwksURL                 string
+	authBackend             string
+	authIssuer              string
+	authAudiencesCSV        string
+	authAudiences           []string
+	protectedAuthMiddleware func(http.Handler) http.Handler
 
 	httpClient *retryablehttp.Client
 }

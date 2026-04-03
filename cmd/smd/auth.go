@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -13,8 +14,11 @@ import (
 
 	jwtauth "github.com/OpenCHAMI/jwtauth/v5"
 	"github.com/lestrrat-go/jwx/v2/jwk"
+	openchami_authenticator "github.com/openchami/chi-middleware/auth"
 	"github.com/openchami/tokensmith/pkg/authn"
 )
+
+var requiredLegacyClaims = []string{"sub", "iss", "aud"}
 
 func (s *SmD) IsUsingAuthentication() bool {
 	return s.jwksURL != ""
@@ -43,11 +47,29 @@ func parseCSVValues(raw string) []string {
 }
 
 func (s *SmD) initializeAuth() error {
+	s.clearAuthState()
+
 	if s.UsingTokenSmithAuth() {
 		return s.initializeTokenSmithAuth()
 	}
 
-	return s.fetchPublicKeyFromURL(s.jwksURL)
+	return s.initializeLegacyAuth()
+}
+
+func (s *SmD) clearAuthState() {
+	s.legacyTokenAuth = nil
+	s.protectedAuthMiddleware = nil
+}
+
+func (s *SmD) initializeLegacyAuth() error {
+	tokenAuth, err := fetchLegacyTokenAuthFromURL(s.jwksURL)
+	if err != nil {
+		return err
+	}
+
+	s.legacyTokenAuth = tokenAuth
+	s.protectedAuthMiddleware = s.withAuthRejectionLogging(authBackendLegacy, buildLegacyProtectedAuthMiddleware(tokenAuth))
+	return nil
 }
 
 func (s *SmD) initializeTokenSmithAuth() error {
@@ -74,8 +96,138 @@ func (s *SmD) initializeTokenSmithAuth() error {
 		return fmt.Errorf("failed to initialize TokenSmith middleware: %w", err)
 	}
 
-	s.authMiddleware = mw
+	s.protectedAuthMiddleware = s.withAuthRejectionLogging(authBackendTokenSmith, mw)
 	return nil
+}
+
+func (s *SmD) ProtectedAuthMiddleware() func(http.Handler) http.Handler {
+	if !s.IsUsingAuthentication() {
+		return nil
+	}
+	if s.protectedAuthMiddleware != nil {
+		return s.protectedAuthMiddleware
+	}
+
+	return unavailableAuthMiddleware()
+}
+
+func unavailableAuthMiddleware() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			sendJsonError(w, http.StatusServiceUnavailable, "authentication is enabled but not initialized")
+		})
+	}
+}
+
+func buildLegacyProtectedAuthMiddleware(tokenAuth *jwtauth.JWTAuth) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return jwtauth.Verifier(tokenAuth)(
+			openchami_authenticator.AuthenticatorWithRequiredClaims(tokenAuth, requiredLegacyClaims)(next),
+		)
+	}
+}
+
+func (s *SmD) withAuthRejectionLogging(backend string, base func(http.Handler) http.Handler) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		handler := base(next)
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			recorder := &authStatusRecorder{ResponseWriter: w}
+			handler.ServeHTTP(recorder, r)
+			s.logAuthRejection(backend, r, recorder)
+		})
+	}
+}
+
+func (s *SmD) logAuthRejection(backend string, r *http.Request, recorder *authStatusRecorder) {
+	statusCode := recorder.StatusCode()
+	if statusCode != http.StatusUnauthorized && statusCode != http.StatusForbidden {
+		return
+	}
+	if s == nil || s.lg == nil {
+		return
+	}
+
+	authHeaderState, authHeaderScheme := describeAuthorizationHeader(r.Header.Get("Authorization"))
+	message := fmt.Sprintf(
+		"Auth rejection backend=%s status=%d method=%s path=%s remote=%s auth_header=%s auth_scheme=%s",
+		backend,
+		statusCode,
+		r.Method,
+		r.URL.Path,
+		r.RemoteAddr,
+		authHeaderState,
+		authHeaderScheme,
+	)
+
+	if backend == authBackendTokenSmith {
+		message += fmt.Sprintf(" expected_issuer=%q expected_audiences=%q", s.authIssuer, strings.Join(s.authAudiences, ","))
+	}
+	if challenge := compactWhitespace(recorder.Header().Get("WWW-Authenticate")); challenge != "" {
+		message += fmt.Sprintf(" www_authenticate=%q", challenge)
+	}
+	if detail := recorder.BodySnippet(); detail != "" {
+		message += fmt.Sprintf(" detail=%q", detail)
+	}
+
+	s.LogAlways("%s", message)
+}
+
+func describeAuthorizationHeader(header string) (state string, scheme string) {
+	trimmed := strings.TrimSpace(header)
+	if trimmed == "" {
+		return "missing", "none"
+	}
+
+	fields := strings.Fields(trimmed)
+	if len(fields) == 0 {
+		return "present", "unknown"
+	}
+
+	return "present", strings.ToLower(fields[0])
+}
+
+func compactWhitespace(value string) string {
+	return strings.Join(strings.Fields(value), " ")
+}
+
+type authStatusRecorder struct {
+	http.ResponseWriter
+	statusCode int
+	body       bytes.Buffer
+}
+
+func (w *authStatusRecorder) WriteHeader(statusCode int) {
+	w.statusCode = statusCode
+	w.ResponseWriter.WriteHeader(statusCode)
+}
+
+func (w *authStatusRecorder) Write(body []byte) (int, error) {
+	if w.statusCode == 0 {
+		w.statusCode = http.StatusOK
+	}
+
+	remaining := 256 - w.body.Len()
+	if remaining > 0 {
+		if len(body) > remaining {
+			_, _ = w.body.Write(body[:remaining])
+		} else {
+			_, _ = w.body.Write(body)
+		}
+	}
+
+	return w.ResponseWriter.Write(body)
+}
+
+func (w *authStatusRecorder) StatusCode() int {
+	if w.statusCode == 0 {
+		return http.StatusOK
+	}
+
+	return w.statusCode
+}
+
+func (w *authStatusRecorder) BodySnippet() string {
+	return compactWhitespace(w.body.String())
 }
 
 func (s *SmD) verifiedClaimsFromRequest(r *http.Request) (map[string]any, error) {
@@ -115,31 +267,7 @@ func (s *SmD) VerifyScope(testScopes []string, r *http.Request) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("failed to get claim(s) from token: %v", err)
 	}
-	var scopes []string
-
-	appendScopes := func(slice []string, scopeClaim any) []string {
-		switch typedScopeClaim := scopeClaim.(type) {
-		case []any:
-			// convert all scopes to str and append
-			for _, s := range typedScopeClaim {
-				switch typedScope := s.(type) {
-				case string:
-					slice = append(slice, typedScope)
-				}
-			}
-		case []string:
-			slice = append(slice, typedScopeClaim...)
-		case string:
-			slice = append(slice, strings.Fields(typedScopeClaim)...)
-		}
-		return slice
-	}
-	if v, ok := claims["scp"]; ok {
-		scopes = appendScopes(scopes, v)
-	}
-	if v, ok := claims["scope"]; ok {
-		scopes = appendScopes(scopes, v)
-	}
+	scopes := extractScopesFromClaims(claims)
 
 	// verify that each of the test scopes are included
 	for _, testScope := range testScopes {
@@ -150,6 +278,34 @@ func (s *SmD) VerifyScope(testScopes []string, r *http.Request) (bool, error) {
 	}
 	// NOTE: should this be ok if no scopes were found?
 	return true, nil
+}
+
+func extractScopesFromClaims(claims map[string]any) []string {
+	appendScopes := func(slice []string, scopeClaim any) []string {
+		switch typedScopeClaim := scopeClaim.(type) {
+		case []any:
+			for _, scope := range typedScopeClaim {
+				if typedScope, ok := scope.(string); ok {
+					slice = append(slice, typedScope)
+				}
+			}
+		case []string:
+			slice = append(slice, typedScopeClaim...)
+		case string:
+			slice = append(slice, strings.Fields(typedScopeClaim)...)
+		}
+		return slice
+	}
+
+	var scopes []string
+	if v, ok := claims["scp"]; ok {
+		scopes = appendScopes(scopes, v)
+	}
+	if v, ok := claims["scope"]; ok {
+		scopes = appendScopes(scopes, v)
+	}
+
+	return scopes
 }
 
 type statusCheckTransport struct {
@@ -192,17 +348,17 @@ func fetchJWKSFromURL(url string, client *http.Client) ([]byte, error) {
 	return jwks, nil
 }
 
-func (s *SmD) fetchPublicKeyFromURL(url string) error {
+func fetchLegacyTokenAuthFromURL(url string) (*jwtauth.JWTAuth, error) {
 	client := newHTTPClient()
 
 	jwks, err := fetchJWKSFromURL(url, client)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	s.tokenAuth, err = jwtauth.NewKeySet(jwks)
+	tokenAuth, err := jwtauth.NewKeySet(jwks)
 	if err != nil {
-		return fmt.Errorf("failed to initialize JWKS: %v", err)
+		return nil, fmt.Errorf("failed to initialize JWKS: %v", err)
 	}
 
-	return nil
+	return tokenAuth, nil
 }

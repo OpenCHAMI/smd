@@ -65,6 +65,13 @@ policy enforcement.
 * The TokenSmith backend requires issuer and audience configuration in addition
 	to the JWKS URL.
 * SMD validates the JWKS endpoint during startup initialization.
+* Authentication rejections are logged clearly for protected routes. For `401`
+	and `403` responses, SMD logs the auth backend, HTTP method, request path,
+	remote address, whether the `Authorization` header was present, and which
+	auth scheme was used. For the TokenSmith backend, the log also includes the
+	expected issuer and audiences so issuer or audience mismatches are easier to
+	diagnose.
+* These rejection logs intentionally do not include bearer token contents.
 * Existing well-formed clients should not need to change request shape. They
 	still send `Authorization: Bearer <token>` for protected routes.
 * Clients may see stricter `401 Unauthorized` responses after enabling the
