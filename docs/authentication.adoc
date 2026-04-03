@@ -1,4 +1,74 @@
 == Security and Authentication
 
 === Authentication Mechanisms
-Placeholder.
+SMD supports optional JWT authentication for protected routes.
+
+Authentication is enabled when `jwks-url` is configured. If `jwks-url` is unset,
+all routes remain unauthenticated.
+
+When authentication is enabled, SMD supports two backends:
+
+* `legacy`:
+	Uses the existing `jwtauth` plus `chi-middleware/auth` stack.
+	This is the default backend.
+* `tokensmith`:
+	Uses `github.com/openchami/tokensmith/pkg/authn` for JWT validation,
+	JWKS refresh, issuer checks, audience checks, and verified-claims context.
+
+=== Configuration
+
+The following flags and environment variables control authentication:
+
+* `-jwks-url` or `SMD_JWKS_URL`:
+	JWKS endpoint used for JWT validation.
+* `-auth-backend` or `SMD_AUTH_BACKEND`:
+	Authentication backend to use with `jwks-url`.
+	Supported values are `legacy` and `tokensmith`.
+* `-auth-issuer` or `SMD_AUTH_ISSUER`:
+	Required when `auth-backend=tokensmith`.
+	Expected JWT issuer.
+* `-auth-audiences` or `SMD_AUTH_AUDIENCES`:
+	Required when `auth-backend=tokensmith`.
+	Comma-separated expected JWT audiences.
+
+These controls are applied at startup. Changing them requires restarting SMD.
+
+=== Runtime Controls
+
+At runtime, SMD authentication behavior is controlled only by the startup
+configuration above.
+
+The current implementation does not support:
+
+* hot reloading of authentication settings
+* switching auth backends without restarting the process
+* a separate `auth-enabled` toggle independent of `jwks-url`
+* request-time overrides of issuer, audience, or backend behavior
+
+Per request, clients only control the standard Bearer token they send in the
+`Authorization` header. Public versus protected route behavior remains fixed by
+the server's route registration.
+
+=== Route Behavior
+
+SMD continues to split routes into public and protected groups:
+
+* Public routes remain accessible without a token.
+* Protected routes require a valid Bearer JWT when authentication is enabled.
+
+The current TokenSmith integration is AuthN-only. It validates tokens and places
+verified claims in request context, but does not yet add route-level scope or
+policy enforcement.
+
+=== Notes
+
+* The TokenSmith backend requires issuer and audience configuration in addition
+	to the JWKS URL.
+* SMD validates the JWKS endpoint during startup initialization.
+* Existing well-formed clients should not need to change request shape. They
+	still send `Authorization: Bearer <token>` for protected routes.
+* Clients may see stricter `401 Unauthorized` responses after enabling the
+	TokenSmith backend if their tokens have issuer, audience, time-claim, or
+	JWKS/algorithm inconsistencies that were previously tolerated.
+* Existing deployments using `jwks-url` can continue using the `legacy`
+	backend until they are ready to switch to `tokensmith`.

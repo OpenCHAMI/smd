@@ -48,6 +48,10 @@ type Route struct {
 type Routes []Route
 
 func (s *SmD) NewRouter(publicRoutes []Route, protectedRoutes []Route) *chi.Mux {
+	// Setup logger
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	logger := zlog.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+
 	// create router and use recommended middleware
 	router := chi.NewRouter()
 	router.Use(middleware.RequestID)
@@ -55,19 +59,13 @@ func (s *SmD) NewRouter(publicRoutes []Route, protectedRoutes []Route) *chi.Mux 
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.StripSlashes)
-	if s.zerolog {
-		zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-		logger := zlog.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-
-		router.Use(openchami_logger.OpenCHAMILogger(logger))
-	}
+	router.Use(openchami_logger.OpenCHAMILogger(logger))
 	router.NotFound(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		s.Logger(http.NotFoundHandler(), "NotFoundHandler")
 	}))
 
 	router.Use(middleware.Timeout(60 * time.Second))
-
-	if s.jwksURL != "" {
+	if s.IsUsingAuthentication() {
 		router.Group(func(r chi.Router) {
 			r.Use(
 				jwtauth.Verifier(s.tokenAuth),
