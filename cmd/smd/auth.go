@@ -118,19 +118,19 @@ func (s *SmD) VerifyScope(testScopes []string, r *http.Request) (bool, error) {
 	var scopes []string
 
 	appendScopes := func(slice []string, scopeClaim any) []string {
-		switch scopeClaim.(type) {
+		switch typedScopeClaim := scopeClaim.(type) {
 		case []any:
 			// convert all scopes to str and append
-			for _, s := range scopeClaim.([]any) {
-				switch s.(type) {
+			for _, s := range typedScopeClaim {
+				switch typedScope := s.(type) {
 				case string:
-					slice = append(slice, s.(string))
+					slice = append(slice, typedScope)
 				}
 			}
 		case []string:
-			slice = append(slice, scopeClaim.([]string)...)
+			slice = append(slice, typedScopeClaim...)
 		case string:
-			slice = append(slice, strings.Fields(scopeClaim.(string))...)
+			slice = append(slice, strings.Fields(typedScopeClaim)...)
 		}
 		return slice
 	}

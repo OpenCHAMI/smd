@@ -67,10 +67,15 @@ func (s *SmD) NewRouter(publicRoutes []Route, protectedRoutes []Route) *chi.Mux 
 	router.Use(middleware.Timeout(60 * time.Second))
 	if s.IsUsingAuthentication() {
 		router.Group(func(r chi.Router) {
-			r.Use(
-				jwtauth.Verifier(s.tokenAuth),
-				openchami_authenticator.AuthenticatorWithRequiredClaims(s.tokenAuth, []string{"sub", "iss", "aud"}),
-			)
+			if s.UsingTokenSmithAuth() {
+				r.Use(s.authMiddleware)
+			} else {
+				tokenAuth := s.tokenAuth.(*jwtauth.JWTAuth)
+				r.Use(
+					jwtauth.Verifier(tokenAuth),
+					openchami_authenticator.AuthenticatorWithRequiredClaims(tokenAuth, []string{"sub", "iss", "aud"}),
+				)
+			}
 
 			// Register protected routes
 			for _, route := range protectedRoutes {
