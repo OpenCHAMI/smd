@@ -1,0 +1,20 @@
+# SPDX-FileCopyrightText: 2026 OpenCHAMI Contributors
+#
+# SPDX-License-Identifier: MIT
+
+# Starter policy for SMD protected routes.
+#
+# SMD applies TokenSmith AuthZ only to the protected route group, so broad path
+# patterns here affect protected routes only.
+
+p, role:viewer, /*, read
+
+p, role:operator, /*, read
+p, role:operator, /*, write
+
+p, role:service, /*, read
+p, role:service, /*, write
+
+p, role:admin, /*, read
+p, role:admin, /*, write
+p, role:admin, /*, delete

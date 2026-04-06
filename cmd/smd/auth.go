@@ -8,14 +8,18 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"path/filepath"
 	"slices"
 	"strings"
 	"time"
 
 	jwtauth "github.com/OpenCHAMI/jwtauth/v5"
+	jwtv5 "github.com/golang-jwt/jwt/v5"
 	"github.com/lestrrat-go/jwx/v2/jwk"
 	openchami_authenticator "github.com/openchami/chi-middleware/auth"
 	"github.com/openchami/tokensmith/pkg/authn"
+	"github.com/openchami/tokensmith/pkg/authz"
+	"github.com/openchami/tokensmith/pkg/authz/engine"
 )
 
 var requiredLegacyClaims = []string{"sub", "iss", "aud"}
@@ -26,6 +30,14 @@ func (s *SmD) IsUsingAuthentication() bool {
 
 func (s *SmD) UsingTokenSmithAuth() bool {
 	return s.IsUsingAuthentication() && s.authBackend == authBackendTokenSmith
+}
+
+func (s *SmD) IsUsingAuthorization() bool {
+	if !s.IsUsingAuthentication() {
+		return false
+	}
+	mode, err := parseAuthzMode(s.authzMode)
+	return err == nil && mode != authz.ModeOff
 }
 
 func parseCSVValues(raw string) []string {
@@ -49,16 +61,29 @@ func parseCSVValues(raw string) []string {
 func (s *SmD) initializeAuth() error {
 	s.clearAuthState()
 
+	var err error
 	if s.UsingTokenSmithAuth() {
-		return s.initializeTokenSmithAuth()
+		err = s.initializeTokenSmithAuth()
+	} else {
+		err = s.initializeLegacyAuth()
+	}
+	if err != nil {
+		return err
+	}
+	if s.IsUsingAuthorization() {
+		if err := s.initializeAuthz(); err != nil {
+			s.clearAuthState()
+			return err
+		}
 	}
 
-	return s.initializeLegacyAuth()
+	return nil
 }
 
 func (s *SmD) clearAuthState() {
 	s.legacyTokenAuth = nil
 	s.protectedAuthMiddleware = nil
+	s.protectedAuthzMiddleware = nil
 }
 
 func (s *SmD) initializeLegacyAuth() error {
@@ -68,7 +93,7 @@ func (s *SmD) initializeLegacyAuth() error {
 	}
 
 	s.legacyTokenAuth = tokenAuth
-	s.protectedAuthMiddleware = s.withAuthRejectionLogging(authBackendLegacy, buildLegacyProtectedAuthMiddleware(tokenAuth))
+	s.protectedAuthMiddleware = s.withAuthRejectionLogging(authBackendLegacy, withLegacyPrincipal(buildLegacyProtectedAuthMiddleware(tokenAuth)))
 	return nil
 }
 
@@ -91,12 +116,48 @@ func (s *SmD) initializeTokenSmithAuth() error {
 		Audiences:  append([]string(nil), s.authAudiences...),
 		JWKSURLs:   []string{s.jwksURL},
 		HTTPClient: client,
+		Mapper: func(ctx context.Context, token *jwtv5.Token, claims jwtv5.MapClaims) (authz.Principal, error) {
+			return principalFromClaims(map[string]any(claims)), nil
+		},
 	})
 	if err != nil {
 		return fmt.Errorf("failed to initialize TokenSmith middleware: %w", err)
 	}
 
 	s.protectedAuthMiddleware = s.withAuthRejectionLogging(authBackendTokenSmith, mw)
+	return nil
+}
+
+func (s *SmD) initializeAuthz() error {
+	mode, err := parseAuthzMode(s.authzMode)
+	if err != nil {
+		return err
+	}
+	if mode == authz.ModeOff {
+		return nil
+	}
+
+	policyDir := strings.TrimSpace(s.authzPolicyDir)
+	if policyDir == "" {
+		return errors.New("authz-policy-dir is required when authz-mode is enabled")
+	}
+
+	authorizer, err := engine.NewBuilder().
+		WithModelPath(filepath.Join(policyDir, "model.conf")).
+		WithPolicyPath(filepath.Join(policyDir, "policy.csv")).
+		WithGroupingPath(filepath.Join(policyDir, "grouping.csv")).
+		Build()
+	if err != nil {
+		return fmt.Errorf("failed to initialize TokenSmith authorization: %w", err)
+	}
+
+	s.protectedAuthzMiddleware = authz.NewMiddleware(
+		authorizer,
+		authz.PathMethodMapper{MethodToAction: authz.MethodToActionREST()},
+		authz.WithMode(mode),
+		authz.WithRequireAuthn(true),
+	).Handler
+
 	return nil
 }
 
@@ -111,10 +172,29 @@ func (s *SmD) ProtectedAuthMiddleware() func(http.Handler) http.Handler {
 	return unavailableAuthMiddleware()
 }
 
+func (s *SmD) ProtectedAuthzMiddleware() func(http.Handler) http.Handler {
+	if !s.IsUsingAuthorization() {
+		return nil
+	}
+	if s.protectedAuthzMiddleware != nil {
+		return s.protectedAuthzMiddleware
+	}
+
+	return unavailableAuthzMiddleware()
+}
+
 func unavailableAuthMiddleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			sendJsonError(w, http.StatusServiceUnavailable, "authentication is enabled but not initialized")
+		})
+	}
+}
+
+func unavailableAuthzMiddleware() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			sendJsonError(w, http.StatusServiceUnavailable, "authorization is enabled but not initialized")
 		})
 	}
 }
@@ -124,6 +204,27 @@ func buildLegacyProtectedAuthMiddleware(tokenAuth *jwtauth.JWTAuth) func(http.Ha
 		return jwtauth.Verifier(tokenAuth)(
 			openchami_authenticator.AuthenticatorWithRequiredClaims(tokenAuth, requiredLegacyClaims)(next),
 		)
+	}
+}
+
+func withLegacyPrincipal(base func(http.Handler) http.Handler) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return base(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			claims, err := legacyVerifiedClaims(r.Context())
+			if err != nil {
+				http.Error(w, "invalid token", http.StatusUnauthorized)
+				return
+			}
+
+			principal := principalFromClaims(claims)
+			if strings.TrimSpace(principal.ID) == "" {
+				http.Error(w, "invalid token", http.StatusUnauthorized)
+				return
+			}
+
+			ctx := authz.SetPrincipal(r.Context(), &principal)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		}))
 	}
 }
 
@@ -300,7 +401,15 @@ func (s *SmD) verifiedClaimsFromRequest(r *http.Request) (map[string]any, error)
 		return claims, nil
 	}
 
-	_, claims, err := jwtauth.FromContext(r.Context())
+	claims, err := legacyVerifiedClaims(r.Context())
+	if err != nil {
+		return nil, err
+	}
+	return claims, nil
+}
+
+func legacyVerifiedClaims(ctx context.Context) (map[string]any, error) {
+	_, claims, err := jwtauth.FromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -367,6 +476,95 @@ func extractScopesFromClaims(claims map[string]any) []string {
 	}
 
 	return scopes
+}
+
+func extractStringClaimValues(claims map[string]any, keys ...string) []string {
+	var values []string
+	appendValues := func(raw any) {
+		switch typed := raw.(type) {
+		case []any:
+			for _, value := range typed {
+				if asString, ok := value.(string); ok && strings.TrimSpace(asString) != "" {
+					values = append(values, strings.TrimSpace(asString))
+				}
+			}
+		case []string:
+			for _, value := range typed {
+				if strings.TrimSpace(value) != "" {
+					values = append(values, strings.TrimSpace(value))
+				}
+			}
+		case string:
+			for _, value := range strings.Fields(typed) {
+				if strings.TrimSpace(value) != "" {
+					values = append(values, strings.TrimSpace(value))
+				}
+			}
+		}
+	}
+
+	for _, key := range keys {
+		if raw, ok := claims[key]; ok {
+			appendValues(raw)
+		}
+	}
+
+	return values
+}
+
+func principalFromClaims(claims map[string]any) authz.Principal {
+	principal := authz.Principal{}
+	if sub, ok := claims["sub"].(string); ok {
+		principal.ID = strings.TrimSpace(sub)
+	}
+	principal.Roles = append(principal.Roles, extractStringClaimValues(claims, "roles", "role")...)
+	if hasServiceAuthEvent(claims) {
+		principal.Roles = append(principal.Roles, "service")
+	}
+	principal.Roles = dedupeStrings(principal.Roles)
+	return principal
+}
+
+func hasServiceAuthEvent(claims map[string]any) bool {
+	for _, event := range extractStringClaimValues(claims, "auth_events") {
+		if strings.EqualFold(event, "service_auth") {
+			return true
+		}
+	}
+	return false
+}
+
+func dedupeStrings(values []string) []string {
+	if len(values) == 0 {
+		return nil
+	}
+	out := make([]string, 0, len(values))
+	seen := make(map[string]struct{}, len(values))
+	for _, value := range values {
+		trimmed := strings.TrimSpace(value)
+		if trimmed == "" {
+			continue
+		}
+		if _, ok := seen[trimmed]; ok {
+			continue
+		}
+		seen[trimmed] = struct{}{}
+		out = append(out, trimmed)
+	}
+	return out
+}
+
+func parseAuthzMode(raw string) (authz.Mode, error) {
+	switch strings.ToLower(strings.TrimSpace(raw)) {
+	case "", "off":
+		return authz.ModeOff, nil
+	case "shadow":
+		return authz.ModeShadow, nil
+	case "enforce":
+		return authz.ModeEnforce, nil
+	default:
+		return authz.ModeOff, fmt.Errorf("unsupported authz mode %q", raw)
+	}
 }
 
 type statusCheckTransport struct {

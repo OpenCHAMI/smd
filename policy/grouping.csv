@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 OpenCHAMI Contributors
+#
+# SPDX-License-Identifier: MIT
+
+# Starter grouping file kept for the standard TokenSmith Casbin layout.
+#
+# SMD currently derives authorization roles from verified JWT claims. Operators
+# can extend this file if they introduce role inheritance in their policy model.

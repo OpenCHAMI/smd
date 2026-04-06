@@ -1,7 +1,7 @@
 == Security and Authentication
 
 === Authentication Mechanisms
-SMD supports optional JWT authentication for protected routes.
+SMD supports optional JWT authentication and authorization for protected routes.
 
 Authentication is enabled when `jwks-url` is configured. If `jwks-url` is unset,
 all routes remain unauthenticated.
@@ -17,7 +17,7 @@ When authentication is enabled, SMD supports two backends:
 
 === Configuration
 
-The following flags and environment variables control authentication:
+The following flags and environment variables control authentication and authorization:
 
 * `-jwks-url` or `SMD_JWKS_URL`:
 	JWKS endpoint used for JWT validation.
@@ -30,6 +30,12 @@ The following flags and environment variables control authentication:
 * `-auth-audiences` or `SMD_AUTH_AUDIENCES`:
 	Required when `auth-backend=tokensmith`.
 	Comma-separated expected JWT audiences.
+* `-authz-mode` or `SMD_AUTHZ_MODE`:
+	Authorization mode for protected routes. Supported values are `off`,
+	`shadow`, and `enforce`. The default is `off`.
+* `-authz-policy-dir` or `SMD_AUTHZ_POLICY_DIR`:
+	Directory containing TokenSmith authorization policy files named
+	`model.conf`, `policy.csv`, and `grouping.csv`. The default is `./policy`.
 
 These controls are applied at startup. Changing them requires restarting SMD.
 
@@ -43,7 +49,7 @@ The current implementation does not support:
 * hot reloading of authentication settings
 * switching auth backends without restarting the process
 * a separate `auth-enabled` toggle independent of `jwks-url`
-* request-time overrides of issuer, audience, or backend behavior
+* request-time overrides of issuer, audience, auth backend, or authorization mode
 
 Per request, clients only control the standard Bearer token they send in the
 `Authorization` header. Public versus protected route behavior remains fixed by
@@ -56,14 +62,26 @@ SMD continues to split routes into public and protected groups:
 * Public routes remain accessible without a token.
 * Protected routes require a valid Bearer JWT when authentication is enabled.
 
-The current TokenSmith integration is AuthN-only. It validates tokens and places
-verified claims in request context, but does not yet add route-level scope or
-policy enforcement.
+When `authz-mode` is enabled, SMD applies TokenSmith authorization middleware
+to the protected route group after authentication succeeds. Public routes remain
+outside the authorization pipeline.
+
+SMD derives the authorization principal from verified JWT claims:
+
+* TokenSmith service tokens with `auth_events` containing `service_auth` map to
+	the `service` role.
+* User-oriented tokens must include explicit role claims for authorization.
+* Legacy-authenticated requests can participate in authorization when their
+	verified claims include role data.
 
 === Notes
 
 * The TokenSmith backend requires issuer and audience configuration in addition
 	to the JWKS URL.
+* Authorization requires authentication to be enabled and successfully
+	initialized.
+* SMD ships a starter TokenSmith policy tree in `./policy`. Operators can use
+	it directly or point `authz-policy-dir` at a different policy directory.
 * SMD validates the JWKS endpoint during startup initialization.
 * Authentication rejections are logged clearly for protected routes. For `401`
 	and `403` responses, SMD logs the auth backend, HTTP method, request path,
@@ -72,10 +90,13 @@ policy enforcement.
 	expected issuer and audiences so issuer or audience mismatches are easier to
 	diagnose.
 * These rejection logs intentionally do not include bearer token contents.
+* In `shadow` mode, authorization is evaluated but requests continue. In
+	`enforce` mode, denied protected requests receive the standard TokenSmith
+	AuthZ denial response.
 * Existing well-formed clients should not need to change request shape. They
 	still send `Authorization: Bearer <token>` for protected routes.
 * Clients may see stricter `401 Unauthorized` responses after enabling the
 	TokenSmith backend if their tokens have issuer, audience, time-claim, or
-	JWKS/algorithm inconsistencies that were previously tolerated.
-* Existing deployments using `jwks-url` can continue using the `legacy`
-	backend until they are ready to switch to `tokensmith`.
+	JWKS/algorithm inconsistencies.
+* Requests may receive `403 Forbidden` responses after enabling authorization
+	if their verified role set does not allow the requested protected route.

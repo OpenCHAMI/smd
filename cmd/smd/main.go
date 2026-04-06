@@ -177,14 +177,17 @@ type SmD struct {
 	discMapLock sync.Mutex
 
 	//router
-	router                  *chi.Mux
-	legacyTokenAuth         *jwtauth.JWTAuth
-	jwksURL                 string
-	authBackend             string
-	authIssuer              string
-	authAudiencesCSV        string
-	authAudiences           []string
-	protectedAuthMiddleware func(http.Handler) http.Handler
+	router                   *chi.Mux
+	legacyTokenAuth          *jwtauth.JWTAuth
+	jwksURL                  string
+	authBackend              string
+	authIssuer               string
+	authAudiencesCSV         string
+	authAudiences            []string
+	protectedAuthMiddleware  func(http.Handler) http.Handler
+	authzMode                string
+	authzPolicyDir           string
+	protectedAuthzMiddleware func(http.Handler) http.Handler
 
 	httpClient *retryablehttp.Client
 }
@@ -607,6 +610,8 @@ func (s *SmD) parseCmdLine() {
 	flag.StringVar(&s.authBackend, "auth-backend", authBackendLegacy, "Authentication backend to use with jwks-url: legacy or tokensmith")
 	flag.StringVar(&s.authIssuer, "auth-issuer", "", "Expected JWT issuer when auth-backend=tokensmith")
 	flag.StringVar(&s.authAudiencesCSV, "auth-audiences", "", "Comma-separated expected JWT audiences when auth-backend=tokensmith")
+	flag.StringVar(&s.authzMode, "authz-mode", "off", "Authorization mode for protected routes when authentication is enabled: off, shadow, or enforce")
+	flag.StringVar(&s.authzPolicyDir, "authz-policy-dir", "./policy", "Directory containing TokenSmith authorization policy files (model.conf, policy.csv, grouping.csv)")
 	flag.BoolVar(&applyMigrations, "migrate", false, "Apply all database migrations before starting")
 	flag.BoolVar(&s.enableDiscovery, "enable-discovery", enableDiscoveryDefault, "Enable discovery-related subroutines")
 	flag.BoolVar(&s.openchami, "openchami", OPENCHAMI_DEFAULT, "Enabled OpenCHAMI features")
@@ -694,6 +699,18 @@ func (s *SmD) parseCmdLine() {
 			s.authAudiencesCSV = val
 		}
 	}
+	envvar = "SMD_AUTHZ_MODE"
+	if s.authzMode == "off" {
+		if val := os.Getenv(envvar); val != "" {
+			s.authzMode = val
+		}
+	}
+	envvar = "SMD_AUTHZ_POLICY_DIR"
+	if s.authzPolicyDir == "./policy" {
+		if val := os.Getenv(envvar); val != "" {
+			s.authzPolicyDir = val
+		}
+	}
 
 	s.authBackend = strings.ToLower(strings.TrimSpace(s.authBackend))
 	if s.authBackend == "" {
@@ -705,6 +722,19 @@ func (s *SmD) parseCmdLine() {
 		os.Exit(1)
 	}
 	s.authAudiences = parseCSVValues(s.authAudiencesCSV)
+	s.authzMode = strings.ToLower(strings.TrimSpace(s.authzMode))
+	if s.authzMode == "" {
+		s.authzMode = "off"
+	}
+	if _, err := parseAuthzMode(s.authzMode); err != nil {
+		fmt.Printf("Bad authz-mode %q: %v\n", s.authzMode, err)
+		flag.Usage()
+		os.Exit(1)
+	}
+	s.authzPolicyDir = strings.TrimSpace(s.authzPolicyDir)
+	if s.authzPolicyDir == "" {
+		s.authzPolicyDir = "./policy"
+	}
 
 	port, err := strconv.ParseInt(s.dbPortStr, 10, 64)
 	if err != nil {

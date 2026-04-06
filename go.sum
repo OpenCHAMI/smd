@@ -337,6 +337,8 @@ github.com/openchami/schemas v0.0.0-20250625220233-9aad17a286c4 h1:89rudSw0Teedl
 github.com/openchami/schemas v0.0.0-20250625220233-9aad17a286c4/go.mod h1:3dridLqXvAdO0ypPXuxnXRgaK2h/dItVKGseCgFQ13k=
 github.com/openchami/tokensmith v0.0.2 h1:Nh/6X/0KPcAD6Hb9xmSh64ktDzlDYHCmU+s7C+qG/iU=
 github.com/openchami/tokensmith v0.0.2/go.mod h1:L4ZCMX/vPGwXUUn9otw+UdfFTbarv+ZVO/FjhZmoOAE=
+github.com/openchami/tokensmith v0.0.3-0.20260406155037-28ca3e689493 h1:35BbJiohxq++ORGj2xETU51bW+uu5eUsp4iDAGxHlEw=
+github.com/openchami/tokensmith v0.0.3-0.20260406155037-28ca3e689493/go.mod h1:L4ZCMX/vPGwXUUn9otw+UdfFTbarv+ZVO/FjhZmoOAE=
 github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8Oi/yOhh5U=
 github.com/opencontainers/go-digest v1.0.0/go.mod h1:0JzlMkj0TRzQZfJkVvzbP0HBR3IKzErnv2BNG4W4MAM=
 github.com/opencontainers/image-spec v1.1.0 h1:8SG7/vwALn54lVB/0yZ/MMwhFrPYtpEHQb2IpWsCzug=

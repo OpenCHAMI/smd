@@ -65,8 +65,12 @@ func (s *SmD) NewRouter(publicRoutes []Route, protectedRoutes []Route) *chi.Mux 
 	router.Use(middleware.Timeout(60 * time.Second))
 	if s.IsUsingAuthentication() {
 		protectedAuthMiddleware := s.ProtectedAuthMiddleware()
+		protectedAuthzMiddleware := s.ProtectedAuthzMiddleware()
 		router.Group(func(r chi.Router) {
 			r.Use(protectedAuthMiddleware)
+			if protectedAuthzMiddleware != nil {
+				r.Use(protectedAuthzMiddleware)
+			}
 
 			// Register protected routes
 			for _, route := range protectedRoutes {
