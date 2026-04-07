@@ -44,6 +44,7 @@ import (
 	"github.com/lestrrat-go/jwx/v2/jwt"
 	"github.com/openchami/tokensmith/pkg/authn"
 	"github.com/openchami/tokensmith/pkg/authz"
+	"github.com/openchami/tokensmith/pkg/keys"
 )
 
 func TestInitializeAuthClearsStaleStateOnError(t *testing.T) {
@@ -252,7 +253,7 @@ func TestTokenSmithJWKSBackedRejectedTokenLogsClearly(t *testing.T) {
 		t.Fatalf("failed to generate RSA key: %v", err)
 	}
 
-	kid := "test-key-1"
+	kid := rsaThumbprint(t, &privateKey.PublicKey)
 	jwksServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write(smdTestJWKSJSON(t, kid, &privateKey.PublicKey))
 	}))
@@ -329,7 +330,7 @@ func TestTokenSmithJWKSBackedAcceptedTokenSetsClaimsAndSkipsRejectionLog(t *test
 		t.Fatalf("failed to generate RSA key: %v", err)
 	}
 
-	kid := "test-key-2"
+	kid := rsaThumbprint(t, &privateKey.PublicKey)
 	jwksServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write(smdTestJWKSJSON(t, kid, &privateKey.PublicKey))
 	}))
@@ -527,7 +528,7 @@ func TestTokenSmithAuthzEnforceAllowsServiceTokenAndDeniesViewerWrite(t *testing
 		t.Fatalf("failed to generate RSA key: %v", err)
 	}
 
-	kid := "test-key-authz"
+	kid := rsaThumbprint(t, &privateKey.PublicKey)
 	jwksServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write(smdTestJWKSJSON(t, kid, &privateKey.PublicKey))
 	}))
@@ -699,4 +700,13 @@ func containsString(values []string, target string) bool {
 		}
 	}
 	return false
+}
+
+func rsaThumbprint(t *testing.T, pub *rsa.PublicKey) string {
+	t.Helper()
+	kid, err := keys.RFC7638Thumbprint(pub)
+	if err != nil {
+		t.Fatalf("failed to compute RFC7638 thumbprint: %v", err)
+	}
+	return kid
 }
