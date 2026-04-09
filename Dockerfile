@@ -9,9 +9,11 @@ RUN set -ex \
     && rm -rf /var/cache/apk/*  \
     && rm -rf /tmp/*
 
-COPY smd /
-COPY smd-loader /
-COPY smd-init /
+ARG TARGETPLATFORM
+
+COPY $TARGETPLATFORM/smd /
+COPY $TARGETPLATFORM/smd-loader /
+COPY $TARGETPLATFORM/smd-init /
 RUN mkdir /persistent_migrations
 COPY migrations/* /persistent_migrations/
 
