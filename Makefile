@@ -41,7 +41,7 @@ LDFLAGS    := -ldflags "-X main.GitCommit=$(COMMIT) \
 	-X 'main.GoVersion=$(GO_VERSION)' \
 	-X 'main.BuildUser=$(BUILD_USER)'"
 
-all: image image-pprof unittest ct-image
+all: binaries binaries-pprof image image-pprof ct-image unittest
 
 .PHONY : all image image-pprof unittest ct-image binaries binaries-pprof coverage docker
 
