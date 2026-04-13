@@ -196,6 +196,18 @@ stages:
                             # no RedfishManagerInfo Actions expected for HPE CabinetPDUController Managers
                             required: False
                             allowempty: True
+                          CommandShell:
+                            type: map
+                            required: False
+                            mapping:
+                              ServiceEnabled:
+                                type: bool
+                                required: False
+                              MaxConcurrentSessions:
+                                type: int
+                                required: False
+                              ConnectTypesSupported:
+                                required: False
                           EthernetNICInfo:
                             type: seq
                             matching: all
@@ -365,6 +377,13 @@ Not Available"
                                             required: True
                                             enum:
                                               - "OK"
+                          SerialConsole:
+                            type: map
+                            required: False
+                            mapping:
+                              MaxConcurrentSessions:
+                                type: int
+                                required: False
                           PowerControl:
                             type: seq
                             matching: all

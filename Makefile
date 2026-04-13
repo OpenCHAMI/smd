@@ -41,9 +41,9 @@ LDFLAGS    := -ldflags "-X main.GitCommit=$(COMMIT) \
 	-X 'main.GoVersion=$(GO_VERSION)' \
 	-X 'main.BuildUser=$(BUILD_USER)'"
 
-all: image image-pprof unittest ct snyk ct_image
+all: image image-pprof unittest ct-image
 
-.PHONY : all image unittest snyk ct ct_image binaries coverage docker
+.PHONY : all image image-pprof unittest ct-image binaries binaries-pprof coverage docker
 
 image:
 	docker build $(NO_CACHE) --pull $(DOCKER_ARGS) --tag '$(NAME):$(VERSION)' -f Dockerfile .
