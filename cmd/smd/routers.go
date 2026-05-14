@@ -28,11 +28,9 @@ import (
 	"strings"
 	"time"
 
-	jwtauth "github.com/OpenCHAMI/jwtauth/v5"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/gorilla/handlers"
-	openchami_authenticator "github.com/openchami/chi-middleware/auth"
 	openchami_logger "github.com/openchami/chi-middleware/log"
 	"github.com/rs/zerolog"
 	zlog "github.com/rs/zerolog/log"
@@ -48,6 +46,10 @@ type Route struct {
 type Routes []Route
 
 func (s *SmD) NewRouter(publicRoutes []Route, protectedRoutes []Route) *chi.Mux {
+	// Setup logger
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	logger := zlog.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+
 	// create router and use recommended middleware
 	router := chi.NewRouter()
 	router.Use(middleware.RequestID)
@@ -55,24 +57,20 @@ func (s *SmD) NewRouter(publicRoutes []Route, protectedRoutes []Route) *chi.Mux 
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.StripSlashes)
-	if s.zerolog {
-		zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-		logger := zlog.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-
-		router.Use(openchami_logger.OpenCHAMILogger(logger))
-	}
+	router.Use(openchami_logger.OpenCHAMILogger(logger))
 	router.NotFound(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		s.Logger(http.NotFoundHandler(), "NotFoundHandler")
 	}))
 
 	router.Use(middleware.Timeout(60 * time.Second))
-
-	if s.jwksURL != "" {
+	if s.IsUsingAuthentication() {
+		protectedAuthMiddleware := s.ProtectedAuthMiddleware()
+		protectedAuthzMiddleware := s.ProtectedAuthzMiddleware()
 		router.Group(func(r chi.Router) {
-			r.Use(
-				jwtauth.Verifier(s.tokenAuth),
-				openchami_authenticator.AuthenticatorWithRequiredClaims(s.tokenAuth, []string{"sub", "iss", "aud"}),
-			)
+			r.Use(protectedAuthMiddleware)
+			if protectedAuthzMiddleware != nil {
+				r.Use(protectedAuthzMiddleware)
+			}
 
 			// Register protected routes
 			for _, route := range protectedRoutes {

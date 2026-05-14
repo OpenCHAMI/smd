@@ -89,6 +89,11 @@ type Job struct {
 
 const httpListenDefault = ":27779"
 
+const (
+	authBackendLegacy     = "legacy"
+	authBackendTokenSmith = "tokensmith"
+)
+
 type SmD struct {
 	db    hmsds.HMSDB
 	dbDSN string
@@ -172,9 +177,17 @@ type SmD struct {
 	discMapLock sync.Mutex
 
 	//router
-	router    *chi.Mux
-	tokenAuth *jwtauth.JWTAuth
-	jwksURL   string
+	router                   *chi.Mux
+	legacyTokenAuth          *jwtauth.JWTAuth
+	jwksURL                  string
+	authBackend              string
+	authIssuer               string
+	authAudiencesCSV         string
+	authAudiences            []string
+	protectedAuthMiddleware  func(http.Handler) http.Handler
+	authzMode                string
+	authzPolicyDir           string
+	protectedAuthzMiddleware func(http.Handler) http.Handler
 
 	httpClient *retryablehttp.Client
 }
@@ -594,6 +607,11 @@ func (s *SmD) parseCmdLine() {
 	flag.StringVar(&s.dbPortStr, "dbport", "", "Database port")
 	flag.StringVar(&s.dbOpts, "dbopts", "", "Database options string")
 	flag.StringVar(&s.jwksURL, "jwks-url", "", "Set the JWKS URL to fetch public key for validation")
+	flag.StringVar(&s.authBackend, "auth-backend", authBackendLegacy, "Authentication backend to use with jwks-url: legacy or tokensmith")
+	flag.StringVar(&s.authIssuer, "auth-issuer", "", "Expected JWT issuer when auth-backend=tokensmith")
+	flag.StringVar(&s.authAudiencesCSV, "auth-audiences", "", "Comma-separated expected JWT audiences when auth-backend=tokensmith")
+	flag.StringVar(&s.authzMode, "authz-mode", "off", "Authorization mode for protected routes when authentication is enabled: off, shadow, or enforce")
+	flag.StringVar(&s.authzPolicyDir, "authz-policy-dir", "./policy", "Directory containing TokenSmith authorization policy files (model.conf, policy.csv, grouping.csv)")
 	flag.BoolVar(&applyMigrations, "migrate", false, "Apply all database migrations before starting")
 	flag.BoolVar(&s.enableDiscovery, "enable-discovery", enableDiscoveryDefault, "Enable discovery-related subroutines")
 	flag.BoolVar(&s.openchami, "openchami", OPENCHAMI_DEFAULT, "Enabled OpenCHAMI features")
@@ -662,6 +680,60 @@ func (s *SmD) parseCmdLine() {
 		if val := os.Getenv(envvar); val != "" {
 			s.jwksURL = val
 		}
+	}
+	envvar = "SMD_AUTH_BACKEND"
+	if s.authBackend == authBackendLegacy {
+		if val := os.Getenv(envvar); val != "" {
+			s.authBackend = val
+		}
+	}
+	envvar = "SMD_AUTH_ISSUER"
+	if s.authIssuer == "" {
+		if val := os.Getenv(envvar); val != "" {
+			s.authIssuer = val
+		}
+	}
+	envvar = "SMD_AUTH_AUDIENCES"
+	if s.authAudiencesCSV == "" {
+		if val := os.Getenv(envvar); val != "" {
+			s.authAudiencesCSV = val
+		}
+	}
+	envvar = "SMD_AUTHZ_MODE"
+	if s.authzMode == "off" {
+		if val := os.Getenv(envvar); val != "" {
+			s.authzMode = val
+		}
+	}
+	envvar = "SMD_AUTHZ_POLICY_DIR"
+	if s.authzPolicyDir == "./policy" {
+		if val := os.Getenv(envvar); val != "" {
+			s.authzPolicyDir = val
+		}
+	}
+
+	s.authBackend = strings.ToLower(strings.TrimSpace(s.authBackend))
+	if s.authBackend == "" {
+		s.authBackend = authBackendLegacy
+	}
+	if s.authBackend != authBackendLegacy && s.authBackend != authBackendTokenSmith {
+		fmt.Printf("Bad auth-backend %q\n", s.authBackend)
+		flag.Usage()
+		os.Exit(1)
+	}
+	s.authAudiences = parseCSVValues(s.authAudiencesCSV)
+	s.authzMode = strings.ToLower(strings.TrimSpace(s.authzMode))
+	if s.authzMode == "" {
+		s.authzMode = "off"
+	}
+	if _, err := parseAuthzMode(s.authzMode); err != nil {
+		fmt.Printf("Bad authz-mode %q: %v\n", s.authzMode, err)
+		flag.Usage()
+		os.Exit(1)
+	}
+	s.authzPolicyDir = strings.TrimSpace(s.authzPolicyDir)
+	if s.authzPolicyDir == "" {
+		s.authzPolicyDir = "./policy"
 	}
 
 	port, err := strconv.ParseInt(s.dbPortStr, 10, 64)
@@ -981,18 +1053,22 @@ func main() {
 		s.DiscoveryUpdater()
 	}
 
-	// Initialize token authorization and load JWKS well-knowns from .well-known endpoint
-	if s.jwksURL != "" {
-		s.LogAlways("Fetching public key from server...")
+	// Initialize token authorization when a JWKS URL is configured.
+	if s.IsUsingAuthentication() {
+		s.LogAlways("Initializing authentication with backend %q...", s.authBackend)
 		for i := 0; i <= 5; i++ {
-			err = s.fetchPublicKeyFromURL(s.jwksURL)
+			err = s.initializeAuth()
 			if err != nil {
 				s.LogAlways("failed to initialize auth token: %v", err)
 				time.Sleep(5 * time.Second)
 				continue
 			}
-			s.LogAlways("Initialized the auth token successfully.")
+			s.LogAlways("Initialized authentication successfully.")
 			break
+		}
+		if err != nil {
+			s.LogAlways("Failed to initialize authentication after retries: %v", err)
+			os.Exit(1)
 		}
 	}
 
