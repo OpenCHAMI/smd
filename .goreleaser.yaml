@@ -165,7 +165,7 @@ changelog:
       - '^docs:'
       - '^test:'
 release:
-  disable: "{{ if eq .Env.IS_PR_BUILD \"true\" }}true{{ else }}false{{ end }}"
+  disable: "{{ if eq (index .Env \"IS_PR_BUILD\") \"true\" }}true{{ else }}false{{ end }}"
   github:
     owner: OpenCHAMI
     name: smd
