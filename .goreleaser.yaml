@@ -27,7 +27,6 @@ builds:
     goos:
       - linux
       - darwin
-      - windows
     goarch:
       - amd64
       - arm64
@@ -53,7 +52,6 @@ builds:
     goos:
       - linux
       - darwin
-      - windows
     goarch:
       - amd64
       - arm64
@@ -166,6 +164,14 @@ changelog:
     exclude:
       - '^docs:'
       - '^test:'
+release:
+  disable: "{{ if eq .Env.IS_PR_BUILD \"true\" }}true{{ else }}false{{ end }}"
+  github:
+    owner: OpenCHAMI
+    name: smd
+  name_template: 'v{{ .Version }}'
+  prerelease: auto
+  mode: replace
 
 # The lines beneath this are called `modelines`. See `:help modeline`
 # Feel free to remove those if you don't want/use them.
