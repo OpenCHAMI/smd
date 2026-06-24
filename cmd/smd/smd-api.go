@@ -2694,7 +2694,7 @@ func (s *SmD) doRedfishEndpointsPost(w http.ResponseWriter, r *http.Request) {
 		if s.openchami {
 			s.lg.Printf("Payload does not contain PDUInventory key, routing to default V2 parser.")
 			schemaVersion := s.getSchemaVersion(w, body)
-			if schemaVersion > 0 { 
+			if schemaVersion > 0 {
 				err = s.parseRedfishEndpointDataV2(w, body, false)
 				if err != nil {
 					sendJsonError(w, http.StatusInternalServerError,
@@ -2702,7 +2702,7 @@ func (s *SmD) doRedfishEndpointsPost(w http.ResponseWriter, r *http.Request) {
 				}
 			} else {
 				// This routes legacy requests (schemaVersion <= 0) to the old parser
-				err = s.parseRedfishEndpointData(w, eps, body) 
+				err = s.parseRedfishEndpointData(w, eps, body)
 				if err != nil {
 					sendJsonError(w, http.StatusInternalServerError,
 						fmt.Sprintf("failed parsing post data: %v", err))
@@ -2816,6 +2816,10 @@ func NormalizeURLPath(uri string) string {
 	return uri
 }
 
+// parseRedfishEndpointDataV2 takes incoming data from magellan and creates the
+// appropriates objects for use within SMD. There are some additional functions
+// needed to manually make the conversions that are not able to be unmarshalled
+// directly.
 func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, forceUpdate bool) error {
 	s.lg.Printf("parsing request data using V2 parsing method...")
 
@@ -2829,6 +2833,8 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 		Type               string                      `json:"type,omitempty"`
 		FirmwareVersion    string                      `json:"firmware_version,omitempty"`
 		EthernetInterfaces []schemas.EthernetInterface `json:"ethernet_interfaces,omitempty"`
+		Actions            []string                    `json:"actions,omitempty"`
+		CommandShell       []string                    `json:"command_shell,omitempty"`
 	}
 
 	type Root struct {
@@ -2935,6 +2941,35 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 
 	}
 
+	// function to create []*rf.EthNICInfo from collection of manager.EthernetInterfaces
+	var createEthNICInfo = func(eths []schemas.EthernetInterface) []*rf.EthernetNICInfo {
+		nics := []*rf.EthernetNICInfo{}
+		for _, eth := range eths {
+			nics = append(nics, &rf.EthernetNICInfo{
+				Hostname:            eth.Name,
+				Description:         eth.Description,
+				MACAddress:          eth.MAC,
+				PermanentMACAddress: eth.MAC,
+				InterfaceEnabled:    &eth.Enabled,
+			})
+		}
+		return nics
+	}
+
+	// function to create rf.CommandShell from []string
+	var createCommandShell = func(supported []string) *rf.CommandShell {
+		connectTypes := []rf.CommandConnectType{}
+		for _, connectType := range supported {
+			connectTypes = append(connectTypes, rf.CommandConnectType(connectType))
+		}
+
+		return &rf.CommandShell{
+			ServiceEnabled:        true,
+			MaxConcurrentSessions: 65536, // not sure what this should be
+			ConnectTypesSupported: connectTypes,
+		}
+	}
+
 	// iterate over all of the managers to create NodeBMC components and component endpoints
 	for _, manager := range root.Managers {
 		var (
@@ -2963,6 +2998,47 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 		}
 
 		// create a new ethernet interface with reference to the component above
+		createCompEthInterfacesV2(component, manager.EthernetInterfaces)
+
+		managerActions := &rf.ManagerActions{
+			ManagerReset: rf.ActionReset{
+				AllowableValues: manager.Actions,
+				Target: fmt.Sprintf("%s/Actions/Manager.Reset",
+					manager.URI),
+				RFActionInfo: fmt.Sprintf("%s/ResetActionInfo", manager.URI),
+			},
+		}
+
+		// component manager
+		managerInfo := &rf.ComponentManagerInfo{
+			Name:         manager.Name,
+			Actions:      managerActions,
+			EthNICInfo:   createEthNICInfo(manager.EthernetInterfaces),
+			CommandShell: createCommandShell(manager.CommandShell), // field already exists on the source struct
+		}
+
+		// component endpoint for BMC (manager)
+		bmcEndpoint := &sm.ComponentEndpoint{
+			ComponentDescription: rf.ComponentDescription{
+				ID:           root.ID,
+				Type:         xnametypes.NodeBMC.String(),
+				RedfishType:  "Manager",
+				RfEndpointID: root.ID,
+				OdataID:      manager.URI,
+			},
+			URL:                   root.FQDN + manager.URI,
+			ComponentEndpointType: sm.CompEPTypeManager,
+			Enabled:               enabled,
+			RedfishManagerInfo:    managerInfo,
+		}
+
+		if err := s.db.UpsertCompEndpoints(&sm.ComponentEndpointArray{
+			ComponentEndpoints: []*sm.ComponentEndpoint{bmcEndpoint},
+		}); err != nil {
+			// matching error handling
+			return fmt.Errorf("failed to upsert %d component endpoints(s): %w", rowsAffected, err)
+		}
+
 		createCompEthInterfacesV2(component, manager.EthernetInterfaces)
 	}
 
