@@ -38,11 +38,11 @@ import (
 	base "github.com/Cray-HPE/hms-base/v2"
 	compcreds "github.com/Cray-HPE/hms-compcredentials"
 	sstorage "github.com/Cray-HPE/hms-securestorage"
+	"github.com/Cray-HPE/hms-xname/xnametypes"
 	"github.com/OpenCHAMI/smd/v2/internal/hmsds"
 	rf "github.com/OpenCHAMI/smd/v2/pkg/redfish"
 	stest "github.com/OpenCHAMI/smd/v2/pkg/sharedtest"
 	"github.com/OpenCHAMI/smd/v2/pkg/sm"
-	"github.com/Cray-HPE/hms-xname/xnametypes"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -761,20 +761,29 @@ func TestNidRangeToCompFilter(t *testing.T) {
 
 func TestDoReadyGet(t *testing.T) {
 	tests := []struct {
-		reqType      string
-		reqURI       string
-		hmsdsRespErr error
-		expectedResp []byte
+		reqType        string
+		reqURI         string
+		hmsdsRespErr   error
+		expectedResp   []byte
+		expectedStatus int
 	}{{
 		"GET",
 		"https://localhost/hsm/v2/service/ready",
 		nil,
 		json.RawMessage(`{"code":0,"message":"HSM is healthy"}` + "\n"),
+		200,
 	}, {
 		"GET",
 		"https://localhost/hsm/v2/service/ready",
 		hmsds.ErrHMSDSPtrClosed,
 		json.RawMessage(`{"type":"about:blank","title":"Service Unavailable","detail":"HSM's database is unhealthy: HMSDS handle is not open.","status":503}` + "\n"),
+		503,
+	}, {
+		"GET",
+		"https://localhost/hsm/v2/path-that-doesnt-exist",
+		nil,
+		[]byte("404 page not found\n"),
+		404,
 	}}
 
 	for i, test := range tests {
@@ -786,13 +795,16 @@ func TestDoReadyGet(t *testing.T) {
 		w := httptest.NewRecorder()
 
 		router.ServeHTTP(w, req)
-		if test.hmsdsRespErr == nil && w.Code != http.StatusOK {
-			t.Errorf("Response code was %v; want 204", w.Code)
-		} else if test.hmsdsRespErr != nil && w.Code == http.StatusOK {
-			t.Errorf("Response code was %v; expected an error", w.Code)
+
+		if test.hmsdsRespErr != err {
+			t.Errorf("Request error was invalid, wanted '%v' and got '%v'", test.hmsdsRespErr, err)
 		}
 
-		if bytes.Compare(test.expectedResp, w.Body.Bytes()) != 0 {
+		if test.expectedStatus != w.Code {
+			t.Errorf("Response code was %v; expected an %v", w.Code, test.expectedStatus)
+		}
+
+		if !bytes.Equal(test.expectedResp, w.Body.Bytes()) {
 			t.Errorf("Test %v Failed: Expected body is '%v'; Received '%v'", i, string(test.expectedResp), w.Body)
 		}
 	}
