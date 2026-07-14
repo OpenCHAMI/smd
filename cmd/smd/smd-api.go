@@ -3073,7 +3073,7 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 
 			enabled := true
 			component := base.Component{
-				ID:      root.ID 
+				ID:      root.ID,
 				NID:     nid,
 				State:   "On",
 				Type:    xnametypes.Node.String(),
