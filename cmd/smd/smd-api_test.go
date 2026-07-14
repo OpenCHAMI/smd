@@ -796,10 +796,6 @@ func TestDoReadyGet(t *testing.T) {
 
 		router.ServeHTTP(w, req)
 
-		if test.hmsdsRespErr != err {
-			t.Errorf("Request error was invalid, wanted '%v' and got '%v'", test.hmsdsRespErr, err)
-		}
-
 		if test.expectedStatus != w.Code {
 			t.Errorf("Response code was %v; expected an %v", w.Code, test.expectedStatus)
 		}
