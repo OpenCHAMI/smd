@@ -58,9 +58,7 @@ func (s *SmD) NewRouter(publicRoutes []Route, protectedRoutes []Route) *chi.Mux 
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.StripSlashes)
 	router.Use(openchami_logger.OpenCHAMILogger(logger))
-	router.NotFound(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		s.Logger(http.NotFoundHandler(), "NotFoundHandler")
-	}))
+	router.NotFound(http.HandlerFunc(s.Logger(http.NotFoundHandler(), "NotFoundHandler").ServeHTTP))
 
 	router.Use(middleware.Timeout(60 * time.Second))
 	if s.IsUsingAuthentication() {
