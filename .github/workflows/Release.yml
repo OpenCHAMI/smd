@@ -17,7 +17,7 @@ jobs:
           sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
 
       - name: Set up latest stable Go
-        uses: actions/setup-go@v6.5.0
+        uses: actions/setup-go@v7.0.0
         with:
           go-version: stable
       - name: Set up QEMU
@@ -36,7 +36,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout
-        uses: actions/checkout@v6.1.0
+        uses: actions/checkout@v7.0.0
         with:
           fetch-tags: 1
           fetch-depth: 0
