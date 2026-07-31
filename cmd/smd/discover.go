@@ -29,10 +29,10 @@ import (
 	"sync"
 
 	base "github.com/Cray-HPE/hms-base/v2"
-	"github.com/Cray-HPE/hms-xname/xnametypes"
 	compcreds "github.com/Cray-HPE/hms-compcredentials"
-	rf "github.com/OpenCHAMI/smd/v2/pkg/redfish"
-	"github.com/OpenCHAMI/smd/v2/pkg/sm"
+	"github.com/Cray-HPE/hms-xname/xnametypes"
+	rf "github.com/openchami/smd2/v2/pkg/redfish"
+	"github.com/openchami/smd2/v2/pkg/sm"
 )
 
 // When we discover a Redfish Endpoint, the data retrieved is processed
@@ -896,8 +896,8 @@ func (s *SmD) GenerateHWInvHist(hwlocs []*sm.HWInvByLoc) error {
 		// Only create a new 'detected' event if the previous event for that location
 		// is not a Location+FRUID+EventType duplicate.
 		if lastHist, ok := lhsMap[hwloc.ID]; !ok ||
-		   lastHist.FruId != hwloc.PopulatedFRU.FRUID ||
-		   lastHist.EventType != sm.HWInvHistEventTypeDetected {
+			lastHist.FruId != hwloc.PopulatedFRU.FRUID ||
+			lastHist.EventType != sm.HWInvHistEventTypeDetected {
 			hwhists = append(hwhists, &newHist)
 		}
 	}

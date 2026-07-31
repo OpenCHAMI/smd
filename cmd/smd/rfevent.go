@@ -29,10 +29,10 @@ import (
 	"sync"
 
 	base "github.com/Cray-HPE/hms-base/v2"
-	"github.com/OpenCHAMI/smd/v2/internal/hmsds"
-	rf "github.com/OpenCHAMI/smd/v2/pkg/redfish"
-	"github.com/OpenCHAMI/smd/v2/pkg/sm"
 	"github.com/Cray-HPE/hms-xname/xnametypes"
+	"github.com/openchami/smd2/v2/internal/hmsds"
+	rf "github.com/openchami/smd2/v2/pkg/redfish"
+	"github.com/openchami/smd2/v2/pkg/sm"
 )
 
 var em = base.NewHMSError("sm.msgbus", "internal error")
@@ -894,13 +894,12 @@ func (s *SmD) doUpdateCompHWInv(cep *sm.ComponentEndpoint, ep *rf.RedfishEP) err
 
 // doUpdateCompFoxconn - Update both the hwinv and the redfish system endpoint data.
 //
-//      For Foxconn Paradise hardware we want to do more than just call doUpdateCompHWInv().
-//      If the last discover was run with the node powered off, the PowerURL and
-//      PowerControl system information may not have been updated due to a BMC fw
-//      bug (see PRDIS-198).  doUpdateCompHWInv() would indeed update this system
-//      information correctly in the endpoint 'ep' since the node is now powered on, but
-//      it will not push it into the database.
-//
+//	For Foxconn Paradise hardware we want to do more than just call doUpdateCompHWInv().
+//	If the last discover was run with the node powered off, the PowerURL and
+//	PowerControl system information may not have been updated due to a BMC fw
+//	bug (see PRDIS-198).  doUpdateCompHWInv() would indeed update this system
+//	information correctly in the endpoint 'ep' since the node is now powered on, but
+//	it will not push it into the database.
 func (s *SmD) doUpdateCompFoxconn(cep *sm.ComponentEndpoint, ep *rf.RedfishEP) error {
 	// First update the hardware inventory.  This also updates system info in the
 	// component endpoint from the ProcesorModule_0 chassis

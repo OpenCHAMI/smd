@@ -35,9 +35,9 @@ import (
 
 	base "github.com/Cray-HPE/hms-base/v2"
 	"github.com/Cray-HPE/hms-xname/xnametypes"
-	rf "github.com/OpenCHAMI/smd/v2/pkg/redfish"
-	stest "github.com/OpenCHAMI/smd/v2/pkg/sharedtest"
-	"github.com/OpenCHAMI/smd/v2/pkg/sm"
+	rf "github.com/openchami/smd2/v2/pkg/redfish"
+	stest "github.com/openchami/smd2/v2/pkg/sharedtest"
+	"github.com/openchami/smd2/v2/pkg/sm"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	sq "github.com/Masterminds/squirrel"

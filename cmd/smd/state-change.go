@@ -24,14 +24,15 @@ package main
 
 import (
 	"encoding/json"
-	base "github.com/Cray-HPE/hms-base/v2"
-	"github.com/Cray-HPE/hms-xname/xnametypes"
-	"github.com/OpenCHAMI/smd/v2/internal/hmsds"
-	rf "github.com/OpenCHAMI/smd/v2/pkg/redfish"
-	"github.com/OpenCHAMI/smd/v2/pkg/sm"
 	"strconv"
 	"strings"
 	"time"
+
+	base "github.com/Cray-HPE/hms-base/v2"
+	"github.com/Cray-HPE/hms-xname/xnametypes"
+	"github.com/openchami/smd2/v2/internal/hmsds"
+	rf "github.com/openchami/smd2/v2/pkg/redfish"
+	"github.com/openchami/smd2/v2/pkg/sm"
 )
 
 var e = base.NewHMSError("sm", "server error")
