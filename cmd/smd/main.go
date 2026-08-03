@@ -44,12 +44,12 @@ import (
 	jwtauth "github.com/OpenCHAMI/jwtauth/v5"
 	"github.com/go-chi/chi/v5"
 	"github.com/hashicorp/go-retryablehttp"
-	"github.com/openchami/smd2/v2/internal/hbtdapi"
-	"github.com/openchami/smd2/v2/internal/hmsds"
-	"github.com/openchami/smd2/v2/internal/pgmigrate"
-	"github.com/openchami/smd2/v2/internal/slsapi"
-	rf "github.com/openchami/smd2/v2/pkg/redfish"
-	"github.com/openchami/smd2/v2/pkg/sm"
+	"github.com/openchami/smd/v2/internal/hbtdapi"
+	"github.com/openchami/smd/v2/internal/hmsds"
+	"github.com/openchami/smd/v2/internal/pgmigrate"
+	"github.com/openchami/smd/v2/internal/slsapi"
+	rf "github.com/openchami/smd/v2/pkg/redfish"
+	"github.com/openchami/smd/v2/pkg/sm"
 	"github.com/sirupsen/logrus"
 )
 

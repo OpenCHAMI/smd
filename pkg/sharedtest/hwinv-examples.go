@@ -25,8 +25,8 @@ package sharedtest
 import (
 	"encoding/json"
 
-	rf "github.com/openchami/smd2/v2/pkg/redfish"
-	"github.com/openchami/smd2/v2/pkg/sm"
+	rf "github.com/openchami/smd/v2/pkg/redfish"
+	"github.com/openchami/smd/v2/pkg/sm"
 )
 
 ///////////////////////////////////////////////////////////////////////////////

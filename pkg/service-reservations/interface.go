@@ -37,7 +37,7 @@ import (
 
 	base "github.com/Cray-HPE/hms-base/v2"
 	"github.com/hashicorp/go-retryablehttp"
-	"github.com/openchami/smd2/v2/pkg/sm"
+	"github.com/openchami/smd/v2/pkg/sm"
 	"github.com/sirupsen/logrus"
 )
 

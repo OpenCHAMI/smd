@@ -31,8 +31,8 @@ import (
 	base "github.com/Cray-HPE/hms-base/v2"
 	compcreds "github.com/Cray-HPE/hms-compcredentials"
 	"github.com/Cray-HPE/hms-xname/xnametypes"
-	rf "github.com/openchami/smd2/v2/pkg/redfish"
-	"github.com/openchami/smd2/v2/pkg/sm"
+	rf "github.com/openchami/smd/v2/pkg/redfish"
+	"github.com/openchami/smd/v2/pkg/sm"
 )
 
 // When we discover a Redfish Endpoint, the data retrieved is processed

@@ -39,10 +39,10 @@ import (
 	"github.com/Cray-HPE/hms-xname/xnametypes"
 	"github.com/go-chi/chi/v5"
 	redfish "github.com/openchami/schemas/schemas/csm"
-	"github.com/openchami/smd2/v2/internal/hmsds"
-	rf "github.com/openchami/smd2/v2/pkg/redfish"
-	"github.com/openchami/smd2/v2/pkg/schemas"
-	"github.com/openchami/smd2/v2/pkg/sm"
+	"github.com/openchami/smd/v2/internal/hmsds"
+	rf "github.com/openchami/smd/v2/pkg/redfish"
+	"github.com/openchami/smd/v2/pkg/schemas"
+	"github.com/openchami/smd/v2/pkg/sm"
 )
 
 type componentArrayIn struct {

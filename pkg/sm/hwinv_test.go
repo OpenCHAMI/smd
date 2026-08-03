@@ -25,8 +25,8 @@ package sm_test
 import (
 	"testing"
 
-	stest "github.com/openchami/smd2/v2/pkg/sharedtest"
-	"github.com/openchami/smd2/v2/pkg/sm"
+	stest "github.com/openchami/smd/v2/pkg/sharedtest"
+	"github.com/openchami/smd/v2/pkg/sm"
 )
 
 ///////////////////////////////////////////////////////////////////////////////
