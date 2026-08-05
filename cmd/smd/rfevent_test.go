@@ -32,10 +32,10 @@ import (
 	base "github.com/Cray-HPE/hms-base/v2"
 	compcreds "github.com/Cray-HPE/hms-compcredentials"
 	sstorage "github.com/Cray-HPE/hms-securestorage"
-	"github.com/OpenCHAMI/smd/v2/internal/hmsds"
-	rf "github.com/OpenCHAMI/smd/v2/pkg/redfish"
-	st "github.com/OpenCHAMI/smd/v2/pkg/sharedtest"
-	"github.com/OpenCHAMI/smd/v2/pkg/sm"
+	"github.com/openchami/smd/v2/internal/hmsds"
+	rf "github.com/openchami/smd/v2/pkg/redfish"
+	st "github.com/openchami/smd/v2/pkg/sharedtest"
+	"github.com/openchami/smd/v2/pkg/sm"
 )
 
 var testFQDN = "[fd40:aaaa:bbbb:1000:240:a6ff:ee82:d7c2]"

@@ -36,8 +36,8 @@ import (
 
 	base "github.com/Cray-HPE/hms-base/v2"
 	"github.com/Cray-HPE/hms-xname/xnametypes"
-	rf "github.com/OpenCHAMI/smd/v2/pkg/redfish"
-	"github.com/OpenCHAMI/smd/v2/pkg/sm"
+	rf "github.com/openchami/smd/v2/pkg/redfish"
+	"github.com/openchami/smd/v2/pkg/sm"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/lib/pq"

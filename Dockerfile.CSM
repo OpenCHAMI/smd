@@ -39,10 +39,10 @@ FROM build-base AS base
 RUN go env -w GO111MODULE=auto
 
 # Copy all the necessary files to the image.
-COPY cmd $GOPATH/src/github.com/OpenCHAMI/smd/cmd
-COPY internal $GOPATH/src/github.com/OpenCHAMI/smd/internal
-COPY pkg $GOPATH/src/github.com/OpenCHAMI/smd/pkg
-COPY vendor $GOPATH/src/github.com/OpenCHAMI/smd/vendor
+COPY cmd $GOPATH/src/github.com/openchami/smd/cmd
+COPY internal $GOPATH/src/github.com/openchami/smd/internal
+COPY pkg $GOPATH/src/github.com/openchami/smd/pkg
+COPY vendor $GOPATH/src/github.com/openchami/smd/vendor
 
 
 ### Build Stage ###
@@ -50,9 +50,9 @@ FROM base AS builder
 
 # Base image contains everything needed for Go building, just build.
 RUN set -ex \
-    && go build -v -tags musl -i github.com/OpenCHAMI/smd/cmd/smd \
-    && go build -v -tags musl -i github.com/OpenCHAMI/smd/cmd/smd-loader \
-    && go build -v -tags musl -i github.com/OpenCHAMI/smd/cmd/smd-init
+    && go build -v -tags musl -i github.com/openchami/smd/cmd/smd \
+    && go build -v -tags musl -i github.com/openchami/smd/cmd/smd-loader \
+    && go build -v -tags musl -i github.com/openchami/smd/cmd/smd-init
 
 
 ### Final Stage ###

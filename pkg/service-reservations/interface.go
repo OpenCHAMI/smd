@@ -36,8 +36,8 @@ import (
 	"time"
 
 	base "github.com/Cray-HPE/hms-base/v2"
-	"github.com/OpenCHAMI/smd/v2/pkg/sm"
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/openchami/smd/v2/pkg/sm"
 	"github.com/sirupsen/logrus"
 )
 
@@ -54,7 +54,7 @@ func DrainAndCloseResponseBodyAndCancelContext(resp *http.Response, ctxCancel co
 	// Call context cancel function, if supplied.  This must always be done
 	// after draining and closing the response body
 	if ctxCancel != nil {
-			ctxCancel()
+		ctxCancel()
 	}
 }
 
@@ -985,7 +985,7 @@ func (i *Production) ValidateDeputyKeys(keys []Key) (ReservationCheckResponse, e
 
 	rsp, rsperr := i.httpClient.Do(req)
 	defer DrainAndCloseResponseBodyAndCancelContext(rsp, reqCtxCancel)
-	if (rsperr != nil) {
+	if rsperr != nil {
 		return retData, fmt.Errorf("Error sending http request for deputy key check: %v",
 			rsperr)
 	}

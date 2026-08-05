@@ -36,8 +36,8 @@ import (
 
 	"github.com/hashicorp/go-retryablehttp"
 
-	"github.com/OpenCHAMI/smd/v2/pkg/sm"
 	base "github.com/Cray-HPE/hms-base/v2"
+	"github.com/openchami/smd/v2/pkg/sm"
 )
 
 ///////////////////////////////////////////////////////////////////////////////

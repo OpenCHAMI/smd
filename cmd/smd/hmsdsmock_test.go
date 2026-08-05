@@ -25,9 +25,9 @@ package main
 import (
 	"log"
 
-	"github.com/OpenCHAMI/smd/v2/internal/hmsds"
-	"github.com/OpenCHAMI/smd/v2/pkg/sm"
 	base "github.com/Cray-HPE/hms-base/v2"
+	"github.com/openchami/smd/v2/internal/hmsds"
+	"github.com/openchami/smd/v2/pkg/sm"
 )
 
 type TestResults struct {
