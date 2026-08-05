@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.20.5] - 2026-08-05
+
+### Security
+
+- Updated golang.org/x/crypto to v0.54.0 (fixes CVE-2024-45337, CVE-2025-58181, CVE-2026-46595)
+- Updated golang.org/x/net to v0.56.0
+
 ## [v2.18.0]
 
 - Added PUT to /group/{id}/members
