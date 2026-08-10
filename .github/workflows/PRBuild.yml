@@ -1,9 +1,7 @@
-# Copyright © 2025 OpenCHAMI a Series of LF Projects, LLC
-#
+# Copyright © 2026 OpenCHAMI a Series of LF Projects, LLC
 # SPDX-License-Identifier: MIT
 
 name: Build each PR for testing and validation
-
 on:
     pull_request:
         branches:
@@ -17,81 +15,58 @@ on:
           type: string
 
 permissions: write-all # Necessary for the generate-build-provenance action with containers
-
 jobs:
 
-  build:
-
-
+  config:
     runs-on: ubuntu-latest
-
+    outputs:
+      rpm-unsigned: ${{ steps.names.outputs.rpm-unsigned }}
+      rpm-signed:   ${{ steps.names.outputs.rpm-signed }}
+      keys-public:  ${{ steps.names.outputs.keys-public }}
     steps:
-      - name: Set up latest stable Go
-        uses: actions/setup-go@v7.0.0
-        with:
-          go-version: stable
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-        with:
-          driver-opts: |
-            image=moby/buildkit:master
-            network=host
-      - name: Docker Login
-        uses: docker/login-action@v4.6.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Checkout
-        uses: actions/checkout@v7.0.1
-        with:
-          fetch-tags: 1
-          fetch-depth: 0
-      # Set environment variables required by GoReleaser
-      - name: Set build environment variables
+      - id: names
         run: |
-          echo "GIT_STATE=$(if git diff-index --quiet HEAD --; then echo 'clean'; else echo 'dirty'; fi)" >> $GITHUB_ENV
-          echo "BUILD_HOST=$(hostname)" >> $GITHUB_ENV
-          echo "GO_VERSION=$(go version | awk '{print $3}')" >> $GITHUB_ENV
-          echo "BUILD_USER=$(whoami)" >> $GITHUB_ENV
-          echo "CGO_ENABLED=0" >> $GITHUB_ENV
-          echo "IS_PR_BUILD=true" >> $GITHUB_ENV
+          {
+            echo "rpm-unsigned=rpms-unsigned"
+            echo "rpm-signed=rpms-signed"
+            echo "keys-public=public-keys"
+          } >> "$GITHUB_OUTPUT"
 
-      - name: Docker Login
-        uses: docker/login-action@v4.6.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+  build:
+    uses: OpenCHAMI/github-actions/.github/workflows/build-publish-container-goreleaser.yml@v3.5
+    secrets: inherit
+    with:
+      cgo_enabled: 0
+      registry_subject_name: ghcr.io/openchami/smd
+      is_pr_build: true
+      pr_number: ${{ inputs.pr_number || github.event.pull_request.number || 0 }}
 
-      - name: Create Tag for PR
-        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.pr_number != '')
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          PR_NUM="${{ github.event.number }}"
-          if [[ "${{ inputs.pr_number }}" != "" ]]; then
-            PR_NUM="${{ inputs.pr_number }}"
-          fi
-          git tag -f -a pr-${PR_NUM} -m "PR Release"
+  rpmbuild:
+    needs: [config, build]
+    uses: OpenCHAMI/github-actions/.github/workflows/build-rpm-quadlet.yml@v3.5
+    secrets: inherit
+    with:
+      artifact-name-unsigned-rpms: ${{ needs.config.outputs.rpm-unsigned }}
 
-      - name: Build/Push container with goreleaser
-        uses: goreleaser/goreleaser-action@v7
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        with:
-          version: '~> 2'
-          args: release --clean --skip=announce,validate,archive
-        id: goreleaser
-      - name: Process goreleaser output
-        id: process_goreleaser_output
-        run: |
-          echo "const fs = require('fs');" > process.js
-          echo 'const artifacts = ${{ steps.goreleaser.outputs.artifacts }}' >> process.js
-          echo "const firstNonNullDigest = artifacts.find(artifact => artifact.extra && artifact.extra.Digest != null)?.extra.Digest;" >> process.js
-          echo "console.log(firstNonNullDigest);" >> process.js
-          echo "fs.writeFileSync('digest.txt', firstNonNullDigest);" >> process.js
-          node process.js
-          echo "digest=$(cat digest.txt)" >> $GITHUB_OUTPUT
+  rpmsign:
+    needs: [config, rpmbuild]
+    uses: OpenCHAMI/github-actions/.github/workflows/gpg-sign-artifacts.yml@v3.5
+    secrets: inherit
+    with:
+      artifact-name-unsigned-rpms: ${{ needs.config.outputs.rpm-unsigned }}
+      artifact-name-signed-rpms:   ${{ needs.config.outputs.rpm-signed }}
+      artifact-name-public-keys:   ${{ needs.config.outputs.keys-public }}
+
+  rpmvalidate:
+    needs: [config, rpmsign]
+    uses: OpenCHAMI/github-actions/.github/workflows/validate-rpm-quadlet.yml@v3.5
+    secrets: inherit
+    with:
+      artifact-name-signed-rpms:   ${{ needs.config.outputs.rpm-signed }}
+      rpms: |
+        - name: smd-*.rpm
+          files:
+            - /usr/share/containers/systemd/smd-init.container
+            - /usr/share/containers/systemd/smd.container
+            - /usr/share/licenses/smd-quadlet
+            - /usr/share/licenses/smd-quadlet/MIT.txt

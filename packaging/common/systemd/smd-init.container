@@ -1,0 +1,30 @@
+# Copyright © 2026 OpenCHAMI a Series of LF Projects, LLC
+# SPDX-License-Identifier: MIT
+
+[Unit]
+Description=The %N container
+Requires=postgres.service
+After=postgres.service
+PartOf=openchami.target
+
+[Container]
+ContainerName=%N
+HostName=%N
+Image=ghcr.io/openchami/smd:@IMAGE_TAG@
+
+# Environment Variables
+EnvironmentFile=-/etc/openchami/configs/openchami.env
+
+# Secrets
+Secret=smd_postgres_password,type=env,target=SMD_DBPASS
+
+# Networks for the Container to use
+Network=openchami-internal.network
+
+# Proxy settings
+PodmanArgs=--http-proxy=false
+PodmanArgs=--entrypoint='["/bin/sh","-c","/%N"]'
+
+[Service]
+Restart=on-failure
+Type=oneshot

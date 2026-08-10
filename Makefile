@@ -41,9 +41,19 @@ LDFLAGS    := -ldflags "-X main.GitCommit=$(COMMIT) \
 	-X 'main.GoVersion=$(GO_VERSION)' \
 	-X 'main.BuildUser=$(BUILD_USER)'"
 
+# RPM version/release: strip the leading 'v' and drop git-describe's
+# '-N-gHASH[-dirty]' suffix (hyphens aren't allowed in an RPM Version
+# field anyway). An exact tag like v0.1.2 becomes 0.1.2.
+RPM_GIT_VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
+RPM_VERSION ?= $(shell echo "$(RPM_GIT_VERSION)" | sed -e 's/^v//' -e 's/-.*//')
+RPM_RELEASE ?= 1
+RPM_TOPDIR ?= $(CURDIR)/dist/rpmbuild
+RPM_NAME ?= smd-quadlet
+
+
 all: binaries binaries-pprof image image-pprof ct-image unittest
 
-.PHONY : all image image-pprof unittest ct-image binaries binaries-pprof coverage docker
+.PHONY : all image image-pprof unittest ct-image binaries binaries-pprof coverage docker rpm-build rpm-clean
 
 image:
 	docker build $(NO_CACHE) --pull $(DOCKER_ARGS) --tag '$(NAME):$(VERSION)' -f Dockerfile .
@@ -97,3 +107,21 @@ clean:
 
 docker: smd smd-init smd-loader
 	docker build -t ghcr.io/openchami/smd:$(VERSION_D) .
+
+rpm-build: ## Build the smd RPM (VERSION/RPM_RELEASE override the derived defaults)
+	@command -v rpmbuild >/dev/null 2>&1 || { echo "rpmbuild is required but not installed."; exit 1; }
+	rm -rf $(RPM_TOPDIR)
+	mkdir -p $(RPM_TOPDIR)/SOURCES/$(RPM_NAME)-$(RPM_VERSION)/LICENSES
+	cp packaging/rpm-quadlet/systemd/* $(RPM_TOPDIR)/SOURCES/$(RPM_NAME)-$(RPM_VERSION)/
+	cp LICENSES/MIT.txt $(RPM_TOPDIR)/SOURCES/$(RPM_NAME)-$(RPM_VERSION)/LICENSES/
+	tar -C $(RPM_TOPDIR)/SOURCES -czf $(RPM_TOPDIR)/SOURCES/$(RPM_NAME)-$(RPM_VERSION).tar.gz \
+		$(RPM_NAME)-$(RPM_VERSION)
+	rpmbuild --define "_topdir $(RPM_TOPDIR)" \
+		--define "version $(RPM_VERSION)" \
+		--define "rel $(RPM_RELEASE)" \
+		-bb packaging/rpm-quadlet/smd-quadlet.spec
+	@echo "Built: $(RPM_TOPDIR)/RPMS/noarch/$$(ls $(RPM_TOPDIR)/RPMS/noarch)"
+
+rpm-clean: ## Remove local RPM build artifacts
+	rm -rf $(RPM_TOPDIR)
+
