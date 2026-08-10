@@ -29,14 +29,14 @@ jobs:
             image=moby/buildkit:master
             network=host
       - name: Docker Login
-        uses: docker/login-action@v4.5.1
+        uses: docker/login-action@v4.6.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout
-        uses: actions/checkout@v7.0.0
+        uses: actions/checkout@v7.0.1
         with:
           fetch-tags: 1
           fetch-depth: 0
@@ -51,7 +51,7 @@ jobs:
           echo "CGO_ENABLED=1" >> $GITHUB_ENV
           echo "IS_PR_BUILD=false" >> $GITHUB_ENV
       - name: Docker Login
-        uses: docker/login-action@v4.5.1
+        uses: docker/login-action@v4.6.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -76,12 +76,12 @@ jobs:
           echo "digest=$(cat digest.txt)" >> $GITHUB_OUTPUT
           
       - name: Attest Binaries
-        uses: actions/attest-build-provenance@v4.1.1
+        uses: actions/attest-build-provenance@v4.2.2
         with:
           subject-path: dist/**
           
       - name: generate build provenance of docker container
-        uses: actions/attest-build-provenance@v4.1.1
+        uses: actions/attest-build-provenance@v4.2.2
         with:
           subject-name: ghcr.io/openchami/smd
           subject-digest: ${{ steps.process_goreleaser_output.outputs.digest }}
