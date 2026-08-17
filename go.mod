@@ -1,6 +1,6 @@
 module github.com/openchami/smd/v2
 
-go 1.26.5
+go 1.26.6
 
 require (
 	github.com/Cray-HPE/hms-base/v2 v2.3.0
@@ -25,7 +25,7 @@ require (
 	github.com/openchami/schemas v0.0.0-20250625220233-9aad17a286c4
 	github.com/openchami/tokensmith v0.3.1-0.20260408211730-d305fa0bedb3
 	github.com/rs/zerolog v1.35.1
-	github.com/sirupsen/logrus v1.9.4
+	github.com/sirupsen/logrus v1.10.0
 )
 
 require (
