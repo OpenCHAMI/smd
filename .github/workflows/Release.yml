@@ -1,88 +1,60 @@
-name: Release with goreleaser
+# Copyright © 2026 OpenCHAMI a Series of LF Projects, LLC
+# SPDX-License-Identifier: MIT
 
+name: Release
 on:
+  workflow_dispatch:
   push:
     tags:
       - v*
-      
+
 permissions: write-all # Necessary for the generate-build-provenance action with containers
 
 jobs:
-  build:
+
+  config:
     runs-on: ubuntu-latest
+    outputs:
+      rpm-unsigned: ${{ steps.names.outputs.rpm-unsigned }}
+      rpm-signed:   ${{ steps.names.outputs.rpm-signed }}
+      keys-public:  ${{ steps.names.outputs.keys-public }}
     steps:
-      - name: Install cross-compilation tools
+      - id: names
         run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+          {
+            echo "rpm-unsigned=rpms-unsigned"
+            echo "rpm-signed=rpms-signed"
+            echo "keys-public=gpg-public-keys"
+          } >> "$GITHUB_OUTPUT"
 
-      - name: Set up latest stable Go
-        uses: actions/setup-go@v7.0.0
-        with:
-          go-version: stable
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-        with:
-          driver-opts: |
-            image=moby/buildkit:master
-            network=host
-      - name: Docker Login
-        uses: docker/login-action@v4.6.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+  build:
+    uses: OpenCHAMI/github-actions/.github/workflows/build-publish-container-goreleaser.yml@v3.5
+    secrets: inherit
+    with:
+      cgo_enabled: 0
+      is_pr_build: false
+      registry_subject_name: ghcr.io/openchami/smd
 
-      - name: Checkout
-        uses: actions/checkout@v7.0.1
-        with:
-          fetch-tags: 1
-          fetch-depth: 0
+  rpmbuild:
+    needs: [config, build]
+    uses: OpenCHAMI/github-actions/.github/workflows/build-rpm-quadlet.yml@v3.5
+    secrets: inherit
+    with:
+      artifact-name-unsigned-rpms: ${{ needs.config.outputs.rpm-unsigned }}
 
-      # Set environment variables required by GoReleaser
-      - name: Set build environment variables
-        run: |
-          echo "GIT_STATE=$(if git diff-index --quiet HEAD --; then echo 'clean'; else echo 'dirty'; fi)" >> $GITHUB_ENV
-          echo "BUILD_HOST=$(hostname)" >> $GITHUB_ENV
-          echo "GO_VERSION=$(go version | awk '{print $3}')" >> $GITHUB_ENV
-          echo "BUILD_USER=$(whoami)" >> $GITHUB_ENV
-          echo "CGO_ENABLED=1" >> $GITHUB_ENV
-          echo "IS_PR_BUILD=false" >> $GITHUB_ENV
-      - name: Docker Login
-        uses: docker/login-action@v4.6.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Release with goreleaser
-        uses: goreleaser/goreleaser-action@v7
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        with:
-          args: release --clean
-        id: goreleaser
+  rpmsign:
+    needs: [config, rpmbuild]
+    uses: OpenCHAMI/github-actions/.github/workflows/gpg-sign-artifacts.yml@v3.5
+    secrets: inherit
+    with:
+      artifact-name-unsigned-rpms: ${{ needs.config.outputs.rpm-unsigned }}
+      artifact-name-signed-rpms: ${{ needs.config.outputs.rpm-signed }}
+      artifact-name-public-keys: ${{ needs.config.outputs.keys-public }}
 
-      - name: Process goreleaser output
-        id: process_goreleaser_output
-        run: |
-          echo "const fs = require('fs');" > process.js
-          echo 'const artifacts = ${{ steps.goreleaser.outputs.artifacts }}' >> process.js
-          echo "const firstNonNullDigest = artifacts.find(artifact => artifact.extra && artifact.extra.Digest != null)?.extra.Digest;" >> process.js
-          echo "console.log(firstNonNullDigest);" >> process.js
-          echo "fs.writeFileSync('digest.txt', firstNonNullDigest);" >> process.js
-          node process.js
-          echo "digest=$(cat digest.txt)" >> $GITHUB_OUTPUT
-          
-      - name: Attest Binaries
-        uses: actions/attest-build-provenance@v4.2.2
-        with:
-          subject-path: dist/**
-          
-      - name: generate build provenance of docker container
-        uses: actions/attest-build-provenance@v4.2.2
-        with:
-          subject-name: ghcr.io/openchami/smd
-          subject-digest: ${{ steps.process_goreleaser_output.outputs.digest }}
-          push-to-registry: true
+  release:
+    needs: [config, rpmsign]
+    uses: OpenCHAMI/github-actions/.github/workflows/release-signed-artifacts.yml@v3.5
+    secrets: inherit
+    with:
+      artifact-name-signed-rpms: ${{ needs.config.outputs.rpm-signed }}
+      artifact-name-public-keys: ${{ needs.config.outputs.keys-public }}
