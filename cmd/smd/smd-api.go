@@ -2893,7 +2893,13 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 		// todo sendJson*() can only be called once. Update this func to only call it once, either by building the err or returning on the first error.
 		for _, eth := range eths {
 			// convert IP address from manager ethernet interface to IPAddressMapping
-			ips := []sm.IPAddressMapping{sm.IPAddressMapping{IPAddr: eth.IP}}
+			// A BMC reports the MAC of a host NIC but usually not the IP the host OS
+			// assigned it, so an empty IP is normal and must not fabricate a mapping
+			// that fails IPAddressMapping.Verify.
+			var ips []sm.IPAddressMapping
+			if eth.IP != "" {
+				ips = append(ips, sm.IPAddressMapping{IPAddr: eth.IP})
+			}
 			cei, err := sm.NewCompEthInterfaceV2(eth.Description, eth.MAC, component.ID, ips)
 			if err != nil {
 				sendJsonError(w, http.StatusBadRequest, err.Error())
