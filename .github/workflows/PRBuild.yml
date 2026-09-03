@@ -67,6 +67,10 @@ jobs:
         - name: smd-*.rpm
           files:
             - /usr/share/containers/systemd/smd-init.container
+            - /usr/share/containers/systemd/smd-init.container.d
+            - /usr/share/containers/systemd/smd-init.container.d/10-defaults.conf
             - /usr/share/containers/systemd/smd.container
+            - /usr/share/containers/systemd/smd.container.d
+            - /usr/share/containers/systemd/smd.container.d/10-defaults.conf
             - /usr/share/licenses/smd-quadlet
             - /usr/share/licenses/smd-quadlet/MIT.txt

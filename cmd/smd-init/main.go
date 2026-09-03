@@ -28,6 +28,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -160,13 +161,24 @@ func parseCmdLine() {
 		dbPass = val
 	}
 
-	// Set default dbName
+	// Require db config, no defaults
+	missing := []string{}
 	if dbName == "" {
-		dbName = "hmsds"
+		missing = append(missing, "SMD_DBNAME")
 	}
-	// Set default dbUser
+	if dbHost == "" {
+		missing = append(missing, "SMD_DBHOST")
+	}
 	if dbUser == "" {
-		dbUser = "hmsdsuser"
+		missing = append(missing, "SMD_DBUSER")
+	}
+	if dbPass == "" {
+		missing = append(missing, "SMD_DBPASS")
+	}
+	if len(missing) > 0 {
+		lg.Printf("Bad/missing db config: %s must be set", strings.Join(missing, ", "))
+		flag.Usage()
+		os.Exit(1)
 	}
 }
 
