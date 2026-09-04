@@ -3,26 +3,22 @@
 
 [Unit]
 Description=The %N container
-Requires=postgres.service
-After=postgres.service
 PartOf=openchami.target
+
+# NOTE: `Requires` responsibility will be shifted to drop-ins to enable
+# packages created from this repo to apply to arbitrary deployment styles.
+Wants=postgres.service
+After=postgres.service
 
 [Container]
 ContainerName=%N
 HostName=%N
 Image=ghcr.io/openchami/smd:@IMAGE_TAG@
 
-# Environment Variables
-EnvironmentFile=-/etc/openchami/configs/openchami.env
-
-# Secrets
+# NOTE: Must be configured either explicitly by the site administrator or
+# implicitly via one of the OpenCHAMI deployment meta-configuration packages.
 Secret=smd_postgres_password,type=env,target=SMD_DBPASS
 
-# Networks for the Container to use
-Network=openchami-internal.network
-
-# Proxy settings
-PodmanArgs=--http-proxy=false
 PodmanArgs=--entrypoint='["/bin/sh","-c","/%N"]'
 
 [Service]

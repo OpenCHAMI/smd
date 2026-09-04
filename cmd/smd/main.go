@@ -761,9 +761,24 @@ func (s *SmD) parseCmdLine() {
 		s.dbPass = val
 	}
 
-	// Set dbName
+	// Require db config, no defaults
+	missing := []string{}
 	if s.dbName == "" {
-		s.dbName = "hmsds"
+		missing = append(missing, "SMD_DBNAME")
+	}
+	if s.dbHost == "" {
+		missing = append(missing, "SMD_DBHOST")
+	}
+	if s.dbUser == "" {
+		missing = append(missing, "SMD_DBUSER")
+	}
+	if s.dbPass == "" {
+		missing = append(missing, "SMD_DBPASS")
+	}
+	if len(missing) > 0 {
+		fmt.Printf("Bad/missing db config: %s must be set\n", strings.Join(missing, ", "))
+		flag.Usage()
+		os.Exit(1)
 	}
 
 	// Set dbType

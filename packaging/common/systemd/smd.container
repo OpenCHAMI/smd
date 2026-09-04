@@ -5,26 +5,18 @@
 Description=The %N container
 PartOf=openchami.target
 
-# Don’t start until its init has run (and propagate failures):
+Wants=tokensmith.service
 Requires=%N-init.service
 After=%N-init.service tokensmith.service
-Wants=%N-init.service tokensmith.service
 
 [Container]
 ContainerName=%N
 HostName=%N
 Image=ghcr.io/openchami/%N:@IMAGE_TAG@
 
-# Environment Variables
-EnvironmentFile=-/etc/openchami/configs/openchami.env
-
-# Secrets
-# TODO: decide whether to move secrets generation out of the release repo
+# NOTE: Must be configured either explicitly by the site administrator or
+# implicitly via one of the OpenCHAMI deployment meta-configuration packages.
 Secret=%N_postgres_password,type=env,target=SMD_DBPASS
-
-# Networks for the Container to use
-Network=openchami-internal.network
-HttpProxy=false
 
 [Service]
 Restart=always
