@@ -135,6 +135,27 @@ SMD_DBOPTS    # Additional DB parameters
 LOGLEVEL      # Logging level (0-4)
 ```
 
+### Quadlet Deployment
+
+The RPM packages ship SMD as a Podman Quadlet unit. Runtime options are set as
+`Environment=` keys in a systemd drop-in rather than on the command line.
+
+Package defaults live in `/usr/share/containers/systemd/smd.container.d/10-defaults.conf`
+and are replaced on upgrade. To override them, drop a higher-numbered file into
+`/etc/containers/systemd/smd{,-init}.container.d/`:
+
+```ini
+# /etc/containers/systemd/smd.container.d/20-site.conf
+[Container]
+Environment=SMD_DBHOST=db.example.com
+Environment=SMD_AUTH_ISSUER=https://tokensmith.example.com
+```
+
+Then `systemctl daemon-reload && systemctl restart smd`.
+
+See [10-defaults.conf](packaging/common/systemd/smd.container.d/10-defaults.conf)
+for the full set of defaults and what each one does.
+
 ### Running Outside Kubernetes
 To run SMD locally with a PostgreSQL database:
 
