@@ -14,11 +14,6 @@ After=postgres.service
 ContainerName=%N
 HostName=%N
 Image=ghcr.io/openchami/smd:@IMAGE_TAG@
-
-# NOTE: Must be configured either explicitly by the site administrator or
-# implicitly via one of the OpenCHAMI deployment meta-configuration packages.
-Secret=smd_postgres_password,type=env,target=SMD_DBPASS
-
 PodmanArgs=--entrypoint='["/bin/sh","-c","/%N"]'
 
 [Service]
