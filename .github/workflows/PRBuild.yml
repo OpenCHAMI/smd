@@ -37,6 +37,7 @@ jobs:
     secrets: inherit
     with:
       cgo_enabled: 0
+      go_version_file: go.mod
       registry_subject_name: ghcr.io/openchami/smd
       is_pr_build: true
       pr_number: ${{ inputs.pr_number || github.event.pull_request.number || 0 }}

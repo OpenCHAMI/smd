@@ -32,6 +32,7 @@ jobs:
     secrets: inherit
     with:
       cgo_enabled: 0
+      go_version_file: go.mod
       is_pr_build: false
       registry_subject_name: ghcr.io/openchami/smd
 
