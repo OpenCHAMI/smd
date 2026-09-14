@@ -816,15 +816,16 @@ func (t *hmsdbPgTx) InsertComponentsTx(comps []*base.Component) ([]string, error
 			t.LogAlways("Error: InsertComponentsTx(): QueryContext: %s", err)
 			return []string{}, err
 		}
-		defer rows.Close()
 		for rows.Next() {
 			var id string
 			err := rows.Scan(&id)
 			if err != nil {
+				rows.Close()
 				return []string{}, err
 			}
 			results = append(results, id)
 		}
+		rows.Close()
 	}
 	return results, nil
 }
