@@ -28,6 +28,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -749,78 +750,81 @@ func (t *hmsdbPgTx) InsertComponentsTx(comps []*base.Component) ([]string, error
 	}
 	valueMap := make(map[string]bool)
 
-	// Generate query
-	query := sq.Insert(compTable).
-		Columns(compColsDefault...)
+	// The 2048 is chosen to undershoot postgres' limit on bind parameters
+	for compChunk := range slices.Chunk(comps, 2048) {
+		// Generate query
+		query := sq.Insert(compTable).
+			Columns(compColsDefault...)
 
-	for _, c := range comps {
-		// Normalize key
-		var normID = xnametypes.NormalizeHMSCompID(c.ID)
-		// Take out duplicates so that we don't get errors for modifying a row multiple times.
-		if _, ok := valueMap[normID]; ok {
-			continue
-		} else {
-			valueMap[normID] = true
+		for _, c := range compChunk {
+			// Normalize key
+			var normID = xnametypes.NormalizeHMSCompID(c.ID)
+			// Take out duplicates so that we don't get errors for modifying a row multiple times.
+			if _, ok := valueMap[normID]; ok {
+				continue
+			} else {
+				valueMap[normID] = true
+			}
+			// If NID is not a valid number (e.g. empty string), set to -1.
+			var rawNID int64
+			if num, err := c.NID.Int64(); err != nil {
+				rawNID = -1
+			} else {
+				rawNID = num
+			}
+
+			// Default to enabled.
+			var enabledFlg bool
+			if c.Enabled == nil {
+				enabledFlg = true
+			} else {
+				enabledFlg = *c.Enabled
+			}
+
+			// Set fields for the INSERT
+			query = query.Values(
+				normID,
+				c.Type,
+				c.State,
+				c.Flag,
+				enabledFlg,
+				c.SwStatus,
+				c.Role,
+				c.SubRole,
+				rawNID,
+				c.Subtype,
+				c.NetType,
+				c.Arch,
+				c.Class,
+				c.ReservationDisabled,
+				c.Locked)
 		}
-		// If NID is not a valid number (e.g. empty string), set to -1.
-		var rawNID int64
-		if num, err := c.NID.Int64(); err != nil {
-			rawNID = -1
-		} else {
-			rawNID = num
-		}
+		query = query.Suffix("ON CONFLICT(" + compIdCol + ") DO UPDATE SET " +
+			compStateCol + " = EXCLUDED." + compStateCol + ", " +
+			compFlagCol + " = EXCLUDED." + compFlagCol + ", " +
+			compSubTypeCol + " = EXCLUDED." + compSubTypeCol + ", " +
+			compNetTypeCol + " = EXCLUDED." + compNetTypeCol + ", " +
+			compArchCol + " = EXCLUDED." + compArchCol + ", " +
+			compClassCol + " = EXCLUDED." + compClassCol +
+			" RETURNING " + compIdCol)
 
-		// Default to enabled.
-		var enabledFlg bool
-		if c.Enabled == nil {
-			enabledFlg = true
-		} else {
-			enabledFlg = *c.Enabled
-		}
-
-		// Set fields for the INSERT
-		query = query.Values(
-			normID,
-			c.Type,
-			c.State,
-			c.Flag,
-			enabledFlg,
-			c.SwStatus,
-			c.Role,
-			c.SubRole,
-			rawNID,
-			c.Subtype,
-			c.NetType,
-			c.Arch,
-			c.Class,
-			c.ReservationDisabled,
-			c.Locked)
-	}
-	query = query.Suffix("ON CONFLICT(" + compIdCol + ") DO UPDATE SET " +
-		compStateCol + " = EXCLUDED." + compStateCol + ", " +
-		compFlagCol + " = EXCLUDED." + compFlagCol + ", " +
-		compSubTypeCol + " = EXCLUDED." + compSubTypeCol + ", " +
-		compNetTypeCol + " = EXCLUDED." + compNetTypeCol + ", " +
-		compArchCol + " = EXCLUDED." + compArchCol + ", " +
-		compClassCol + " = EXCLUDED." + compClassCol +
-		" RETURNING " + compIdCol)
-
-	query = query.PlaceholderFormat(sq.Dollar)
-	qStr, qArgs, _ := query.ToSql()
-	t.Log(LOG_DEBUG, "Debug: InsertComponentsTx(): Query: %s - With args: %v", qStr, qArgs)
-	rows, err := query.RunWith(t.sc).QueryContext(t.ctx)
-	if err != nil {
-		t.LogAlways("Error: InsertComponentsTx(): QueryContext: %s", err)
-		return []string{}, err
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var id string
-		err := rows.Scan(&id)
+		query = query.PlaceholderFormat(sq.Dollar)
+		qStr, qArgs, _ := query.ToSql()
+		t.Log(LOG_DEBUG, "Debug: InsertComponentsTx(): Query: %s - With args: %v", qStr, qArgs)
+		rows, err := query.RunWith(t.sc).QueryContext(t.ctx)
 		if err != nil {
+			t.LogAlways("Error: InsertComponentsTx(): QueryContext: %s", err)
 			return []string{}, err
 		}
-		results = append(results, id)
+		defer rows.Close()
+		for rows.Next() {
+			var id string
+			err := rows.Scan(&id)
+			if err != nil {
+				return []string{}, err
+			}
+			results = append(results, id)
+		}
 	}
 	return results, nil
 }
