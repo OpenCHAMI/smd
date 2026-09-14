@@ -7,6 +7,7 @@ require (
 	github.com/Cray-HPE/hms-certs v1.7.1
 	github.com/Cray-HPE/hms-compcredentials v1.15.0
 	github.com/Cray-HPE/hms-go-http-lib v1.7.1
+	github.com/Cray-HPE/hms-msgbus v1.13.1
 	github.com/Cray-HPE/hms-securestorage v1.18.0
 	github.com/Cray-HPE/hms-xname v1.4.0
 	github.com/DATA-DOG/go-sqlmock v1.5.2
@@ -14,8 +15,9 @@ require (
 	github.com/OpenCHAMI/jwtauth/v5 v5.0.0-20240321222802-e6cb468a2a18
 	github.com/go-chi/chi/v5 v5.3.2
 	github.com/golang-jwt/jwt/v5 v5.3.1
-	github.com/golang-migrate/migrate/v4 v4.19.1
+	github.com/golang-migrate/migrate/v4 v4.20.1
 	github.com/google/uuid v1.6.0
+	github.com/gorilla/handlers v1.5.2
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/invopop/jsonschema v0.14.0
 	github.com/lestrrat-go/jwx/v2 v2.1.7
@@ -39,31 +41,11 @@ require (
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/confluentinc/confluent-kafka-go/v2 v2.10.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.1 // indirect
-	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
-	github.com/goccy/go-json v0.10.6 // indirect
-	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
-	github.com/lestrrat-go/blackmagic v1.0.4 // indirect
-	github.com/lestrrat-go/httpcc v1.0.1 // indirect
-	github.com/lestrrat-go/httprc v1.0.6 // indirect
-	github.com/lestrrat-go/iter v1.0.2 // indirect
-	github.com/lestrrat-go/option v1.0.1 // indirect
-	github.com/mailru/easyjson v0.9.0 // indirect
-	github.com/moby/go-archive v0.3.3 // indirect
-	github.com/moby/patternmatcher v0.6.1 // indirect
-	github.com/moby/sys/atomicwriter v0.1.0 // indirect
-	github.com/moby/sys/sequential v0.7.0 // indirect
-	github.com/moby/sys/user v0.4.1 // indirect
-	github.com/pb33f/ordered-map/v2 v2.3.1 // indirect
-	github.com/segmentio/asm v1.2.1 // indirect
-	go.yaml.in/yaml/v4 v4.0.0-rc.2 // indirect
-)
-
-require (
-	github.com/Cray-HPE/hms-msgbus v1.13.1
+	github.com/felixge/httpsnoop v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
+	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
 	github.com/go-test/deep v1.1.0 // indirect
-	github.com/gorilla/handlers v1.5.2
+	github.com/goccy/go-json v0.10.6 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
@@ -71,18 +53,33 @@ require (
 	github.com/hashicorp/go-secure-stdlib/parseutil v0.2.0 // indirect
 	github.com/hashicorp/go-secure-stdlib/strutil v0.1.2 // indirect
 	github.com/hashicorp/go-sockaddr v1.0.7 // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hashicorp/hcl v1.0.1-vault-5 // indirect
 	github.com/hashicorp/vault/api v1.16.0 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
+	github.com/lestrrat-go/blackmagic v1.0.4 // indirect
+	github.com/lestrrat-go/httpcc v1.0.1 // indirect
+	github.com/lestrrat-go/httprc v1.0.6 // indirect
+	github.com/lestrrat-go/iter v1.0.2 // indirect
+	github.com/lestrrat-go/option v1.0.1 // indirect
+	github.com/mailru/easyjson v0.9.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
+	github.com/moby/go-archive v0.3.3 // indirect
+	github.com/moby/patternmatcher v0.6.1 // indirect
+	github.com/moby/sys/atomicwriter v0.1.0 // indirect
+	github.com/moby/sys/sequential v0.7.0 // indirect
+	github.com/moby/sys/user v0.4.1 // indirect
+	github.com/pb33f/ordered-map/v2 v2.3.1 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
+	github.com/segmentio/asm v1.2.1 // indirect
+	go.yaml.in/yaml/v4 v4.0.0-rc.2 // indirect
 	golang.org/x/crypto v0.53.0 // indirect
-	golang.org/x/net v0.55.0 // indirect
+	golang.org/x/net v0.56.0 // indirect
 	golang.org/x/sys v0.46.0 // indirect
 	golang.org/x/text v0.38.0 // indirect
-	golang.org/x/time v0.12.0 // indirect
+	golang.org/x/time v0.15.0 // indirect
 )
