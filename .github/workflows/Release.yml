@@ -28,7 +28,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
   build:
-    uses: OpenCHAMI/github-actions/.github/workflows/build-publish-container-goreleaser.yml@v3.6
+    uses: OpenCHAMI/github-actions/.github/workflows/build-publish-container-goreleaser.yml@v3.7
     secrets: inherit
     with:
       cgo_enabled: 0
@@ -37,14 +37,14 @@ jobs:
 
   rpmbuild:
     needs: [config, build]
-    uses: OpenCHAMI/github-actions/.github/workflows/build-rpm-quadlet.yml@v3.6
+    uses: OpenCHAMI/github-actions/.github/workflows/build-rpm-quadlet.yml@v3.7
     secrets: inherit
     with:
       artifact-name-unsigned-rpms: ${{ needs.config.outputs.rpm-unsigned }}
 
   rpmsign:
     needs: [config, rpmbuild]
-    uses: OpenCHAMI/github-actions/.github/workflows/gpg-sign-artifacts.yml@v3.6
+    uses: OpenCHAMI/github-actions/.github/workflows/gpg-sign-artifacts.yml@v3.7
     secrets: inherit
     with:
       artifact-name-unsigned-rpms: ${{ needs.config.outputs.rpm-unsigned }}
@@ -53,7 +53,7 @@ jobs:
 
   release:
     needs: [config, rpmsign]
-    uses: OpenCHAMI/github-actions/.github/workflows/release-signed-artifacts.yml@v3.6
+    uses: OpenCHAMI/github-actions/.github/workflows/release-signed-artifacts.yml@v3.7
     secrets: inherit
     with:
       artifact-name-signed-rpms: ${{ needs.config.outputs.rpm-signed }}
