@@ -2386,10 +2386,9 @@ func (s *SmD) doRedfishEndpointPut(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		// parse data using the new inventory data format (will conform to schema)
-		err = s.parseRedfishEndpointDataV2(w, body, true)
+		err = s.parseRedfishEndpointDataV2(body, true)
 		if err != nil {
-			sendJsonError(w, http.StatusInternalServerError,
-				fmt.Sprintf("failed parsing post data (V2): %v", err))
+			sendRedfishInventoryError(w, err)
 			return
 		}
 	}
@@ -2695,10 +2694,10 @@ func (s *SmD) doRedfishEndpointsPost(w http.ResponseWriter, r *http.Request) {
 			s.lg.Printf("Payload does not contain PDUInventory key, routing to default V2 parser.")
 			schemaVersion := s.getSchemaVersion(w, body)
 			if schemaVersion > 0 {
-				err = s.parseRedfishEndpointDataV2(w, body, false)
+				err = s.parseRedfishEndpointDataV2(body, false)
 				if err != nil {
-					sendJsonError(w, http.StatusInternalServerError,
-						fmt.Sprintf("failed parsing post data (V2): %v", err))
+					sendRedfishInventoryError(w, err)
+					return
 				}
 			} else {
 				// This routes legacy requests (schemaVersion <= 0) to the old parser
@@ -2820,7 +2819,7 @@ func NormalizeURLPath(uri string) string {
 // appropriates objects for use within SMD. There are some additional functions
 // needed to manually make the conversions that are not able to be unmarshalled
 // directly.
-func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, forceUpdate bool) error {
+func (s *SmD) parseRedfishEndpointDataV2(data []byte, forceUpdate bool) error {
 	s.lg.Printf("parsing request data using V2 parsing method...")
 
 	// NOTE: temporary definition for manager
@@ -2850,8 +2849,6 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 	// unmarshal the root JSON object from data
 	err = json.Unmarshal(data, &root)
 	if err != nil {
-		sendJsonError(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to unmarshal Redfish data: %v", err))
 		return fmt.Errorf("failed to unmarshal Redfish data: %v", err)
 	}
 
@@ -2889,56 +2886,31 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 	}
 
 	// function to create CompEthInterfaceV2 from collection of EthernetInterfaces
-	var createCompEthInterfacesV2 = func(component base.Component, eths []schemas.EthernetInterface) {
-		// todo sendJson*() can only be called once. Update this func to only call it once, either by building the err or returning on the first error.
+	var createCompEthInterfacesV2 = func(component base.Component, eths []schemas.EthernetInterface) error {
 		for _, eth := range eths {
-			// convert IP address from manager ethernet interface to IPAddressMapping
-			ips := []sm.IPAddressMapping{sm.IPAddressMapping{IPAddr: eth.IP}}
+			ips := []sm.IPAddressMapping{{IPAddr: eth.IP}}
 			cei, err := sm.NewCompEthInterfaceV2(eth.Description, eth.MAC, component.ID, ips)
 			if err != nil {
-				sendJsonError(w, http.StatusBadRequest, err.Error())
-				continue
+				return &redfishInventoryError{http.StatusBadRequest, err.Error()}
 			}
 			err = s.db.InsertCompEthInterface(cei)
-			if err != nil {
-				if err == hmsds.ErrHMSDSDuplicateKey {
-					if forceUpdate {
-						// Duplicate key detected, but foreceUpdate enabled, so we delete and readd.
-
-						// try deleting and reinserting the CompEthInterface since there is not an upsert/update function
-						rowAffected, err := s.db.DeleteCompEthInterfaceByID(cei.ID)
-						if err != nil {
-							sendJsonDBError(w, "", "operation failed trying to delete component ethernet interface.", err)
-							continue
-						}
-						if rowAffected {
-							err = s.db.InsertCompEthInterface(cei)
-							if err != nil {
-								if err == hmsds.ErrHMSDSDuplicateKey {
-									sendJsonError(w, http.StatusConflict, "operation would conflict "+
-										"with an existing component ethernet interface that has the same MAC address.")
-								} else {
-									// Send this message as 500 or 400 plus error message if it is
-									// an HMSError and not, e.g. an internal DB error code.
-									sendJsonDBError(w, "", "operation  failed during store.", err)
-								}
-							}
-						}
-					} else {
-						// forceUpdate was not enabled when duplicate key was found, so we err.
-						sendJsonError(w, http.StatusConflict, "operation would conflict "+
-							"with an existing component ethernet interface that has the same MAC address.")
-					}
-				} else {
-					// Some other error occurred that we want to let the user know about.
-					// Send this message as 500 or 400 plus error message if it is
-					// an HMSError and not, e.g. an internal DB error code.
-					sendJsonDBError(w, "", "operation failed during store.", err)
+			if errors.Is(err, hmsds.ErrHMSDSDuplicateKey) && forceUpdate {
+				// Replace an existing interface when processing a forced update.
+				if _, deleteErr := s.db.DeleteCompEthInterfaceByID(cei.ID); deleteErr != nil {
+					return redfishInventoryDBError("operation failed trying to delete component ethernet interface.", deleteErr)
 				}
-				continue
+				// Retry even if the interface was concurrently removed before deletion.
+				err = s.db.InsertCompEthInterface(cei)
+			}
+			if errors.Is(err, hmsds.ErrHMSDSDuplicateKey) {
+				return &redfishInventoryError{http.StatusConflict, "operation would conflict " +
+					"with an existing component ethernet interface that has the same MAC address."}
+			}
+			if err != nil {
+				return redfishInventoryDBError("operation failed during store.", err)
 			}
 		}
-
+		return nil
 	}
 
 	// function to create []*rf.EthNICInfo from collection of manager.EthernetInterfaces
@@ -2984,8 +2956,6 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 		// components
 		rowsAffected, err := s.db.InsertComponent(&component)
 		if err != nil {
-			sendJsonError(w, http.StatusInternalServerError,
-				fmt.Sprintf("failed to insert %d component(s): %v", rowsAffected, err))
 			if forceUpdate {
 				// upsert here to keep allow returning error for duplicates when not forcing updates
 				_, err := s.db.UpsertComponents([]*base.Component{&component}, false)
@@ -2998,7 +2968,9 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 		}
 
 		// create a new ethernet interface with reference to the component above
-		createCompEthInterfacesV2(component, manager.EthernetInterfaces)
+		if err := createCompEthInterfacesV2(component, manager.EthernetInterfaces); err != nil {
+			return err
+		}
 
 		managerActions := &rf.ManagerActions{
 			ManagerReset: rf.ActionReset{
@@ -3038,8 +3010,6 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 			// matching error handling
 			return fmt.Errorf("failed to upsert %d component endpoints(s): %w", rowsAffected, err)
 		}
-
-		createCompEthInterfacesV2(component, manager.EthernetInterfaces)
 	}
 
 	// iterate over all of the systems to create components and component endpoints
@@ -3137,29 +3107,29 @@ func (s *SmD) parseRedfishEndpointDataV2(w http.ResponseWriter, data []byte, for
 			}
 
 			// add the corresponding CompEthInterfaceV2 for each ComponentEndpoint created
-			createCompEthInterfacesV2(component, system.EthernetInterfaces)
+			if err := createCompEthInterfacesV2(component, system.EthernetInterfaces); err != nil {
+				return err
+			}
 			knownCEs[system.UUID] = componentEndpoint.ComponentDescription.ID
 			ceNum++
 
 			// components
 			rowsAffected, err := s.db.InsertComponent(&component)
 			if err != nil {
-				sendJsonError(w, http.StatusInternalServerError,
-					fmt.Sprintf("failed to insert %d component(s): %v", rowsAffected, err))
-
+				insertErr := err
 				// upsert here to keep allow returning error for duplicates when not forcing updates
 				_, err := s.db.UpsertComponents([]*base.Component{&component}, false)
 				if err != nil {
 					return fmt.Errorf("failed to update component: %w", err)
 				}
-				return fmt.Errorf("failed to insert %d component(s): %v", rowsAffected, err)
+				if !forceUpdate {
+					return fmt.Errorf("failed to insert %d component(s): %w", rowsAffected, insertErr)
+				}
 			}
 
 			// component endpoints
 			err = s.db.UpsertCompEndpoint(&componentEndpoint)
 			if err != nil {
-				sendJsonError(w, http.StatusInternalServerError,
-					fmt.Sprintf("failed to upsert component endpoint: %v", err))
 				return fmt.Errorf("failed to upsert component endpoint: %v", err)
 			}
 		}

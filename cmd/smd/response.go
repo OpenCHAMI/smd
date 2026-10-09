@@ -24,6 +24,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -52,6 +53,32 @@ func sendJsonError(w http.ResponseWriter, code int, msg string) {
 	} else {
 		base.SendProblemDetailsGeneric(w, code, msg)
 	}
+}
+
+// redfishInventoryError preserves the HTTP status of an inventory failure while
+// leaving response writing to the request handler.
+type redfishInventoryError struct {
+	status  int
+	message string
+}
+
+func (e *redfishInventoryError) Error() string { return e.message }
+
+func redfishInventoryDBError(message string, err error) error {
+	if base.IsHMSError(err) {
+		return &redfishInventoryError{http.StatusBadRequest, err.Error()}
+	}
+	return &redfishInventoryError{http.StatusInternalServerError, message}
+}
+
+func sendRedfishInventoryError(w http.ResponseWriter, err error) {
+	var inventoryErr *redfishInventoryError
+	if errors.As(err, &inventoryErr) {
+		sendJsonError(w, inventoryErr.status, inventoryErr.message)
+		return
+	}
+	sendJsonError(w, http.StatusInternalServerError,
+		fmt.Sprintf("failed parsing post data (V2): %v", err))
 }
 
 func sendJsonResponse(w http.ResponseWriter, code int, msg string) {
