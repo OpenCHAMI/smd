@@ -1,6 +1,6 @@
 module github.com/openchami/smd/v2
 
-go 1.26.7
+go 1.26.10
 
 require (
 	github.com/Cray-HPE/hms-base/v2 v2.3.0
@@ -20,7 +20,8 @@ require (
 	github.com/gorilla/handlers v1.5.2
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/invopop/jsonschema v0.14.0
-	github.com/lestrrat-go/jwx/v2 v2.1.7
+	github.com/lestrrat-go/jwx/v2 v2.1.1
+	github.com/lestrrat-go/jwx/v4 v4.6.0
 	github.com/lib/pq v1.12.3
 	github.com/openchami/chi-middleware/auth v0.0.0-20240812224658-b16b83c70700
 	github.com/openchami/chi-middleware/log v0.0.0-20240812224658-b16b83c70700
