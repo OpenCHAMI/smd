@@ -43,7 +43,7 @@ require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.1 // indirect
 	github.com/felixge/httpsnoop v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
-	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
+	github.com/go-jose/go-jose/v4 v4.1.6 // indirect
 	github.com/go-test/deep v1.1.0 // indirect
 	github.com/goccy/go-json v0.10.6 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
