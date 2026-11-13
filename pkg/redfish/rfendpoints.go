@@ -1127,7 +1127,16 @@ func (ep *RedfishEP) GetSystems() string {
 			errlog.Printf("%s: odata.count != Member array len\n", ep.FQDN+path)
 		}
 		ep.Systems.OIDs = make(map[string]*EpSystem)
-		ep.Systems.Num = ep.NumSystems
+		filtered := sysInfo.Members[:0]
+		for _, m := range sysInfo.Members {
+			if strings.HasPrefix(m.Basename(), "HGX_Baseboard") {
+				errlog.Printf("%s: Skipping HGX baseboard system %s\n", ep.FQDN+path, m.Basename())
+				continue
+			}
+			filtered = append(filtered, m)
+		}
+		sysInfo.Members = filtered
+		ep.Systems.Num = len(sysInfo.Members)
 		sort.Sort(ResourceIDSlice(sysInfo.Members))
 		for i, sysOID := range sysInfo.Members {
 			sID := sysOID.Basename()
