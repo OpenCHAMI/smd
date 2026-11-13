@@ -709,6 +709,10 @@ func (m *EpManager) discoverRemotePhase1() {
 		sort.Sort(ResourceIDSlice(ethInfo.Members))
 		for i, eOID := range ethInfo.Members {
 			eID := eOID.Basename()
+			if strings.HasPrefix(strings.ToLower(eID), "usb") {
+				errlog.Printf("%s: Skipping USB interface %s\n", url, eID)
+				continue
+			}
 			m.ENetInterfaces.OIDs[eID] = NewEpEthInterface(m.epRF, m.OdataID, m.RedfishType, eOID, i)
 		}
 		m.ENetInterfaces.discoverRemotePhase1()
