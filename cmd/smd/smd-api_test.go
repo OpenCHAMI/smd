@@ -2719,7 +2719,7 @@ func TestDoCompNIDPatch(t *testing.T) {
 		reqBody:      json.RawMessage(`{"NID": "foo"}`),
 		hmsdsRespErr: hmsds.ErrHMSDSArgNoMatch,
 		expectedComp: &base.Component{},
-		expectedResp: json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","detail":"error decoding JSON json: cannot unmarshal string into Go struct field compPatchIn.CompUpdate.NID of type int64","status":500}` + "\n"),
+		expectedResp: json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","detail":"error decoding JSON json: cannot unmarshal string into Go struct field compPatchIn.NID of type int64","status":500}` + "\n"),
 	}}
 
 	for i, test := range tests {
