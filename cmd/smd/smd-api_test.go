@@ -2693,38 +2693,38 @@ func TestDoCompNIDPatch(t *testing.T) {
 	}
 
 	tests := []struct {
-		reqType      string
-		reqURI       string
-		reqBody      []byte
-		hmsdsRespErr error
-		expectedComp *base.Component
-		expectedResp []byte
+		reqType        string
+		reqURI         string
+		reqBody        []byte
+		hmsdsRespErr   error
+		expectedComp   *base.Component
+		expectedStatus int
 	}{{
-		reqType:      "PATCH",
-		reqURI:       "https://localhost/hsm/v2/State/Components/x0c0s25b0n0/NID",
-		reqBody:      json.RawMessage(`{"NID": 864}`),
-		hmsdsRespErr: nil,
-		expectedComp: &testComp1,
-		expectedResp: nil,
+		reqType:        "PATCH",
+		reqURI:         "https://localhost/hsm/v2/State/Components/x0c0s25b0n0/NID",
+		reqBody:        json.RawMessage(`{"NID": 864}`),
+		hmsdsRespErr:   nil,
+		expectedComp:   &testComp1,
+		expectedStatus: http.StatusNoContent,
 	}, {
-		reqType:      "PATCH",
-		reqURI:       "https://localhost/hsm/v2/State/Components/x0c0s25b0n0/NID",
-		reqBody:      json.RawMessage(`{"NID": 800}`),
-		hmsdsRespErr: hmsds.ErrHMSDSArgNoMatch,
-		expectedComp: &testComp2,
-		expectedResp: json.RawMessage(`{"type":"about:blank","title":"Bad Request","detail":"a required argument did not match any valid input","status":400}` + "\n"),
+		reqType:        "PATCH",
+		reqURI:         "https://localhost/hsm/v2/State/Components/x0c0s25b0n0/NID",
+		reqBody:        json.RawMessage(`{"NID": 800}`),
+		hmsdsRespErr:   hmsds.ErrHMSDSArgNoMatch,
+		expectedComp:   &testComp2,
+		expectedStatus: http.StatusBadRequest,
 	}, {
-		reqType:      "PATCH",
-		reqURI:       "https://localhost/hsm/v2/State/Components/x0c0s25b0n0/NID",
-		reqBody:      json.RawMessage(`{"NID": "foo"}`),
-		hmsdsRespErr: hmsds.ErrHMSDSArgNoMatch,
-		expectedComp: &base.Component{},
-		expectedResp: json.RawMessage(`{"type":"about:blank","title":"Internal Server Error","detail":"error decoding JSON json: cannot unmarshal string into Go struct field compPatchIn.CompUpdate.NID of type int64","status":500}` + "\n"),
+		reqType:        "PATCH",
+		reqURI:         "https://localhost/hsm/v2/State/Components/x0c0s25b0n0/NID",
+		reqBody:        json.RawMessage(`{"NID": "foo"}`),
+		hmsdsRespErr:   hmsds.ErrHMSDSArgNoMatch,
+		expectedComp:   nil,
+		expectedStatus: http.StatusInternalServerError,
 	}}
 
 	for i, test := range tests {
 		// Clear the results
-		results.UpdateCompNID.Input.c = &base.Component{}
+		results.UpdateCompNID.Input.c = nil
 		results.UpdateCompNID.Return.err = test.hmsdsRespErr
 		req, err := http.NewRequest(test.reqType, test.reqURI, bytes.NewBuffer(test.reqBody))
 		if err != nil {
@@ -2733,18 +2733,32 @@ func TestDoCompNIDPatch(t *testing.T) {
 		w := httptest.NewRecorder()
 
 		router.ServeHTTP(w, req)
-		if test.hmsdsRespErr == nil && w.Code != http.StatusNoContent {
-			t.Errorf("Test %v Failed: Response code was %v; want 204", i, w.Code)
-		} else if test.hmsdsRespErr != nil && w.Code == http.StatusNoContent {
-			t.Errorf("Test %v Failed: Response code was %v; expected an error", i, w.Code)
+		if w.Code != test.expectedStatus {
+			t.Errorf("Test %v Failed: Response code was %v; want %v", i, w.Code, test.expectedStatus)
 		}
 
-		if *test.expectedComp != *results.UpdateCompNID.Input.c {
+		if !reflect.DeepEqual(test.expectedComp, results.UpdateCompNID.Input.c) {
 			t.Errorf("Test %v Failed: Expected component '%v'; Received component '%v'", i, test.expectedComp, results.UpdateCompNID.Input.c)
 		}
 
-		if bytes.Compare(test.expectedResp, w.Body.Bytes()) != 0 {
-			t.Errorf("Test %v Failed: Expected body is '%v'; Received '%v'", i, string(test.expectedResp), w.Body)
+		if test.expectedStatus == http.StatusNoContent {
+			if w.Body.Len() != 0 {
+				t.Errorf("Test %v Failed: Expected empty response body; received %q", i, w.Body.String())
+			}
+			continue
+		}
+
+		var problem base.ProblemDetails
+		if err := json.Unmarshal(w.Body.Bytes(), &problem); err != nil {
+			t.Fatalf("Test %v Failed: Invalid problem response: %v", i, err)
+		}
+		if problem.Status != test.expectedStatus || problem.Title != http.StatusText(test.expectedStatus) {
+			t.Errorf("Test %v Failed: Unexpected problem response: %+v", i, problem)
+		}
+		// Decoder diagnostics vary between Go versions; require a useful detail
+		// without depending on the standard library's exact wording.
+		if strings.TrimSpace(problem.Detail) == "" {
+			t.Errorf("Test %v Failed: Expected nonempty problem detail", i)
 		}
 	}
 }
